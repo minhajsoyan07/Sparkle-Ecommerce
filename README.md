@@ -7,6 +7,17 @@ Sparkle E-Commerce is an enterprise-grade, multi-vendor marketplace application 
 ## Table of Contents
 
 - [Executive Overview](#executive-overview)
+- [Business Model and Marketplace Economics](#business-model-and-marketplace-economics)
+  - [Revenue Streams](#revenue-streams)
+  - [Transaction and Settlement Flow](#transaction-and-settlement-flow)
+  - [Regional Market Fit](#regional-market-fit)
+- [Actor Roles and Permissions (Who Can Do What)](#actor-roles-and-permissions-who-can-do-what)
+  - [1. Guest (Unauthenticated Visitor)](#1-guest-unauthenticated-visitor)
+  - [2. Customer / Buyer (Authenticated Consumer)](#2-customer--buyer-authenticated-consumer)
+  - [3. Merchant / Vendor (Seller)](#3-merchant--vendor-seller)
+  - [4. Platform Administrator (Super Admin)](#4-platform-administrator-super-admin)
+  - [Cross-Actor Permissions Matrix](#cross-actor-permissions-matrix)
+- [End-to-End Business Workflows](#end-to-end-business-workflows)
 - [System Architecture](#system-architecture)
 - [Core Functional Modules](#core-functional-modules)
   - [Customer Experience and Storefront](#customer-experience-and-storefront)
@@ -25,7 +36,7 @@ Sparkle E-Commerce is an enterprise-grade, multi-vendor marketplace application 
   - [Running the Application](#running-the-application)
 - [Default System Credentials](#default-system-credentials)
 - [Security and Configuration Guidelines](#security-and-configuration-guidelines)
-- [License](#license)
+- [Proprietary Ownership and License](#proprietary-ownership-and-license)
 
 ---
 
@@ -39,6 +50,228 @@ The platform provides out-of-the-box infrastructure for:
 - Third-party courier integration via Pathao Logistics API for end-to-end parcel tracking.
 - Localization with native bilingual support (English and Bengali).
 - Automated database schema migrations and demographic data seeding on startup.
+
+---
+
+## Business Model and Marketplace Economics
+
+Sparkle operates as a multi-sided B2C (Business-to-Consumer) marketplace connecting independent merchant sellers with online shoppers. The platform eliminates infrastructure barriers for sellers while providing shoppers with a unified catalog, integrated checkout, verified fulfillment, and buyer protection.
+
+### Revenue Streams
+
+1. **Transaction Commission (Take Rate):**
+   - The primary revenue driver is an automated commission fee deducted from every completed order item.
+   - Rates can be configured globally (e.g., standard platform fee) or overridden at the category level (e.g., lower take rate on high-ticket Electronics, higher take rate on high-margin Fashion).
+
+2. **Merchant Verification and Premium Tiers:**
+   - Platform monetization through tiered seller verification, store badges, and preferential placement.
+
+3. **Featured Placement and Sponsored Listings (CMS Merchandising):**
+   - Homepage showcase sections (Hero banners, Best Deals, Flash Sales) offer revenue opportunities for sponsored product placement.
+
+4. **Logistics Handling Margins:**
+   - Integration with courier APIs (Pathao) allows the platform to offer negotiated delivery rates while collecting nominal platform handling fees.
+
+### Transaction and Settlement Flow
+
+```
+[Buyer Orders & Pays] 
+        |
+        v
+[Payment Captured via SSLCommerz / COD]
+        |
+        v
+[Funds Held in Platform Ledger]
+        |
+        v
+[Seller Ships Order via Pathao Courier]
+        |
+        v
+[Customer Receives Order / Delivery Confirmed]
+        |
+        +---> [Commission Deducted -> Credited to Admin Platform Wallet]
+        |
+        +---> [Net Revenue Credited to Seller Merchant Wallet]
+        |
+        v
+[Seller Submits Withdrawal / Disbursement Request]
+```
+
+1. **Buyer Payment:** Funds are captured at checkout via SSLCommerz or earmarked as Cash on Delivery (COD).
+2. **Escrow Holding:** Payments are recorded in the central platform ledger. Funds are not immediately disbursed to vendors, preventing fraud and unauthorized withdrawals.
+3. **Fulfillment Verification:** The merchant fulfills the parcel through integrated logistics.
+4. **Automated Split & Settlement:** Once delivery is confirmed, the platform commission engine calculates the cut, deposits platform earnings into the Admin Wallet, and credits the net balance to the Seller Wallet.
+5. **Vendor Payout:** Sellers can request withdrawals to their bank accounts or Mobile Financial Services accounts once balances clear minimum payout thresholds.
+
+### Regional Market Fit
+
+The platform is purpose-built to solve structural challenges in emerging South Asian e-commerce markets (specifically Bangladesh):
+- **Cash on Delivery (COD) Reconciliation:** Robust order verification workflows reduce fake orders and return-to-origin (RTO) costs.
+- **Mobile Financial Services (MFS):** Native integration for bKash, Nagad, and Rocket payments where credit card penetration is low.
+- **Localized Logistics Structure:** Addressing follows administrative hierarchies (Divisions, Districts, Upazilas/Thanas) tailored directly to domestic courier routing rules.
+- **Bilingual Trust Building:** Full interface translation between Bengali (`bn`) and English (`en`) ensures accessibility for both urban and rural demographics.
+
+---
+
+## Actor Roles and Permissions (Who Can Do What)
+
+The platform enforces strict Role-Based Access Control (RBAC) across four distinct actors:
+
+### 1. Guest (Unauthenticated Visitor)
+
+An unauthenticated visitor accessing the storefront.
+
+- **Browsing & Discovery:**
+  - View storefront catalogs, category landing pages, brand directories, and product detail pages.
+  - Execute multi-attribute searches (keyword search, price range filter, rating filter, category navigation).
+  - Toggle UI language dynamically between English and Bengali (`en` / `bn`).
+- **Cart & Selection:**
+  - Add and remove items from a persistent guest cart stored via browser sessions/cookies.
+  - Adjust item quantities and review subtotal estimates.
+- **Evaluation & Inquiries:**
+  - Read verified customer reviews and star ratings.
+  - View individual seller profile pages, business locations, and ratings.
+  - Track orders publicly using an order number and phone number without signing in.
+- **Access Control:**
+  - Register for a Customer or Seller account.
+  - Log in using Email/Password credentials or Google OAuth 2.0.
+
+---
+
+### 2. Customer / Buyer (Authenticated Consumer)
+
+A registered consumer purchasing products on the marketplace.
+
+- **Cart & Checkout Management:**
+  - Automatic migration of guest cart contents into the permanent user account upon authentication.
+  - Maintain multiple delivery addresses structured by Bangladesh divisions, districts, and upazilas.
+  - Complete checkout using SSLCommerz (Cards, bKash, Nagad, Rocket) or Cash on Delivery.
+  - Apply promotional coupon codes and redeem accumulated loyalty points.
+- **Order Lifecycle & Post-Purchase:**
+  - Access comprehensive order history and monitor live shipment phases (Pending -> Processing -> Shipped -> Delivered).
+  - Download official tax invoices and receipts generated dynamically in PDF format via QuestPDF.
+  - Self-service cancellation for orders that have not yet entered the fulfillment/shipping pipeline.
+  - Track parcel dispatch directly with Pathao Courier consignment tracking links.
+- **Social Proof & Engagement:**
+  - Write verified product reviews with 1-5 star ratings and photo uploads.
+  - Update or revise previously submitted reviews.
+  - Manage a private Wishlist of saved items.
+- **Financial & Support Capabilities:**
+  - Customer Wallet: Access account credits, monitor automatic order refund balances, and review transaction history.
+  - Live Chat: Real-time messaging with merchants and platform customer support agents via SignalR.
+  - Support Tickets: Submit, track, and escalate return requests, warranty claims, or product defect reports.
+
+---
+
+### 3. Merchant / Vendor (Seller)
+
+An independent merchant operating a digital storefront within the marketplace.
+
+- **Store Customization & Branding:**
+  - Set up and maintain store profiles, company trade descriptions, store banners, and logos.
+  - Monitor store health indicators and algorithmic seller performance scores.
+- **Product & Inventory Operations:**
+  - Create, edit, publish, or temporarily unpublish products.
+  - Upload multi-angle product photography with automated optimization.
+  - Manage stock levels, SKU tracking, pricing, and promotional discounts.
+  - Assign products to platform categories.
+- **Order Fulfillment & Logistics Hand-Off:**
+  - Receive real-time order alerts when customers purchase items from their inventory.
+  - Transition order fulfillment states (Accept Order -> Mark Processing -> Ready for Shipment).
+  - Request courier pickup via Pathao Logistics API and print parcel shipping labels.
+  - Cancel orders with required administrative justification if stock is depleted.
+- **Financial Ledger & Disbursement:**
+  - Real-time seller wallet displaying gross sales, platform commission deductions, and net withdrawable balance.
+  - Itemized transaction history detailing deductions for every completed order.
+  - Submit disbursement and withdrawal requests to the platform administrator.
+- **Customer Communication:**
+  - Direct live chat with prospective buyers inquiring about specifications or order statuses.
+  - Review customer ratings and feedback received on products sold.
+
+---
+
+### 4. Platform Administrator (Super Admin)
+
+The central authority responsible for governance, catalog integrity, dispute arbitration, and financial clearance.
+
+- **User Governance & Vendor Verification:**
+  - Complete visibility over customer and merchant directories.
+  - Review seller merchant applications, inspect legal credentials/trade licenses, and approve or reject vendor onboarding.
+  - Suspend, ban, or reinstate accounts violating platform terms of service.
+- **Taxonomy & Catalog Management:**
+  - Full CRUD control over the 24 core commerce categories and subcategories.
+  - Define category slugs, display order, featured status, and custom category commission rates.
+  - Moderate or remove flagged, prohibited, or fraudulent product listings.
+- **Commission & Financial Administration:**
+  - Configure global marketplace commission percentages or assign negotiated rates to specific sellers.
+  - Central Platform Wallet: Monitor total platform revenue, gross marketplace volume (GMV), and escrow reserves.
+  - Review, approve, or reject vendor payout requests and track banking disbursement records.
+- **Content Management System (CMS) & Merchandising:**
+  - Curate and schedule homepage promotional banners and marketing campaigns.
+  - Configure dynamic homepage showcase sections (Flash Sales, Trending Brands, Discount Highlights).
+  - Control manual versus automated algorithmic product selection for showcase sections.
+- **Dispute Resolution & Fraud Prevention:**
+  - Arbitrate escalated buyer-seller disputes, issue wallet refunds, and enforce return policies.
+  - Review automated fraud detection warnings (velocity checks, suspicious repeated guest orders).
+  - Inspect sentiment analysis scores across customer reviews to identify low-quality vendors.
+- **System Auditing & Global Settings:**
+  - Access searchable audit trails detailing administrator logins, permission modifications, and critical entities.
+  - Maintain site-wide operational settings (support telephone hotline, contact email, delivery fee baselines).
+
+---
+
+### Cross-Actor Permissions Matrix
+
+| Platform Capability | Guest | Customer | Seller | Administrator |
+|---|:---:|:---:|:---:|:---:|
+| Browse Catalog & Search Products | Yes | Yes | Yes | Yes |
+| Toggle Bilingual UI (Bangla / English) | Yes | Yes | Yes | Yes |
+| Persistent Shopping Cart | Cookie-based | Account-based | - | - |
+| Place Orders & Complete Checkout | - | Yes | - | - |
+| Order Invoice PDF Download | - | Yes | Yes (Store items) | Yes (All) |
+| Post Reviews & Star Ratings | - | Yes (Verified buyers) | - | Moderation |
+| Customer Wallet & Store Credits | - | Yes | - | Full Access |
+| Live Customer Support Chat | - | Yes | Yes | Yes |
+| Open Support & Dispute Tickets | - | Yes | - | Resolve & Close |
+| Create & Edit Product Listings | - | - | Yes (Own catalog) | Yes (Global catalog) |
+| Inventory & Stock Level Control | - | - | Yes (Own stock) | Yes |
+| Order Fulfillment & Courier Dispatch | - | - | Yes (Own orders) | Full Oversight |
+| Seller Wallet & Payout Requests | - | - | Yes | Review & Approve |
+| Seller Performance Scorecard | View | View | View (Own score) | Configure & Override |
+| Category & Taxonomy Governance | - | - | - | Full Access |
+| Platform Commission Rate Setting | - | - | - | Full Access |
+| Vendor Onboarding Approval | - | - | Application only | Approve / Reject |
+| CMS Banners & Homepage Sections | - | - | - | Full Access |
+| Platform Financials & Central Wallet | - | - | - | Full Access |
+| Audit Trail & Security Logs | - | - | - | Full Access |
+
+---
+
+## End-to-End Business Workflows
+
+### 1. Customer Acquisition, Checkout, and Payment
+1. The customer discovers items via category navigation, dynamic showcase banners, or bilingual search.
+2. Items are added to the cart; the system validates real-time stock levels against the merchant's inventory.
+3. During checkout, the customer selects a verified delivery address (Division -> District -> Upazila).
+4. The customer selects a payment method:
+   - **Online Payment:** Routed to SSLCommerz; transaction validated via Instant Payment Notification (IPN) webhook.
+   - **Cash on Delivery (COD):** Earmarked for payment collection by the courier during delivery.
+5. Order confirmation is generated, and a PDF tax invoice is rendered via QuestPDF.
+
+### 2. Seller Fulfillment and Logistics Dispatch
+1. The merchant receives an automated notification in their seller portal.
+2. The merchant prepares the package, verifies the invoice, and marks the status as **Processing**.
+3. The merchant clicks **Dispatch with Pathao Courier**:
+   - The system calls the Pathao Courier API with customer address and parcel dimensions.
+   - A unique consignment ID and tracking barcode are returned and attached to the shipment record.
+4. The parcel is handed over to the courier; tracking status updates automatically in both customer and seller portals.
+
+### 3. Commission Split and Vendor Settlement
+1. Upon courier confirmation that the parcel is **Delivered**, the settlement engine is triggered.
+2. The category-specific commission rate is applied to the gross product sale price.
+3. The commission fee is credited directly to the **Platform Admin Wallet**.
+4. The remaining net revenue is credited to the **Seller Merchant Wallet**.
+5. Once the seller's cleared balance meets the withdrawal threshold, they request a payout, which the administrator audits and clears.
 
 ---
 
