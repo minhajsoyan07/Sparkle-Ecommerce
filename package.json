@@ -11,9 +11,9 @@
     "type": "git",
     "url": "git+https://github.com/minhajsoyan07/Sparkle-Ecommerce.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "private": true,
+  "author": "Minhajul Islam (https://github.com/minhajsoyan07)",
+  "license": "UNLICENSED",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/minhajsoyan07/Sparkle-Ecommerce/issues"

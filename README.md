@@ -297,6 +297,10 @@ All 25 pre-configured seller accounts share the default password: `Vendor@123`. 
 
 ---
 
-## License
+## Proprietary Ownership and License
 
-This project is licensed under the [ISC License](LICENSE).
+Copyright (c) 2026 Minhajul Islam (https://github.com/minhajsoyan07). All Rights Reserved.
+
+This software, its source code, architecture, database schemas, and documentation are proprietary and confidential. No portion of this project may be copied, reproduced, redistributed, sublicensed, or claimed by any third party without explicit prior written authorization from the owner.
+
+For detailed legal terms, consult the [LICENSE](LICENSE) document.
