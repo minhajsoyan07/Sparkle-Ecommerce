@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /category/
+Allow: /home/product/
+Allow: /search
+
+Disallow: /admin/
+Disallow: /seller/
+Disallow: /auth/
+Disallow: /cart/
+Disallow: /checkout/
+Disallow: /orders/
+Disallow: /profile/
+
+Sitemap: https://sparkle.com/sitemap.xml

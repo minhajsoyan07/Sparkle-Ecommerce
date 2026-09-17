@@ -1,0 +1,247 @@
+@model Sparkle.Domain.Content.HomepageSection
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Create Section" : "Edit Section";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid p-4">
+    <!-- Standardized Header -->
+    <div class="content-header mb-4">
+        <div>
+            <h2 class="content-title fw-bold">@ViewData["Title"]</h2>
+            <p class="text-muted mb-0">Configure your homepage display and curation logic.</p>
+        </div>
+        <div>
+            <a asp-action="Index" class="btn btn-outline-secondary px-4 fw-medium shadow-sm">
+                <i class="bi bi-arrow-left me-2"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Standardized Form Layout -->
+    <form id="sectionForm" asp-action="@(Model.Id == 0 ? "Create" : "Edit")" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" id="SlugInput" asp-for="Slug" />
+
+        <div class="row g-4">
+            <!-- Left Column: Primary Configuration (Standard Admin Sizing) -->
+            <div class="col-lg-8">
+                <div class="content-card mb-4">
+                    <h5 class="card-title fw-bold mb-3 border-bottom pb-2">
+                        <i class="bi bi-info-circle me-2"></i>Section Identity
+                    </h5>
+                    
+                    <div class="row">
+                         <div class="col-md-12 mb-3">
+                            <label asp-for="DisplayTitle" class="form-label tw-text-[11px] tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider">Public Display Title</label>
+                            <input asp-for="DisplayTitle" class="form-control" placeholder="e.g. Flash Sale Madness" oninput="synchInternalName(this.value)" />
+                            <span asp-validation-for="DisplayTitle" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Name" class="form-label tw-text-[11px] tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider">Internal Identifier (Auto)</label>
+                            <input asp-for="Name" id="Name" class="form-control bg-light" readonly tabindex="-1" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="SectionType" class="form-label tw-text-[11px] tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider">Source Strategy</label>
+                            <select asp-for="SectionType" class="form-select" onchange="updateUIForType(this.value)">
+                                <option value="" disabled selected>Select Source...</option>
+                                <option value="CategoryShop">Category Collection</option>
+                                <option value="TrendingProducts">Trending Products (Auto)</option>
+                                <option value="FlashSale">Flash Sale Event</option>
+                                <option value="RecommendedProducts">AI User Recommendations</option>
+                            </select>
+                            <span asp-validation-for="SectionType" class="text-danger small"></span>
+                        </div>
+
+                         <div class="col-md-12 mb-0">
+                            <label asp-for="Description" class="form-label tw-text-[11px] tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider">Subtitle / Description</label>
+                            <input asp-for="Description" class="form-control" placeholder="Optional context for users..." />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-card mb-4 content-strategy-panel">
+                    <h5 class="card-title fw-bold mb-3 border-bottom pb-2">
+                        <i class="bi bi-robot me-2"></i>Smart Logic
+                    </h5>
+                    
+                    <div class="tw-p-4 tw-bg-purple-50 tw-rounded-xl tw-border tw-border-purple-200">
+                        <div class="tw-flex tw-items-center tw-justify-between">
+                            <div class="tw-flex tw-items-center tw-gap-3">
+                                <div class="tw-w-10 tw-h-10 tw-rounded-lg tw-bg-white tw-text-purple-600 tw-flex tw-items-center tw-justify-center tw-shadow-sm tw-border tw-border-purple-100">
+                                    <i class="bi bi-stars tw-text-lg"></i>
+                                </div>
+                                <div>
+                                    <h6 class="tw-font-bold tw-text-purple-900 tw-mb-0">Automated Selection</h6>
+                                    <p id="aiStatusText" class="tw-text-xs tw-text-purple-600 tw-mb-0">Enabled: AI will curate best products automatically.</p>
+                                </div>
+                            </div>
+                            <div class="form-check form-switch p-0 m-0">
+                                <input asp-for="UseAutomatedSelection" class="form-check-input tw-scale-125 tw-cursor-pointer" style="margin-left: 0;" type="checkbox" onchange="toggleAI(this)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 row">
+                         <div class="col-md-4">
+                            <label class="form-label tw-text-[11px] tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider">Limit Results</label>
+                            <div class="input-group">
+                                <input asp-for="MaxProductsToDisplay" type="number" class="form-control" min="4" max="24" />
+                                <span class="input-group-text tw-text-[10px] tw-font-bold">ITEMS</span>
+                            </div>
+                        </div>
+                         <div class="col-md-8">
+                            <label class="form-label tw-text-[11px] tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider">Interactive Density (@Model.ProductsPerRow Items)</label>
+                            <input asp-for="ProductsPerRow" type="range" min="1" max="8" class="form-range" oninput="this.previousElementSibling.innerText = 'Interactive Density (' + this.value + ' Items)'">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end mb-5">
+                    <button type="submit" class="btn btn-primary btn-lg px-5 fw-bold shadow">
+                        <i class="bi bi-save me-2"></i> Save Section
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: Visual & Display Settings -->
+            <div class="col-lg-4">
+                <div class="content-card mb-4">
+                    <h5 class="card-title fw-bold mb-3 border-bottom pb-2">
+                        <i class="bi bi-palette me-2"></i>Layout & Style
+                    </h5>
+                    
+                    <div class="mb-4">
+                        <label class="form-label tw-text-[11px] tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider tw-mb-2">Visual Architecture</label>
+                        <div class="tw-grid tw-grid-cols-2 tw-gap-2">
+                            <label class="tw-cursor-pointer">
+                                <input type="radio" asp-for="LayoutType" value="Grid" class="tw-hidden tw-peer" />
+                                <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-gap-1 tw-py-3 tw-rounded-xl tw-border-2 tw-border-slate-100 tw-bg-slate-50 peer-checked:tw-border-primary peer-checked:tw-bg-primary/5 peer-checked:tw-text-primary tw-text-slate-400 tw-transition-all hover:tw-bg-white hover:tw-shadow-sm">
+                                    <i class="bi bi-grid-3x3-gap-fill tw-text-xl"></i>
+                                    <span class="tw-text-[10px] tw-font-bold tw-uppercase">Grid</span>
+                                </div>
+                            </label>
+                            <label class="tw-cursor-pointer">
+                                <input type="radio" asp-for="LayoutType" value="Carousel" class="tw-hidden tw-peer" />
+                                <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-gap-1 tw-py-3 tw-rounded-xl tw-border-2 tw-border-slate-100 tw-bg-slate-50 peer-checked:tw-border-primary peer-checked:tw-bg-primary/5 peer-checked:tw-text-primary tw-text-slate-400 tw-transition-all hover:tw-bg-white hover:tw-shadow-sm">
+                                    <i class="bi bi-collection-play-fill tw-text-xl"></i>
+                                    <span class="tw-text-[10px] tw-font-bold tw-uppercase">Slide</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label tw-text-[11px] tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider tw-mb-2">Card Sizing</label>
+                        <div class="tw-grid tw-grid-cols-3 tw-gap-2">
+                            @foreach(var size in new[] { "Small", "Medium", "Large" }) {
+                                <label class="tw-cursor-pointer">
+                                    <input type="radio" asp-for="CardSize" value="@size" class="tw-hidden tw-peer" />
+                                    <div class="tw-flex tw-items-center tw-justify-center tw-py-2 tw-rounded-lg tw-border-2 tw-border-slate-100 tw-bg-slate-50 peer-checked:tw-border-primary peer-checked:tw-bg-primary/5 peer-checked:tw-text-primary tw-text-slate-400 tw-transition-all hover:tw-bg-white hover:tw-shadow-sm tw-text-[10px] tw-font-bold">@size.ToUpper()</div>
+                                </label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                         <label class="form-label tw-text-[11px] tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider tw-mb-2">Background Personalization</label>
+                         <div class="tw-flex tw-gap-2">
+                             <input asp-for="BackgroundColor" type="color" class="form-control form-control-color" style="width: 45px; height: 38px;" title="Pick background color" />
+                             <input asp-for="BannerImageUrl" class="form-control" placeholder="Background URL (https://...)" />
+                         </div>
+                    </div>
+                </div>
+
+                <div class="content-card mb-4 tw-border-l-4 tw-border-emerald-400">
+                    <div class="tw-p-1">
+                        <div class="tw-flex tw-items-center tw-justify-between mb-3">
+                            <div>
+                                <h6 class="tw-font-bold tw-text-slate-800 tw-mb-0">Live Status</h6>
+                                <p class="tw-text-[10px] tw-text-slate-500 tw-mb-0">Visibility on storefront</p>
+                            </div>
+                            <div class="form-check form-switch p-0 m-0">
+                                <input asp-for="IsActive" class="form-check-input tw-scale-125 tw-cursor-pointer" style="margin-left: 0;" type="checkbox">
+                            </div>
+                        </div>
+
+                         <div class="tw-flex tw-items-center tw-justify-between tw-pt-3 tw-border-top tw-border-slate-100">
+                            <div>
+                                <h6 class="tw-font-bold tw-text-slate-800 tw-mb-0">Ordering</h6>
+                                <p class="tw-text-[10px] tw-text-slate-500 tw-mb-0">Stacking position</p>
+                            </div>
+                            <input asp-for="DisplayOrder" type="number" class="form-control form-control-sm" style="width: 60px;" />
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="content-card">
+                    <h5 class="card-title fw-bold mb-3 border-bottom pb-2">
+                        <i class="bi bi-eye me-2"></i>Product Visibility
+                    </h5>
+                    <div class="tw-space-y-3">
+                         @foreach(var toggle in new[] { ("Show Rating", "ShowRating"), ("Show Price", "ShowPrice"), ("Show Discount", "ShowDiscount") }) {
+                            <div class="tw-flex tw-items-center tw-justify-between">
+                                <span class="tw-text-xs tw-font-bold tw-text-slate-600">@toggle.Item1</span>
+                                <div class="form-check form-switch p-0 m-0">
+                                    <input name="@toggle.Item2" value="true" type="checkbox" class="form-check-input tw-cursor-pointer" @(ViewData.Model?.GetType().GetProperty(toggle.Item2)?.GetValue(Model, null)?.Equals(true) == true ? "checked" : "") />
+                                </div>
+                            </div>
+                         }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function synchInternalName(val) {
+            const nameInput = document.getElementById('Name');
+            const slugInput = document.getElementById('SlugInput');
+            
+            if(nameInput) {
+                nameInput.value = val;
+                if (!val) {
+                    if(slugInput) slugInput.value = '';
+                    return;
+                }
+                const slug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+                if(slugInput) slugInput.value = slug;
+            }
+        }
+        
+        function updateUIForType(val) {
+            const aiInfo = document.getElementById('aiStatusText');
+            if(val === 'FlashSale') {
+                if(aiInfo) aiInfo.innerText = "Sync Enabled: Showing current flash sale items";
+            } else if(val === 'TrendingProducts' || val === 'RecommendedProducts') {
+                if(aiInfo) aiInfo.innerText = "Autonomous Mode: System-generated dynamic list";
+            } else {
+                if(aiInfo) aiInfo.innerText = "AI Curation: Auto-populate with relevant products";
+            }
+        }
+        
+        function toggleAI(el) {
+            const configPanel = document.querySelector('.content-strategy-panel');
+            if (el.checked) {
+                configPanel?.classList.add('tw-ring-4', 'tw-ring-purple-500/10');
+            } else {
+                configPanel?.classList.remove('tw-ring-4', 'tw-ring-purple-500/10');
+            }
+        }
+
+        // Initialize UI state
+        document.addEventListener('DOMContentLoaded', function() {
+            const typeSelect = document.getElementById('SectionType');
+            if(typeSelect && typeSelect.value) updateUIForType(typeSelect.value);
+            
+            const aiToggle = document.getElementById('UseAutomatedSelection');
+            if(aiToggle) toggleAI(aiToggle);
+        });
+    </script>
+}

@@ -1,0 +1,199 @@
+@using Sparkle.Domain.Logistics
+@model Rider
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title d-flex align-items-center gap-2">
+            @Model.Name
+            <span class="badge bg-@(Model.Status == RiderStatus.Active ? "success" : Model.Status == RiderStatus.OnDelivery ? "primary" : "secondary") fs-6">
+                @Model.Status
+            </span>
+        </h2>
+        <p class="text-muted font-monospace mb-0">@Model.RiderCode</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Riders" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back
+        </a>
+        <a asp-action="EditRider" asp-route-id="@Model.Id" class="btn btn-success">
+            <i class="bi bi-pencil me-2"></i>Edit Rider
+        </a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card card-tale">
+            <div class="stats-card-body text-center">
+                <div class="stats-number">@Model.TotalDeliveries</div>
+                <div class="stats-label">Total Deliveries</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-dark-blue">
+            <div class="stats-card-body text-center">
+                <div class="stats-number">@Model.SuccessfulDeliveries</div>
+                <div class="stats-label">Successful</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-light-danger">
+            <div class="stats-card-body text-center">
+                <div class="stats-number"><i class="bi bi-star-fill"></i> @Model.Rating.ToString("0.0")</div>
+                <div class="stats-label">Rating</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <div class="content-card mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-send me-2 text-info"></i>Recent Deliveries</h5>
+            @if (Model.DeliveryAssignments?.Any() == true)
+            {
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Delivery #</th>
+                                <th>Status</th>
+                                <th>Assigned</th>
+                                <th>Delivered</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in Model.DeliveryAssignments.Take(10))
+                            {
+                                <tr>
+                                    <td class="font-monospace">@d.DeliveryNumber</td>
+                                    <td><span class="badge bg-@(d.Status == DeliveryStatus.Delivered ? "success-subtle text-success" : d.Status == DeliveryStatus.InTransit ? "primary-subtle text-primary" : "secondary-subtle text-secondary")">@d.Status</span></td>
+                                    <td>@d.AssignedAt.ToString("MMM dd")</td>
+                                    <td>@(d.DeliveredAt?.ToString("MMM dd") ?? "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-send display-6 text-muted mb-2"></i>
+                    <p class="text-muted mb-0">No delivery history</p>
+                </div>
+            }
+        </div>
+
+        <div class="content-card">
+            <h5 class="fw-bold mb-3"><i class="bi bi-box-seam me-2 text-warning"></i>Recent Pickups</h5>
+            @if (Model.PickupRequests?.Any() == true)
+            {
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Pickup #</th>
+                                <th>Status</th>
+                                <th>Scheduled</th>
+                                <th>Picked Up</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Model.PickupRequests.Take(10))
+                            {
+                                <tr>
+                                    <td class="font-monospace">@p.PickupNumber</td>
+                                    <td><span class="badge bg-@(p.Status == PickupStatus.Completed ? "success-subtle text-success" : p.Status == PickupStatus.InProgress ? "primary-subtle text-primary" : "warning-subtle text-warning")">@p.Status</span></td>
+                                    <td>@p.ScheduledAt.ToString("MMM dd")</td>
+                                    <td>@(p.PickedUpAt?.ToString("MMM dd HH:mm") ?? "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-box-seam display-6 text-muted mb-2"></i>
+                    <p class="text-muted mb-0">No pickup history</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <div class="content-card mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-person me-2" style="color: var(--sk-primary);"></i>Contact</h5>
+            <div class="mb-3">
+                <div class="text-muted small">Phone</div>
+                <div class="fw-bold"><i class="bi bi-telephone me-2"></i>@Model.Phone</div>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Email))
+            {
+                <div class="mb-3">
+                    <div class="text-muted small">Email</div>
+                    <div><i class="bi bi-envelope me-2"></i>@Model.Email</div>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.NidNumber))
+            {
+                <div>
+                    <div class="text-muted small">NID</div>
+                    <div class="font-monospace">@Model.NidNumber</div>
+                </div>
+            }
+        </div>
+
+        <div class="content-card mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-truck me-2" style="color: var(--sk-primary);"></i>Vehicle</h5>
+            @if (!string.IsNullOrEmpty(Model.VehicleType))
+            {
+                <div class="mb-2">
+                    <span class="badge bg-light text-dark fs-6">@Model.VehicleType</span>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.VehicleNumber))
+                {
+                    <div class="font-monospace">@Model.VehicleNumber</div>
+                }
+            }
+            else
+            {
+                <p class="text-muted mb-0">No vehicle registered</p>
+            }
+        </div>
+
+        <div class="content-card">
+            <h5 class="fw-bold mb-3"><i class="bi bi-building me-2" style="color: var(--sk-primary);"></i>Assigned Hub</h5>
+            @if (Model.AssignedHub != null)
+            {
+                <a asp-action="HubDetails" asp-route-id="@Model.AssignedHub.Id" class="text-decoration-none d-block p-3 bg-light rounded">
+                    <div class="fw-bold" style="color: var(--sk-primary);">@Model.AssignedHub.Name</div>
+                    <small class="text-muted">@Model.AssignedHub.District, @Model.AssignedHub.Division</small>
+                </a>
+            }
+            else
+            {
+                <p class="text-muted mb-0">Not assigned to any hub</p>
+            }
+        </div>
+    </div>
+</div>

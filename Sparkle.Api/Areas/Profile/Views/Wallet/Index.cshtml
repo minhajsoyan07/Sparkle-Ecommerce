@@ -1,0 +1,97 @@
+@model Sparkle.Domain.Wallets.UserWallet
+@{
+    ViewData["Title"] = "My Wallet";
+    Layout = "/Views/Shared/_Layout.cshtml";
+    var transactions = ViewBag.Transactions as List<Sparkle.Domain.Wallets.WalletTransaction>;
+}
+
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-3">
+             <div class="list-group shadow-sm mb-4">
+                <a href="/profile" class="list-group-item list-group-item-action">
+                    <i class="bi bi-person me-2"></i> Dashboard
+                </a>
+                <a href="/profile/orders" class="list-group-item list-group-item-action">
+                    <i class="bi bi-box-seam me-2"></i> My Orders
+                </a>
+                <a href="/profile/wallet" class="list-group-item list-group-item-action active">
+                    <i class="bi bi-wallet2 me-2"></i> My Wallet
+                </a>
+                <a href="/profile/addresses" class="list-group-item list-group-item-action">
+                    <i class="bi bi-geo-alt me-2"></i> Addresses
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-9">
+            <div class="card border-0 shadow-sm mb-4 bg-primary text-white">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Available Balance</h6>
+                            <h2 class="mb-0 fw-bold">৳ @Model.Balance.ToString("N2")</h2>
+                        </div>
+                        <div class="text-end">
+                            <button class="btn btn-light" disabled title="Coming Soon">
+                                <i class="bi bi-plus-circle me-1"></i> Add Money
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Transaction History</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (transactions != null && transactions.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4">Date</th>
+                                        <th>Description</th>
+                                        <th>Type</th>
+                                        <th class="text-end pe-4">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var tx in transactions)
+                                    {
+                                        <tr>
+                                            <td class="ps-4">@tx.TransactionDate.ToString("MMM dd, yyyy")</td>
+                                            <td>
+                                                <div>@tx.Description</div>
+                                                <small class="text-muted">Ref: @tx.ReferenceId</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-@(tx.TransactionType == "Credit" ? "success-subtle text-success" : "danger-subtle text-danger")">
+                                                    @tx.TransactionType
+                                                </span>
+                                            </td>
+                                            <td class="text-end pe-4 fw-bold @(tx.TransactionType == "Credit" ? "text-success" : "text-danger")">
+                                                @(tx.TransactionType == "Credit" ? "+" : "-")৳ @tx.Amount.ToString("N2")
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <div class="mb-3 text-muted">
+                                <i class="bi bi-clock-history display-1"></i>
+                            </div>
+                            <h5>No transactions yet</h5>
+                            <p class="text-muted">Your wallet transaction history will appear here.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

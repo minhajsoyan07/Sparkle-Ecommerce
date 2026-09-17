@@ -1,0 +1,172 @@
+@model Sparkle.Domain.Support.Dispute
+@{
+    ViewData["Title"] = $"Dispute #{Model.DisputeNumber}";
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title">Dispute Details</h2>
+        <p class="text-muted">Review evidence and resolve the dispute.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back to List
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Dispute Info -->
+        <div class="content-card mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h5 class="fw-bold mb-0">Dispute Information</h5>
+                <span class="badge @(Model.Status == Sparkle.Domain.Support.DisputeStatus.Opened ? "bg-danger" : "bg-primary") fs-6">
+                    @Model.Status
+                </span>
+            </div>
+            
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="text-muted small">Dispute Reason</div>
+                    <div class="fw-bold">@Model.Type</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-muted small">Opened At</div>
+                    <div class="fw-bold">@Model.OpenedAt.ToString("f")</div>
+                </div>
+            </div>
+
+            <div class="bg-light p-3 rounded mb-3">
+                <h6 class="fw-bold small text-muted text-uppercase mb-2">Description</h6>
+                <p class="mb-0">@Model.Description</p>
+            </div>
+            
+            @if(Model.Status == Sparkle.Domain.Support.DisputeStatus.Resolved || Model.Status == Sparkle.Domain.Support.DisputeStatus.Rejected)
+            {
+                <div class="@(Model.Status == Sparkle.Domain.Support.DisputeStatus.Rejected ? "bg-danger" : "bg-success") bg-opacity-10 p-3 rounded border">
+                    <div class="fw-bold mb-1">Resolution: @Model.ResolutionType</div>
+                    <p class="mb-1">@Model.ResolutionDetails</p>
+                    @if(Model.RefundAmount.HasValue)
+                    {
+                        <div class="fw-bold text-success">Refunded: ৳@Model.RefundAmount.Value.ToString("N0")</div>
+                    }
+                    <div class="small text-muted mt-2">Resolved by @Model.ResolvedBy</div>
+                </div>
+            }
+        </div>
+
+        <!-- Discussion / Notes -->
+        <div class="content-card">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Notes & Timeline</h5>
+            
+            <div class="timeline mb-4">
+                @foreach(var note in Model.Notes.OrderBy(n => n.PostedAt))
+                {
+                    <div class="mb-3 border-start border-3 ps-3 ms-2 @(note.IsInternal ? "border-warning" : "border-primary")">
+                        <div class="d-flex justify-content-between">
+                            <div class="fw-bold small">@(note.Author?.FullName ?? "System") <span class="badge bg-light text-dark border ms-2">@(note.IsInternal ? "Staff Note" : "Message")</span></div>
+                            <div class="text-muted small">@note.PostedAt.ToString("g")</div>
+                        </div>
+                        <p class="mb-0 mt-1 small">@note.Content</p>
+                    </div>
+                }
+            </div>
+
+            @if(Model.Status != Sparkle.Domain.Support.DisputeStatus.Resolved && Model.Status != Sparkle.Domain.Support.DisputeStatus.Rejected)
+            {
+                <form asp-action="AddNote" method="post" class="bg-light p-3 rounded">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div class="mb-2">
+                        <label class="form-label fw-bold small">Add Internal Note</label>
+                        <textarea name="content" class="form-control" rows="2" placeholder="Private note for staff..." required></textarea>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="isInternal" value="true" checked id="internalCheck">
+                        <label class="form-check-label small" for="internalCheck">Internal Note (Visible to Admins only)</label>
+                        <!-- Hidden input for false value handling if needed, but checkbox sends true only when checked -->
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-secondary">Post Note</button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Resolution Panel -->
+        @if(Model.Status != Sparkle.Domain.Support.DisputeStatus.Resolved && Model.Status != Sparkle.Domain.Support.DisputeStatus.Rejected)
+        {
+            <div class="content-card mb-4 bg-primary text-white bg-opacity-10 border-primary">
+                <h5 class="fw-bold mb-3 text-primary">Take Action</h5>
+                
+                <form asp-action="Resolve" method="post" class="mb-3">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div class="mb-2">
+                        <label class="form-label small text-dark fw-bold">Resolution Type</label>
+                        <select name="resolution" class="form-select form-select-sm" required>
+                            <option value="">Select Action...</option>
+                            <option value="FullRefund">Full Refund</option>
+                            <option value="PartialRefund">Partial Refund</option>
+                            <option value="Replacement">Replacement</option>
+                            <option value="NoAction">No Refund (Close)</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small text-dark fw-bold">Refund Amount (৳)</label>
+                        <input type="number" name="refundAmount" class="form-control form-control-sm" step="0.01" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small text-dark fw-bold">Resolution Note</label>
+                        <textarea name="resolutionDetails" class="form-control form-control-sm" rows="2" required placeholder="Outcome explanation..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm w-100 mb-2">Resolve Dispute</button>
+                    
+                </form>
+                
+                 <button type="button" class="btn btn-outline-danger btn-sm w-100" data-bs-toggle="collapse" data-bs-target="#rejectCollapse">
+                    Reject Dispute
+                </button>
+                <div class="collapse mt-2" id="rejectCollapse">
+                     <form asp-action="Reject" method="post">
+                         <input type="hidden" name="id" value="@Model.Id" />
+                         <textarea name="reason" class="form-control form-control-sm mb-2" rows="2" required placeholder="Rejection reason..."></textarea>
+                         <button type="submit" class="btn btn-danger btn-sm w-100">Confirm Reject</button>
+                     </form>
+                </div>
+            </div>
+        }
+
+        <!-- Related Order -->
+        <div class="content-card mb-4">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Order Details</h5>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted small">Order #</span>
+                <a href="#" class="fw-bold text-decoration-none">@Model.Order?.OrderNumber</a>
+            </div>
+             <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted small">Total</span>
+                <span class="fw-bold">৳@((Model.Order?.Total ?? 0).ToString("N0"))</span>
+            </div>
+             <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted small">Order Status</span>
+                <span class="badge bg-light text-dark border">@Model.Order?.Status</span>
+            </div>
+            
+            <hr class="my-2" />
+            <h6 class="small fw-bold mb-2">User</h6>
+            <div class="d-flex align-items-center mb-2">
+                <div class="bg-light rounded-circle p-2 me-2"><i class="bi bi-person"></i></div>
+                <div style="line-height:1.2;">
+                    <div class="fw-bold small">@Model.User?.FullName</div>
+                    <div class="text-muted extra-small">@Model.User?.Email</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,742 @@
+@model Sparkle.Domain.Sellers.Seller
+@{
+    ViewData["Title"] = "Store Settings";
+    Layout = "~/Areas/Seller/Views/Shared/_SellerLayout.cshtml";
+}
+
+<style>
+    /* ===== VARIABLES ===== */
+    :root {
+        --primary: #f97316;
+        --primary-dark: #ea580c;
+        --success: #22c55e;
+        --danger: #ef4444;
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-300: #cbd5e1;
+        --slate-500: #64748b;
+        --slate-700: #334155;
+        --slate-800: #1e293b;
+    }
+
+    /* ===== PAGE LAYOUT ===== */
+    .settings-container {
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+    }
+
+    /* ===== TABS ===== */
+    .settings-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 32px;
+        border-bottom: 2px solid var(--slate-100);
+        padding-bottom: 0;
+    }
+    .tab-btn {
+        padding: 14px 24px;
+        border: none;
+        background: transparent;
+        color: var(--slate-500);
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .tab-btn:hover {
+        color: var(--primary);
+    }
+    .tab-btn.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+    }
+    .tab-btn i {
+        font-size: 1.1rem;
+    }
+    .tab-content {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== CARDS ===== */
+    .settings-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+        border: 1px solid var(--slate-100);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+    .card-header {
+        padding: 24px 28px;
+        background: linear-gradient(135deg, #fff9f5 0%, #fffbeb 100%);
+        border-bottom: 1px solid var(--slate-100);
+    }
+    .card-header h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--slate-800);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .card-header h3 i {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: #fff;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+    .card-body {
+        padding: 28px;
+    }
+
+    /* ===== FORM ELEMENTS ===== */
+    .form-group {
+        margin-bottom: 24px;
+    }
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+    .form-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .form-label span {
+        font-weight: 600;
+        color: var(--slate-700);
+        font-size: 0.9rem;
+    }
+    .form-label .required {
+        color: var(--danger);
+    }
+    .form-label .char-count {
+        font-size: 0.75rem;
+        color: var(--slate-500);
+        font-weight: 500;
+    }
+    .form-label .char-count.warning {
+        color: #f59e0b;
+    }
+    .form-label .char-count.danger {
+        color: var(--danger);
+    }
+    .form-input {
+        width: 100%;
+        padding: 14px 18px;
+        border: 2px solid var(--slate-200);
+        border-radius: 12px;
+        font-size: 0.95rem;
+        color: var(--slate-800);
+        background: var(--slate-50);
+        transition: all 0.2s ease;
+    }
+    .form-input:hover {
+        border-color: var(--slate-300);
+    }
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
+    }
+    .form-input::placeholder {
+        color: var(--slate-500);
+    }
+    textarea.form-input {
+        resize: vertical;
+        min-height: 100px;
+    }
+    .form-hint {
+        font-size: 0.8rem;
+        color: var(--slate-500);
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .form-hint i {
+        font-size: 0.9rem;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    @@media (max-width: 768px) {
+        .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: #fff;
+        border: none;
+        padding: 16px 32px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(249, 115, 22, 0.35);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(249, 115, 22, 0.45);
+    }
+    .btn-primary:active {
+        transform: translateY(0);
+    }
+    .btn-secondary {
+        background: var(--slate-100);
+        color: var(--slate-700);
+        border: 2px solid var(--slate-200);
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .btn-secondary:hover {
+        background: var(--slate-200);
+        border-color: var(--slate-300);
+    }
+    .btn-danger {
+        background: #fef2f2;
+        color: var(--danger);
+        border: 2px solid #fecaca;
+    }
+    .btn-danger:hover {
+        background: #fee2e2;
+        border-color: var(--danger);
+    }
+    .btn-success {
+        background: #f0fdf4;
+        color: var(--success);
+        border: 2px solid #bbf7d0;
+    }
+    .btn-success:hover {
+        background: #dcfce7;
+        border-color: var(--success);
+    }
+
+    /* ===== STATUS SECTION ===== */
+    .status-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .status-card {
+        background: linear-gradient(135deg, var(--slate-50), #fff);
+        border: 1px solid var(--slate-100);
+        border-radius: 14px;
+        padding: 20px;
+        text-align: center;
+    }
+    .status-card i {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        margin: 0 auto 12px;
+    }
+    .status-card.orange i { background: #fff7ed; color: var(--primary); }
+    .status-card.blue i { background: #eff6ff; color: #3b82f6; }
+    .status-card.green i { background: #f0fdf4; color: #22c55e; }
+    .status-card.purple i { background: #faf5ff; color: #a855f7; }
+    .status-card h4 {
+        font-size: 0.75rem;
+        color: var(--slate-500);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0 0 4px;
+    }
+    .status-card p {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--slate-800);
+        margin: 0;
+    }
+    .store-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 30px;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+    .store-status-badge.active {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: #fff;
+    }
+    .store-status-badge.inactive {
+        background: var(--slate-200);
+        color: var(--slate-600);
+    }
+    .store-status-badge .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: currentColor;
+        animation: pulse 2s infinite;
+    }
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    /* ===== PREVIEW ===== */
+    .preview-section {
+        background: linear-gradient(180deg, var(--slate-100), var(--slate-50));
+        border-radius: 16px;
+        padding: 24px;
+        text-align: center;
+    }
+    .preview-logo {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #fff;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        margin: 0 auto 16px;
+        display: block;
+    }
+    .preview-name {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--slate-800);
+        margin-bottom: 4px;
+    }
+    .preview-location {
+        font-size: 0.9rem;
+        color: var(--slate-500);
+        margin-bottom: 16px;
+    }
+    .preview-banner {
+        width: 100%;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 3px solid #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    /* ===== SUCCESS TOAST ===== */
+    .success-banner {
+        background: linear-gradient(135deg, var(--success), #16a34a);
+        color: #fff;
+        padding: 18px 24px;
+        border-radius: 14px;
+        margin-bottom: 28px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-weight: 600;
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
+    }
+    .success-banner i {
+        font-size: 1.4rem;
+    }
+
+    /* ===== SECTION DIVIDER ===== */
+    .section-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--slate-200), transparent);
+        margin: 32px 0;
+    }
+
+    /* ===== GRID LAYOUT ===== */
+    .page-grid {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 32px;
+        align-items: start;
+    }
+    @@media (max-width: 1024px) {
+        .page-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="tw-w-full tw-px-2 tw-py-2 tw-overflow-x-hidden">
+
+<div class="settings-container">
+    <!-- Success Message -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="success-banner">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>@TempData["Success"]</span>
+        </div>
+    }
+
+    <!-- Tabs Navigation -->
+    <div class="settings-tabs">
+        <button class="tab-btn active" data-tab="profile">
+            <i class="bi bi-shop"></i> Store Profile
+        </button>
+        <button class="tab-btn" data-tab="contact">
+            <i class="bi bi-telephone"></i> Contact & Address
+        </button>
+        <button class="tab-btn" data-tab="branding">
+            <i class="bi bi-palette"></i> Branding
+        </button>
+        <button class="tab-btn" data-tab="status">
+            <i class="bi bi-sliders"></i> Status & Stats
+        </button>
+    </div>
+
+    <form method="post" asp-action="UpdateStoreSettings" id="storeSettingsForm">
+        <div class="page-grid">
+            <!-- Main Content -->
+            <div>
+                <!-- Tab 1: Store Profile -->
+                <div class="tab-content active" id="tab-profile">
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <h3><i class="bi bi-shop"></i> Basic Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <div class="form-label">
+                                    <span>Shop Name <span class="required">*</span></span>
+                                    <span class="char-count" id="shopNameCount">0/100</span>
+                                </div>
+                                <input type="text" class="form-input" asp-for="ShopName" maxlength="100" required 
+                                       data-counter="shopNameCount" placeholder="Your amazing store name" />
+                                <div class="form-hint">
+                                    <i class="bi bi-info-circle"></i>
+                                    This is how customers will find you on Sparkle
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="form-label">
+                                    <span>Shop Description <span class="required">*</span></span>
+                                    <span class="char-count" id="shopDescCount">0/500</span>
+                                </div>
+                                <textarea class="form-input" asp-for="ShopDescription" maxlength="500" rows="5" required
+                                          data-counter="shopDescCount" placeholder="Tell customers what makes your store special..."></textarea>
+                                <div class="form-hint">
+                                    <i class="bi bi-lightbulb"></i>
+                                    Tip: Highlight your unique products, quality, and customer service
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Contact & Address -->
+                <div class="tab-content" id="tab-contact">
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <h3><i class="bi bi-telephone"></i> Contact Details</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <div class="form-label">
+                                        <span>Mobile Number <span class="required">*</span></span>
+                                    </div>
+                                    <input type="tel" class="form-input" asp-for="MobileNumber" required 
+                                           placeholder="+880 1XXX-XXXXXX" />
+                                </div>
+                                <div class="form-group">
+                                    <div class="form-label">
+                                        <span>bKash Merchant Number</span>
+                                    </div>
+                                    <input type="text" class="form-input" asp-for="BkashMerchantNumber" 
+                                           placeholder="01XXXXXXXXX" />
+                                    <div class="form-hint">
+                                        <i class="bi bi-wallet2"></i>
+                                        For receiving payments
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <h3><i class="bi bi-geo-alt"></i> Business Address</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <div class="form-label">
+                                    <span>Full Address <span class="required">*</span></span>
+                                </div>
+                                <textarea class="form-input" asp-for="BusinessAddress" rows="3" required
+                                          placeholder="House/Road, Area, Landmark..."></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <div class="form-label">
+                                        <span>City <span class="required">*</span></span>
+                                    </div>
+                                    <input type="text" class="form-input" asp-for="City" required placeholder="e.g. Dhaka" />
+                                </div>
+                                <div class="form-group">
+                                    <div class="form-label">
+                                        <span>District <span class="required">*</span></span>
+                                    </div>
+                                    <input type="text" class="form-input" asp-for="District" required placeholder="e.g. Dhaka" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Branding -->
+                <div class="tab-content" id="tab-branding">
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <h3><i class="bi bi-image"></i> Store Logo</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <div class="form-label">
+                                    <span>Logo Image URL</span>
+                                </div>
+                                <input type="url" class="form-input" asp-for="StoreLogo" id="logoInput"
+                                       placeholder="https://example.com/logo.png" />
+                                <div class="form-hint">
+                                    <i class="bi bi-aspect-ratio"></i>
+                                    Square image, 200×200 pixels recommended
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <h3><i class="bi bi-card-image"></i> Store Banner</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <div class="form-label">
+                                    <span>Banner Image URL</span>
+                                </div>
+                                <input type="url" class="form-input" asp-for="StoreBanner" id="bannerInput"
+                                       placeholder="https://example.com/banner.png" />
+                                <div class="form-hint">
+                                    <i class="bi bi-aspect-ratio"></i>
+                                    Wide image, 1200×300 pixels recommended
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Status & Stats -->
+                <div class="tab-content" id="tab-status">
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <h3><i class="bi bi-bar-chart"></i> Store Statistics</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="status-grid">
+                                <div class="status-card orange">
+                                    <i class="bi bi-star-fill"></i>
+                                    <h4>Rating</h4>
+                                    <p>@Model.Rating.ToString("0.0")</p>
+                                </div>
+                                <div class="status-card blue">
+                                    <i class="bi bi-box-seam"></i>
+                                    <h4>Products</h4>
+                                    <p>@Model.TotalProducts</p>
+                                </div>
+                                <div class="status-card green">
+                                    <i class="bi bi-calendar-check"></i>
+                                    <h4>Joined</h4>
+                                    <p>@Model.CreatedAt.ToString("MMM yyyy")</p>
+                                </div>
+                                <div class="status-card purple">
+                                    <i class="bi bi-truck"></i>
+                                    <h4>Orders</h4>
+                                    <p>@Model.TotalSales</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <h3><i class="bi bi-toggle-on"></i> Store Visibility</h3>
+                        </div>
+                        <div class="card-body" style="text-align: center;">
+                            <div class="store-status-badge @(Model.Status == Sparkle.Domain.Sellers.SellerStatus.Approved ? "active" : "inactive")" style="margin-bottom: 20px;">
+                                <span class="dot"></span>
+                                @(Model.Status == Sparkle.Domain.Sellers.SellerStatus.Approved ? "Store is LIVE" : "Store is PAUSED")
+                            </div>
+                            <p style="color: var(--slate-500); margin-bottom: 20px; font-size: 0.9rem;">
+                                @(Model.Status == Sparkle.Domain.Sellers.SellerStatus.Approved 
+                                    ? "Your products are visible to customers on Sparkle" 
+                                    : "Your products are hidden from customers")
+                            </p>
+                            <button type="button" id="toggleStoreStatus"
+                                    class="btn-secondary @(Model.Status == Sparkle.Domain.Sellers.SellerStatus.Approved ? "btn-danger" : "btn-success")">
+                                <i class="bi @(Model.Status == Sparkle.Domain.Sellers.SellerStatus.Approved ? "bi-pause-circle" : "bi-play-circle")"></i>
+                                @(Model.Status == Sparkle.Domain.Sellers.SellerStatus.Approved ? "Pause Store" : "Go Live")
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div style="margin-top: 32px;">
+                    <button type="submit" class="btn-primary">
+                        <i class="bi bi-check2-circle"></i> Save All Changes
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sidebar: Live Preview -->
+            <div>
+                <div class="settings-card" style="position: sticky; top: 24px;">
+                    <div class="card-header">
+                        <h3><i class="bi bi-eye"></i> Live Preview</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="preview-section">
+                            <img src="@(Model.StoreLogo ?? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(Model.ShopName ?? "S")}&size=100&background=f97316&color=fff&bold=true")" 
+                                 alt="Logo" class="preview-logo" id="previewLogo" />
+                            <div class="preview-name" id="previewName">@(Model.ShopName ?? "Your Store Name")</div>
+                            <div class="preview-location" id="previewLocation">
+                                <i class="bi bi-geo-alt"></i> @(Model.City ?? "City"), @(Model.District ?? "District")
+                            </div>
+                            <img src="@(Model.StoreBanner ?? "https://via.placeholder.com/400x80/f97316/ffffff?text=Banner")" 
+                                 alt="Banner" class="preview-banner" id="previewBanner" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Tab Switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+});
+
+// Character Counters
+document.querySelectorAll('[data-counter]').forEach(input => {
+    const counterId = input.dataset.counter;
+    const counter = document.getElementById(counterId);
+    const max = parseInt(input.getAttribute('maxlength')) || 100;
+    
+    const updateCount = () => {
+        const len = input.value.length;
+        counter.textContent = `${len}/${max}`;
+        counter.className = 'char-count';
+        if (len > max * 0.9) counter.classList.add('danger');
+        else if (len > max * 0.7) counter.classList.add('warning');
+    };
+    
+    input.addEventListener('input', updateCount);
+    updateCount();
+});
+
+// Live Preview Updates
+const shopNameInput = document.querySelector('[name="ShopName"]');
+const cityInput = document.querySelector('[name="City"]');
+const districtInput = document.querySelector('[name="District"]');
+const logoInput = document.getElementById('logoInput');
+const bannerInput = document.getElementById('bannerInput');
+
+shopNameInput?.addEventListener('input', e => {
+    document.getElementById('previewName').textContent = e.target.value || 'Your Store Name';
+});
+
+const updateLocation = () => {
+    const city = cityInput?.value || 'City';
+    const district = districtInput?.value || 'District';
+    document.getElementById('previewLocation').innerHTML = `<i class="bi bi-geo-alt"></i> ${city}, ${district}`;
+};
+cityInput?.addEventListener('input', updateLocation);
+districtInput?.addEventListener('input', updateLocation);
+
+logoInput?.addEventListener('input', e => {
+    const img = document.getElementById('previewLogo');
+    img.src = e.target.value || `https://ui-avatars.com/api/?name=${encodeURIComponent(shopNameInput?.value || 'S')}&size=100&background=f97316&color=fff`;
+});
+
+bannerInput?.addEventListener('input', e => {
+    const img = document.getElementById('previewBanner');
+    img.src = e.target.value || 'https://via.placeholder.com/400x80/f97316/ffffff?text=Banner';
+});
+
+// Toggle Store Status
+document.getElementById('toggleStoreStatus')?.addEventListener('click', async function() {
+    const isActive = @(Model.Status == Sparkle.Domain.Sellers.SellerStatus.Approved ? "true" : "false");
+    const msg = isActive 
+        ? 'Pause your store? Products will be hidden from customers.' 
+        : 'Go live? Your products will become visible to customers.';
+    
+    if (!confirm(msg)) return;
+    
+    const btn = this;
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite;"></i> Processing...';
+    
+    try {
+        const response = await fetch('/Seller/Dashboard/ToggleStoreStatus', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await response.json();
+        if (data.success) {
+            location.reload();
+        } else {
+            showToast(data.message || 'Error changing store status', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }
+    } catch (err) {
+        showToast('Network error. Please try again.', 'danger');
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+    }
+});
+</script>
+
+<style>
+@@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+</div>

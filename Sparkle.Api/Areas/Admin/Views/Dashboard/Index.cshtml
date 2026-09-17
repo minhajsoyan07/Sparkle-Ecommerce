@@ -1,0 +1,522 @@
+@using Sparkle.Api.Areas.Admin.Controllers
+@model Sparkle.Api.Areas.Admin.Controllers.DashboardStats
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<style>
+    /* Professional Dashboard Styles */
+    .metric-card {
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        background: white;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .metric-card-green { background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); }
+    .metric-card-blue { background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); }
+    .metric-card-orange { background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%); }
+    .metric-card-purple { background: linear-gradient(135deg, #faf5ff 0%, #ffffff 100%); }
+    
+    .metric-card:hover {
+        border-color: #d1d5db;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transform: translateY(-2px);
+    }
+    
+    .metric-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+    }
+    
+    .chart-card {
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        background: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.2;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+</style>
+
+<!-- Minimal Header -->
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-1" style="font-weight: 700; color: #111827; font-size: 24px;">Dashboard</h4>
+            <p class="text-muted mb-0" style="font-size: 13px; font-weight: 500;">Platform performance overview</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-light border" onclick="window.location.reload()" style="border-radius: 8px; font-weight: 600;">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-light border dropdown-toggle" type="button" data-bs-toggle="dropdown" style="border-radius: 8px; font-weight: 600;">
+                    <i class="bi bi-calendar3 me-1"></i>@DateTime.Now.ToString("dd MMM")
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#">Today</a></li>
+                    <li><a class="dropdown-item" href="#">This Week</a></li>
+                    <li><a class="dropdown-item" href="#">This Month</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="metric-card metric-card-green">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <p class="stat-label mb-2">Revenue</p>
+                        <h3 class="stat-value mb-0">৳@Model.TotalRevenue.ToString("N0")</h3>
+                    </div>
+                    <div class="metric-icon" style="background: #f0fdf4; color: #16a34a;">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                </div>
+                <p class="mb-0" style="font-size: 12px; font-weight: 500; color: #16a34a;">
+                    <i class="bi bi-arrow-up-short"></i>All active orders
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="metric-card metric-card-blue">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <p class="stat-label mb-2">Orders</p>
+                        <h3 class="stat-value mb-0">@Model.TotalOrders</h3>
+                    </div>
+                    <div class="metric-icon" style="background: #eff6ff; color: #2563eb;">
+                        <i class="bi bi-bag-check"></i>
+                    </div>
+                </div>
+                <p class="mb-0" style="font-size: 12px; font-weight: 500; color: #2563eb;">
+                    <i class="bi bi-plus"></i>@Model.TodayOrders today
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="metric-card metric-card-orange">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <p class="stat-label mb-2">Customers</p>
+                        <h3 class="stat-value mb-0">@Model.TotalUsers</h3>
+                    </div>
+                    <div class="metric-icon" style="background: #fef3c7; color: #d97706;">
+                        <i class="bi bi-people"></i>
+                    </div>
+                </div>
+                <p class="mb-0" style="font-size: 12px; font-weight: 500; color: #d97706;">
+                    <i class="bi bi-person-check"></i>Registered
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="metric-card metric-card-purple">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <p class="stat-label mb-2">Vendors</p>
+                        <h3 class="stat-value mb-0">@Model.TotalSellers</h3>
+                    </div>
+                    <div class="metric-icon" style="background: #f5f3ff; color: #7c3aed;">
+                        <i class="bi bi-shop"></i>
+                    </div>
+                </div>
+                <p class="mb-0" style="font-size: 12px; font-weight: 500; color: #7c3aed;">
+                    <i class="bi bi-check-circle"></i>Active sellers
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row g-3 mb-4">
+    <!-- Revenue Chart -->
+    <div class="col-xl-8">
+        <div class="chart-card">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="mb-0" style="font-weight: 700; font-size: 15px; color: #111827;">Revenue Trend</h6>
+                        <p class="text-muted mb-0" style="font-size: 12px; font-weight: 500;">Last 30 days</p>
+                    </div>
+                    <a href="/Admin/Reports" class="btn btn-sm btn-light border" style="border-radius: 8px; font-weight: 600; font-size: 13px;">
+                        View Reports
+                    </a>
+                </div>
+                <div style="height: 350px; position: relative;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions & Donut -->
+    <div class="col-xl-4">
+        <div class="chart-card h-100">
+            <div class="card-body p-4">
+                <h6 class="mb-3" style="font-weight: 700; font-size: 15px; color: #111827;">Quick Actions</h6>
+                <div class="d-grid gap-2 mb-3">
+                    <a href="/Admin/Products/Create" class="btn btn-sm btn-primary text-start" style="border-radius: 8px; font-weight: 600; padding: 8px 12px; font-size: 13px;">
+                        <i class="bi bi-plus-circle me-2"></i>New Product
+                    </a>
+                    <a href="/Admin/Orders" class="btn btn-sm btn-outline-secondary text-start" style="border-radius: 8px; font-weight: 600; padding: 8px 12px; font-size: 13px;">
+                        <i class="bi bi-box-seam me-2"></i>Orders
+                    </a>
+                    <a href="/Admin/Users" class="btn btn-sm btn-outline-secondary text-start" style="border-radius: 8px; font-weight: 600; padding: 8px 12px; font-size: 13px;">
+                        <i class="bi bi-people me-2"></i>Users
+                    </a>
+                </div>
+
+                <h6 class="mb-3" style="font-weight: 700; font-size: 15px; color: #111827;">Payment Methods</h6>
+                <div style="height: 170px; position: relative;">
+                    <canvas id="salesDonut"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Disputes Alert -->
+@if (Model.RecentDisputes.Any())
+{
+    <div class="alert alert-danger border-0 mb-4" style="border-radius: 12px; border-left: 4px solid #dc2626 !important; background: #fef2f2;">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-exclamation-triangle-fill fs-4" style="color: #dc2626;"></i>
+                <div>
+                    <h6 class="mb-0" style="font-weight: 700; color: #991b1b; font-size: 14px;">
+                        @Model.RecentDisputes.Count Pending Disputes
+                    </h6>
+                    <p class="mb-0" style="font-size: 12px; color: #7f1d1d; font-weight: 500;">Require immediate attention</p>
+                </div>
+            </div>
+            <a href="/Admin/Disputes" class="btn btn-sm btn-danger" style="border-radius: 8px; font-weight: 600;">
+                Review
+            </a>
+        </div>
+    </div>
+}
+
+<!-- Recent Orders -->
+<div class="chart-card">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h6 class="mb-0" style="font-weight: 700; font-size: 15px; color: #111827;">Recent Orders</h6>
+                <p class="text-muted mb-0" style="font-size: 12px; font-weight: 500;">Latest transactions</p>
+            </div>
+            <div class="d-flex gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light border dropdown-toggle" type="button" data-bs-toggle="dropdown" style="border-radius: 8px; font-weight: 600; font-size: 13px;">
+                        <i class="bi bi-funnel me-1"></i> Sort
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                        <li><a class="dropdown-item @(ViewBag.CurrentSort == "date" ? "active" : "")" href="?sortOrder=date">Latest</a></li>
+                        <li><a class="dropdown-item @(ViewBag.CurrentSort == "amount" ? "active" : "")" href="?sortOrder=amount">Higest Amount</a></li>
+                    </ul>
+                </div>
+                <a href="/Admin/Orders" class="btn btn-sm btn-light border" style="border-radius: 8px; font-weight: 600; font-size: 13px;">
+                    View All
+                </a>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table align-middle mb-0" style="font-size: 13px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #e5e7eb;">
+                        <th class="border-0 py-3 ps-3" style="font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; width: 50px;">No.</th>
+                        <th class="border-0 py-3" style="font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Order</th>
+                        <th class="border-0 py-3" style="font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Seller</th>
+                        <th class="border-0 py-3" style="font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Customer</th>
+                        <th class="border-0 py-3" style="font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Date & Time</th>
+                        <th class="border-0 py-3" style="font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Amount</th>
+                        <th class="border-0 py-3" style="font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Status</th>
+                        <th class="border-0 py-3" style="font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.RecentOrders.Any())
+                    {
+                        var index = 1;
+                        foreach (var order in Model.RecentOrders)
+                        {
+                            <tr style="border-bottom: 1px solid #f3f4f6;">
+                                <td class="py-3 ps-3 text-muted fw-bold">@(index++)</td>
+                                <td class="py-3">
+                                    <div class="d-flex flex-column">
+                                        <span class="mb-1 text-truncate" style="font-weight: 600; color: #111827; font-size: 13px; max-width: 200px;" title="@order.ProductName">@order.ProductName</span>
+                                        <span class="badge bg-light text-dark font-monospace" style="font-weight: 600; font-size: 10px; width: fit-content;">@order.OrderNumber</span>
+                                    </div>
+                                </td>
+                                <td class="py-3">
+                                    <span class="text-dark fw-medium">@order.SellerName</span>
+                                </td>
+                                <td class="py-3" style="font-weight: 600; color: #111827;">@order.CustomerName</td>
+                                <td class="py-3 text-muted">
+                                    <div class="fw-medium">@order.Date.ToString("MMM dd, yyyy • h:mm tt")</div>
+                                    <!-- Time merged above -->
+                                </td>
+                                <td class="py-3" style="font-weight: 700; color: #16a34a;">৳@order.Total.ToString("N0")</td>
+                                <td class="py-3">
+                                    @{
+                                        var badge = order.Status.ToLower() switch {
+                                            "delivered" => "success",
+                                            "pending" => "warning",
+                                            "cancelled" => "danger",
+                                            "processing" => "info",
+                                            _ => "secondary"
+                                        };
+                                    }
+                                    <span class="badge bg-@badge" style="font-weight: 600; font-size: 10px; padding: 4px 10px; border-radius: 6px;">
+                                        @order.Status.ToUpper()
+                                    </span>
+                                </td>
+                                <td class="py-3">
+                                    <a href="/Admin/Orders/Details/@order.OrderId" class="btn btn-sm btn-light border" style="border-radius: 6px; padding: 4px 10px;">
+                                        <i class="bi bi-eye" style="font-size: 12px;"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else 
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                No recent orders found.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Get chart data from backend
+    let revenueData = @Json.Serialize(Model.RevenueChart.Select(x => x.Revenue).Take(30));
+    let revenueDates = @Json.Serialize(Model.RevenueChart.Select(x => x.FullDate).Take(30));
+    
+    // Create date labels from real data
+    const dateLabels = revenueDates.map(dateStr => {
+        const d = new Date(dateStr);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return months[d.getMonth()] + ' ' + d.getDate();
+    });
+
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart');
+    if (revenueCtx && revenueData && revenueData.length > 0) {
+        const hasAnyRevenue = revenueData.some(v => v > 0);
+        
+        if (hasAnyRevenue) {
+            new Chart(revenueCtx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: dateLabels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: revenueData,
+                        borderColor: '#f97316',
+                        backgroundColor: (context) => {
+                            const ctx = context.chart.ctx;
+                            const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+                            gradient.addColorStop(0, 'rgba(249, 115, 22, 0.2)');
+                            gradient.addColorStop(1, 'rgba(249, 115, 22, 0)');
+                            return gradient;
+                        },
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: '#f97316',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            enabled: true,
+                            backgroundColor: '#1e293b',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            padding: 14,
+                            borderColor: '#f97316',
+                            borderWidth: 2,
+                            displayColors: false,
+                            titleFont: { size: 13, weight: '600' },
+                            bodyFont: { size: 16, weight: '700' },
+                            callbacks: {
+                                title: function(context) {
+                                    const index = context[0].dataIndex;
+                                    const d = new Date(revenueDates[index]);
+                                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                    return months[d.getMonth()] + ' ' + d.getDate();
+                                },
+                                label: function(context) {
+                                    return '৳' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            grid: { display: false },
+                            ticks: { 
+                                display: true,
+                                color: '#374151',
+                                font: { size: 11, weight: '600' },
+                                padding: 8,
+                                maxRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 10
+                            },
+                            border: {
+                                display: true,
+                                color: '#e5e7eb',
+                                width: 1
+                            }
+                        },
+                        y: {
+                            display: true,
+                            beginAtZero: true,
+                            grid: { 
+                                display: true,
+                                color: '#f1f5f9',
+                                drawBorder: false
+                            },
+                            ticks: { 
+                                display: true,
+                                color: '#64748b',
+                                font: { size: 11, weight: '600' },
+                                padding: 10,
+                                callback: function(value) {
+                                    if (value >= 1000000) return '৳' + (value / 1000000).toFixed(1) + 'M';
+                                    if (value >= 1000) return '৳' + (value / 1000).toFixed(0) + 'k';
+                                    return '৳' + value;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        } else {
+            // All days have 0 revenue
+            const container = revenueCtx.parentElement;
+            container.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100"><div class="text-center text-muted"><i class="bi bi-graph-up fs-1 d-block mb-2 opacity-25"></i><p class="mb-1 fw-semibold" style="font-size:14px;">No revenue data yet</p><p class="mb-0" style="font-size:12px;">Revenue will appear here once orders are placed</p></div></div>';
+        }
+    } else {
+        // No data at all
+        const container = revenueCtx.parentElement;
+        container.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100"><div class="text-center text-muted"><i class="bi bi-graph-up fs-1 d-block mb-2 opacity-25"></i><p class="mb-0">No revenue data available</p></div></div>';
+    }
+
+    // Payment Methods Donut Chart
+    const donutCtx = document.getElementById('salesDonut');
+    if (donutCtx) {
+        const offlineData = @Json.Serialize(Model.SalesChart.Select(x => x.Offline));
+        const onlineData = @Json.Serialize(Model.SalesChart.Select(x => x.Online));
+        
+        const totalOffline = offlineData.reduce((a, b) => a + b, 0);
+        const totalOnline = onlineData.reduce((a, b) => a + b, 0);
+
+        if (totalOffline > 0 || totalOnline > 0) {
+            new Chart(donutCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Cash on Delivery', 'Online Payment'],
+                    datasets: [{
+                        data: [totalOffline, totalOnline],
+                        backgroundColor: ['#f97316', '#3b82f6'],
+                        hoverBackgroundColor: ['#ea580c', '#2563eb'],
+                        borderWidth: 3,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 12,
+                                font: { size: 11, weight: '600' },
+                                color: '#374151',
+                                usePointStyle: true,
+                                pointStyleWidth: 10
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#111827',
+                            padding: 12,
+                            titleFont: { size: 12, weight: '600' },
+                            bodyFont: { size: 13, weight: '700' },
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return context.label + ': ৳' + context.parsed.toLocaleString() + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        } else {
+            const container = donutCtx.parentElement;
+            container.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100"><div class="text-center text-muted"><i class="bi bi-pie-chart fs-1 d-block mb-2 opacity-25"></i><p class="mb-1 fw-semibold" style="font-size:13px;">No payment data yet</p><p class="mb-0" style="font-size:11px;">Data appears after orders are placed</p></div></div>';
+        }
+    }
+</script>
+}

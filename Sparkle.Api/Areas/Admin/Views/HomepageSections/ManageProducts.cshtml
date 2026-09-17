@@ -1,0 +1,241 @@
+@model Sparkle.Domain.Content.HomepageSection
+@{
+    ViewData["Title"] = "Manage Products - " + Model.Name;
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var availableProducts = ViewBag.AvailableProducts as List<Sparkle.Domain.Catalog.Product> ?? new List<Sparkle.Domain.Catalog.Product>();
+}
+
+<style>
+    .product-card {
+        cursor: grab;
+        transition: all 0.2s;
+    }
+    .product-card:active {
+        cursor: grabbing;
+    }
+    .product-card.dragging {
+        opacity: 0.5;
+    }
+    .dropzone {
+        min-height: 100px;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 16px;
+    }
+    .dropzone.drag-over {
+        border-color: #0d6efd;
+        background-color: #f8f9fa;
+    }
+</style>
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title">Manage Products</h2>
+        <p class="text-muted">@Model.Name (@Model.SectionType)</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i> Back to Sections
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Current Products -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">Selected Products (@Model.ManualProducts.Count/@Model.MaxProductsToDisplay)</h5>
+            </div>
+            <div class="card-body">
+                <div id="selectedProducts" class="dropzone">
+                    @if (Model.ManualProducts.Any())
+                    {
+                        @foreach (var sp in Model.ManualProducts.OrderBy(x => x.DisplayOrder))
+                        {
+                            <div class="product-card card mb-2" draggable="true" data-product-id="@sp.ProductId" data-sp-id="@sp.Id">
+                                <div class="card-body py-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-grip-vertical text-muted me-2"></i>
+                                        @if (sp.Product.Images?.Any() == true)
+                                        {
+                                            <img src="@sp.Product.Images.First().Url" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;" />
+                                        }
+                                        <div class="flex-grow-1">
+                                            <strong>@sp.Product.Title</strong>
+                                            <div class="small text-muted">৳@sp.Product.BasePrice.ToString("N0")</div>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(sp.BadgeText))
+                                        {
+                                            <span class="badge bg-info me-2">@sp.BadgeText</span>
+                                        }
+                                        <button class="btn btn-sm btn-outline-danger" onclick="removeProduct(@sp.Id)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p class="mt-2">No products added yet. Add products from the right panel.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Products -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0">Available Products</h6>
+            </div>
+            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                <input type="text" id="searchProducts" class="form-control mb-3" placeholder="Search products..." />
+                <div id="availableProductsList">
+                    @foreach (var product in availableProducts)
+                    {
+                        <div class="card mb-2 available-product" data-title="@product.Title.ToLower()">
+                            <div class="card-body py-2">
+                                <div class="d-flex align-items-center">
+                                    @if (product.Images?.Any() == true)
+                                    {
+                                        <img src="@product.Images.First().Url" class="rounded me-2" style="width: 30px; height: 30px; object-fit: cover;" />
+                                    }
+                                    <div class="flex-grow-1 small">
+                                        <div class="fw-bold text-truncate" style="max-width: 150px;">@product.Title</div>
+                                        <div class="text-muted">৳@product.BasePrice.ToString("N0")</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-primary" onclick="addProduct(@product.Id)">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const sectionId = @Model.Id;
+
+    // Drag and Drop
+    const selectedProducts = document.getElementById('selectedProducts');
+    let draggedElement = null;
+
+    document.addEventListener('dragstart', (e) => {
+        if (e.target.classList.contains('product-card')) {
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+        }
+    });
+
+    document.addEventListener('dragend', (e) => {
+        if (e.target.classList.contains('product-card')) {
+            e.target.classList.remove('dragging');
+            updateProductOrder();
+        }
+    });
+
+    selectedProducts.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(selectedProducts, e.clientY);
+        if (afterElement == null) {
+            selectedProducts.appendChild(draggedElement);
+        } else {
+            selectedProducts.insertBefore(draggedElement, afterElement);
+        }
+    });
+
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.product-card:not(.dragging)')];
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // Add Product
+    async function addProduct(productId) {
+        try {
+            const formData = new FormData();
+            formData.append('sectionId', sectionId);
+            formData.append('productId', productId);
+            
+            const response = await fetch('/Admin/HomepageSections/AddProduct', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            if (data.success) {
+                showToast('Product added successfully', 'success');
+                setTimeout(() => location.reload(), 500);
+            } else {
+                showToast(data.message || 'Error adding product', 'error');
+            }
+        } catch (error) {
+            showToast('Error adding product', 'error');
+        }
+    }
+
+    // Remove Product
+    async function removeProduct(id) {
+        if (!confirm('Remove this product?')) return;
+        try {
+            const response = await fetch(`/Admin/HomepageSections/RemoveProduct?id=${id}`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            if (data.success) {
+                showToast('Product removed', 'success');
+                setTimeout(() => location.reload(), 500);
+            }
+        } catch (error) {
+            showToast('Error removing product', 'error');
+        }
+    }
+
+    // Update Order
+    async function updateProductOrder() {
+        const productIds = [...document.querySelectorAll('#selectedProducts .product-card')]
+            .map(card => parseInt(card.dataset.productId));
+        
+        const formData = new FormData();
+        formData.append('sectionId', sectionId);
+        productIds.forEach(id => formData.append('productIds', id));
+
+        try {
+            await fetch('/Admin/HomepageSections/ReorderProducts', {
+                method: 'POST',
+                body: formData
+            });
+            showToast('Order updated', 'success');
+        } catch (error) {
+            console.error('Error updating order:', error);
+        }
+    }
+
+    // Search
+    document.getElementById('searchProducts').addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.available-product').forEach(card => {
+            const title = card.dataset.title;
+            card.style.display = title.includes(term) ? '' : 'none';
+        });
+    });
+</script>
+}

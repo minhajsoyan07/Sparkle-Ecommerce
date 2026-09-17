@@ -1,0 +1,75 @@
+@model List<Sparkle.Domain.System.SupportTicket>
+@using Sparkle.Domain.System
+@{
+    ViewData["Title"] = "Support Tickets";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var currentStatus = ViewBag.CurrentStatus as string;
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title">Support Tickets</h2>
+        <p class="text-muted">Manage user support requests</p>
+    </div>
+</div>
+
+<div class="content-card">
+    <div class="mb-4">
+        <ul class="nav nav-pills">
+            <li class="nav-item">
+                <a class="nav-link @(string.IsNullOrEmpty(currentStatus) ? "active" : "")" asp-action="Index">All</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(currentStatus == "Open" ? "active" : "")" asp-action="Index" asp-route-status="Open">Open</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(currentStatus == "InProgress" ? "active" : "")" asp-action="Index" asp-route-status="InProgress">In Progress</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(currentStatus == "Resolved" ? "active" : "")" asp-action="Index" asp-route-status="Resolved">Resolved</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Subject</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var ticket in Model)
+                {
+                    <tr>
+                        <td>#@ticket.TicketNumber</td>
+                        <td>
+                             <!-- We might need UserNav property or similar, defaulting to ID for now -->
+                             <span class="font-monospace">@(ticket.User?.FullName ?? ticket.UserId.Substring(0, Math.Min(8, ticket.UserId.Length)))...</span>
+                        </td>
+                        <td>
+                            <div class="fw-bold">@ticket.Subject</div>
+                            <small class="text-muted text-truncate" style="max-width: 200px; display:inline-block;">@ticket.Description</small>
+                        </td>
+                        <td><span class="badge bg-light text-dark border">@ticket.Status</span></td>
+                        <td>
+                            <span class="badge bg-@(ticket.Priority == "Urgent" ? "danger" : ticket.Priority == "High" ? "warning" : "info")">
+                                @ticket.Priority
+                            </span>
+                        </td>
+                        <td>@ticket.CreatedAt.ToString("MMM dd hh:mm tt")</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@ticket.Id" class="btn btn-sm btn-light border">View</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,215 @@
+@model Sparkle.Domain.Orders.Order
+@{
+    ViewData["Title"] = $"Payment Details — {Model.OrderNumber}";
+    var statusColor = Model.Status switch
+    {
+        Sparkle.Domain.Orders.OrderStatus.Delivered  => "success",
+        Sparkle.Domain.Orders.OrderStatus.Shipped    => "info",
+        Sparkle.Domain.Orders.OrderStatus.Cancelled  => "danger",
+        Sparkle.Domain.Orders.OrderStatus.Refunded   => "warning",
+        _                                            => "secondary"
+    };
+    var payStatusColor = Model.PaymentStatus switch
+    {
+        Sparkle.Domain.Orders.PaymentStatus.Paid              => "success",
+        Sparkle.Domain.Orders.PaymentStatus.Failed            => "danger",
+        Sparkle.Domain.Orders.PaymentStatus.Refunded          => "warning",
+        Sparkle.Domain.Orders.PaymentStatus.PartiallyRefunded => "info",
+        _                                                     => "secondary"
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Payment Details</h4>
+        <p class="text-muted mb-0">Order #@Model.OrderNumber</p>
+    </div>
+    <a href="/Admin/Payments" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="row g-4">
+
+    @* Left column *@
+    <div class="col-lg-8">
+
+        @* Order Items *@
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">Order Items</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Product</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Commission</th>
+                                <th class="text-end pe-4">Seller Earning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.OrderItems)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-medium">@item.ProductName</div>
+                                        @if (!string.IsNullOrEmpty(item.VariantName))
+                                        {
+                                            <small class="text-muted">@item.VariantName</small>
+                                        }
+                                    </td>
+                                    <td class="text-center">@item.Quantity</td>
+                                    <td class="text-end">৳@item.UnitPrice.ToString("N0")</td>
+                                    <td class="text-end fw-medium">৳@item.TotalPrice.ToString("N0")</td>
+                                    <td class="text-end text-danger">
+                                        ৳@item.PlatformCommissionAmount.ToString("N0")
+                                        <small class="text-muted d-block">(@item.PlatformCommissionRate.ToString("0.#")%)</small>
+                                    </td>
+                                    <td class="text-end text-success pe-4 fw-medium">৳@item.SellerEarning.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        @* Amount Breakdown *@
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">Amount Breakdown</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Subtotal</span>
+                    <span>৳@Model.SubTotal.ToString("N0")</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Shipping</span>
+                    <span>৳@Model.ShippingCost.ToString("N0")</span>
+                </div>
+                @if (Model.DiscountAmount > 0)
+                {
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Discount</span>
+                        <span class="text-danger">-৳@Model.DiscountAmount.ToString("N0")</span>
+                    </div>
+                }
+                @if (Model.CouponDiscount > 0)
+                {
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Coupon (@Model.CouponCode)</span>
+                        <span class="text-danger">-৳@Model.CouponDiscount.ToString("N0")</span>
+                    </div>
+                }
+                @if (Model.TaxAmount > 0)
+                {
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Tax</span>
+                        <span>৳@Model.TaxAmount.ToString("N0")</span>
+                    </div>
+                }
+                <hr class="my-2">
+                <div class="d-flex justify-content-between fw-bold">
+                    <span>Total</span>
+                    <span class="text-success fs-5">৳@Model.TotalAmount.ToString("N0")</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    @* Right column *@
+    <div class="col-lg-4">
+
+        @* Order Info *@
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">Order Info</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted d-block">Order Status</small>
+                    <span class="badge bg-@statusColor">@Model.Status</span>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted d-block">Payment Status</small>
+                    <span class="badge bg-@payStatusColor">@Model.PaymentStatus</span>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted d-block">Payment Method</small>
+                    <span class="fw-medium">@Model.PaymentMethod</span>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.PaymentTransactionId))
+                {
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Transaction ID</small>
+                        <code class="text-dark">@Model.PaymentTransactionId</code>
+                    </div>
+                }
+                <div class="mb-3">
+                    <small class="text-muted d-block">Order Date</small>
+                    <span>@Model.OrderDate.ToString("MMM dd, yyyy — hh:mm tt")</span>
+                </div>
+                @if (Model.PaidAt.HasValue)
+                {
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Paid At</small>
+                        <span>@Model.PaidAt.Value.ToString("MMM dd, yyyy — hh:mm tt")</span>
+                    </div>
+                }
+                @if (Model.DeliveredAt.HasValue)
+                {
+                    <div>
+                        <small class="text-muted d-block">Delivered At</small>
+                        <span>@Model.DeliveredAt.Value.ToString("MMM dd, yyyy")</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* Customer *@
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">Customer</h6>
+            </div>
+            <div class="card-body">
+                <div class="fw-medium">@(Model.User?.FullName ?? "Guest")</div>
+                <div class="text-muted small">@(Model.User?.Email ?? "—")</div>
+                @if (!string.IsNullOrEmpty(Model.User?.PhoneNumber))
+                {
+                    <div class="text-muted small">@Model.User.PhoneNumber</div>
+                }
+            </div>
+        </div>
+
+        @* Shipping Address *@
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">Shipping Address</h6>
+            </div>
+            <div class="card-body">
+                <div class="fw-medium">@Model.ShippingFullName</div>
+                <div class="text-muted small">@Model.ShippingPhone</div>
+                <div class="text-muted small mt-1">
+                    @Model.ShippingAddressLine1
+                    @if (!string.IsNullOrEmpty(Model.ShippingAddressLine2))
+                    {
+                        <span>, @Model.ShippingAddressLine2</span>
+                    }
+                </div>
+                <div class="text-muted small">
+                    @Model.ShippingArea, @Model.ShippingCity, @Model.ShippingDistrict
+                </div>
+                <div class="text-muted small">@Model.ShippingDivision — @Model.ShippingPostalCode</div>
+                <div class="text-muted small">@Model.ShippingCountry</div>
+            </div>
+        </div>
+
+    </div>
+</div>

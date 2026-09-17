@@ -1,0 +1,727 @@
+@{
+    ViewData["Title"] = "Product Ratings & Feedback";
+    Layout = "~/Areas/Seller/Views/Shared/_SellerLayout.cshtml";
+    var activeTab = ViewBag.ActiveTab as string ?? "reviews";
+    var currentFilter = ViewBag.CurrentFilter as string;
+    var currentSort = ViewBag.CurrentSort as string ?? "latest";
+    var currentProductId = ViewBag.CurrentProductId as int?;
+    var reviews = ViewBag.Reviews as List<Sparkle.Domain.Reviews.ProductReview> ?? new List<Sparkle.Domain.Reviews.ProductReview>();
+    var sellerProducts = ViewBag.SellerProducts as dynamic ?? new List<dynamic>();
+}
+
+<style>
+    /* Premium Header - Orange Theme */
+    .feedback-header {
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        color: white;
+        padding: 1.75rem 2rem;
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 20px -2px rgba(249, 115, 22, 0.25);
+    }
+    .feedback-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .stat-card {
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(8px);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.25);
+        transition: transform 0.2s;
+        min-width: 100px;
+    }
+    .stat-card:hover { transform: translateY(-2px); background: rgba(255,255,255,0.2); }
+    .stat-value { font-size: 1.75rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .stat-label { font-size: 0.8rem; opacity: 0.95; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+    
+    /* Filter Bar */
+    .filter-bar {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+        border: 1px solid #f1f5f9;
+    }
+    .filter-section { display: flex; align-items: center; gap: 0.5rem; }
+    .filter-section label { font-size: 0.85rem; font-weight: 600; color: #64748b; white-space: nowrap; }
+    .filter-select {
+        padding: 0.4rem 2rem 0.4rem 0.75rem;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #334155;
+    }
+    .filter-select:focus { border-color: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); outline: none; }
+    .filter-select:hover { border-color: #cbd5e1; }
+    
+    /* Quick Filter Pills */
+    .filter-pills {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .filter-pill {
+        padding: 0.4rem 0.85rem;
+        border-radius: 20px;
+        border: 1.5px solid #e2e8f0;
+        background: white;
+        color: #64748b;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .filter-pill:hover { border-color: #f97316; color: #f97316; background: #fff7ed; }
+    .filter-pill.active { background: #f97316; border-color: #f97316; color: white; box-shadow: 0 2px 6px rgba(249, 115, 22, 0.25); }
+    .filter-pill .count { 
+        background: rgba(0,0,0,0.06); 
+        padding: 0.1rem 0.4rem; 
+        border-radius: 10px; 
+        font-size: 0.75rem;
+        color: #475569;
+    }
+    .filter-pill:hover .count { background: rgba(249, 115, 22, 0.1); color: #c2410c; }
+    .filter-pill.active .count { background: rgba(255,255,255,0.25); color: white; }
+    
+    /* Review Cards */
+    .review-card {
+        background: white;
+        border-radius: 14px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        margin-bottom: 1rem;
+        overflow: hidden;
+        transition: all 0.25s ease;
+        border: 1px solid #f1f5f9;
+        position: relative;
+    }
+    .review-card:hover { 
+        transform: translateY(-3px); 
+        box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
+        border-color: #fed7aa;
+    }
+    .review-card.pinned { border-left: 4px solid #f59e0b; background: #fffbf0; }
+    
+    .review-card.pinned .review-header { border-bottom-color: #fef3c7; }
+
+    .review-header {
+        padding: 1rem 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 1px solid #f8fafc;
+    }
+    .reviewer-info { display: flex; align-items: center; gap: 0.75rem; }
+    .reviewer-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f97316, #ea580c);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        box-shadow: 0 2px 5px rgba(249, 115, 22, 0.2);
+    }
+    .reviewer-name { font-weight: 600; color: #1e293b; margin-bottom: 0.15rem; }
+    .review-meta { font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 0.5rem; }
+    
+    .star-rating { display: flex; gap: 0.15rem; }
+    .star { color: #f59e0b; font-size: 1rem; filter: drop-shadow(0 1px 1px rgba(245, 158, 11, 0.2)); }
+    .star.empty { color: #e2e8f0; filter: none; }
+    
+    .review-body { padding: 1.25rem; }
+    .product-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: #f8fafc;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s;
+    }
+    .product-info:hover { background: #fff7ed; border-color: #fed7aa; }
+    .product-info img {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+    .product-name { font-size: 0.9rem; color: #334155; font-weight: 600; }
+    .product-id { font-size: 0.75rem; color: #94a3b8; }
+    
+    .review-text { color: #334155; font-size: 0.95rem; line-height: 1.6; }
+    
+    .review-images {
+        display: flex;
+        gap: 0.6rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+    .review-images img {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        object-fit: cover;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+    .review-images img:hover { transform: scale(1.05); border-color: #f97316; }
+    
+    /* Seller Response */
+    .seller-response {
+        background: #f0fdf4;
+        border-left: 4px solid #10b981;
+        padding: 1rem;
+        margin-top: 1.25rem;
+        border-radius: 0 8px 8px 0;
+    }
+    .seller-response-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #10b981;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .seller-response-text { font-size: 0.9rem; color: #334155; }
+    
+    /* Admin Note Badge */
+    .admin-note-badge {
+        background: #fffbeb;
+        color: #b45309;
+        padding: 0.6rem 0.85rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid #fcd34d;
+    }
+    
+    /* Card Footer */
+    .review-footer {
+        padding: 0.85rem 1.25rem;
+        background: #f8fafc;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #f1f5f9;
+    }
+    .review-badges { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .badge-verified {
+        background: #dcfce7;
+        color: #166534;
+        padding: 0.25rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .badge-pinned {
+        background: #fef3c7;
+        color: #b45309;
+        padding: 0.25rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .review-actions { display: flex; gap: 0.5rem; }
+    .action-btn {
+        padding: 0.45rem 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .action-btn-primary {
+        background: linear-gradient(135deg, #f97316, #ea580c);
+        color: white;
+        box-shadow: 0 2px 5px rgba(234, 88, 12, 0.25);
+    }
+    .action-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(234, 88, 12, 0.35); }
+    .action-btn-secondary {
+        background: white;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
+    .action-btn-secondary:hover { background: #f8fafc; border-color: #cbd5e1; color: #334155; }
+    .action-btn-pin { 
+        background: #fffbeb; 
+        color: #b45309; 
+        border: 1px solid #fcd34d;
+    }
+    .action-btn-pin:hover { background: #fef3c7; }
+    .action-btn-pin.active { background: #f59e0b; color: white; border-color: #f59e0b; }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: #64748b;
+    }
+    .empty-state i { font-size: 4rem; color: #cbd5e1; margin-bottom: 1.5rem; display: block; }
+    .empty-state h5 { font-weight: 700; color: #1e293b; margin-bottom: 0.5rem; }
+    
+    /* Pagination */
+    .pagination-wrap {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+    .page-btn {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: white;
+        color: #64748b;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    .page-btn:hover { background: #f8fafc; color: #f97316; border-color: #f97316; }
+    .page-btn.active { background: #f97316; border-color: #f97316; color: white; box-shadow: 0 2px 5px rgba(249, 115, 22, 0.3); }
+
+    /* Light box for images */
+    .lightbox-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.9);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+    }
+    .lightbox-overlay.active { display: flex; animation: fadeIn 0.2s; }
+    .lightbox-overlay img {
+        max-width: 90%;
+        max-height: 90%;
+        border-radius: 12px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    }
+    .lightbox-close {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        color: white;
+        font-size: 2.5rem;
+        cursor: pointer;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+    .lightbox-close:hover { opacity: 1; }
+    
+    @@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+
+<!-- Header with Statistics -->
+<div class="feedback-header">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <h4 class="mb-1 fw-bold"><i class="bi bi-star-fill me-2"></i>Product Ratings & Feedback</h4>
+            <p class="mb-0 opacity-75">Manage customer reviews and build trust</p>
+        </div>
+        <div class="d-flex gap-3 flex-wrap">
+            <div class="stat-card">
+                <div class="stat-value">@ViewBag.TotalReviews</div>
+                <div class="stat-label">Total Reviews</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">@(((double)ViewBag.AverageRating).ToString("F1"))</div>
+                <div class="stat-label">Avg Rating</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">@ViewBag.PendingResponses</div>
+                <div class="stat-label">Need Response</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">@ViewBag.PinnedReviews</div>
+                <div class="stat-label">Pinned</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <div class="filter-section">
+        <label><i class="bi bi-box me-1"></i>Product:</label>
+        <select class="filter-select" id="productFilter" onchange="applyFilters()">
+            <option value="">All Products</option>
+            @foreach (var product in sellerProducts)
+            {
+                if (currentProductId.HasValue && currentProductId == product.Id)
+                {
+                    <option value="@product.Id" selected>@product.Title</option>
+                }
+                else
+                {
+                    <option value="@product.Id">@product.Title</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="filter-section">
+        <label><i class="bi bi-sort-down me-1"></i>Sort:</label>
+        <select class="filter-select" id="sortFilter" onchange="applyFilters()">
+            @if (currentSort == "latest") { <option value="latest" selected>Latest First</option> } else { <option value="latest">Latest First</option> }
+            @if (currentSort == "highest") { <option value="highest" selected>Highest Rating</option> } else { <option value="highest">Highest Rating</option> }
+            @if (currentSort == "lowest") { <option value="lowest" selected>Lowest Rating</option> } else { <option value="lowest">Lowest Rating</option> }
+            @if (currentSort == "helpful") { <option value="helpful" selected>Most Helpful</option> } else { <option value="helpful">Most Helpful</option> }
+            @if (currentSort == "edited") { <option value="edited" selected>Most Edited</option> } else { <option value="edited">Most Edited</option> }
+        </select>
+    </div>
+    <div class="filter-pills ms-auto">
+        <a href="@Url.Action("Index", new { tab = "reviews" })" class="filter-pill @(string.IsNullOrEmpty(currentFilter) ? "active" : "")">
+            <i class="bi bi-list-ul"></i> All
+        </a>
+        <a href="@Url.Action("Index", new { tab = "reviews", filter = "pending" })" class="filter-pill @(currentFilter == "pending" ? "active" : "")">
+            <i class="bi bi-clock"></i> Pending <span class="count">@ViewBag.PendingResponses</span>
+        </a>
+        <a href="@Url.Action("Index", new { tab = "reviews", filter = "positive" })" class="filter-pill @(currentFilter == "positive" ? "active" : "")">
+            <i class="bi bi-emoji-smile"></i> Positive <span class="count">@ViewBag.PositiveReviews</span>
+        </a>
+        <a href="@Url.Action("Index", new { tab = "reviews", filter = "negative" })" class="filter-pill @(currentFilter == "negative" ? "active" : "")">
+            <i class="bi bi-emoji-frown"></i> Negative <span class="count">@ViewBag.NegativeReviews</span>
+        </a>
+        <a href="@Url.Action("Index", new { tab = "reviews", filter = "pinned" })" class="filter-pill @(currentFilter == "pinned" ? "active" : "")">
+            <i class="bi bi-pin-angle"></i> Pinned
+        </a>
+    </div>
+</div>
+
+<!-- Reviews List -->
+@if (reviews.Any())
+{
+    foreach (var review in reviews)
+    {
+        <div class="review-card @(review.IsPinned ? "pinned" : "")" data-review-id="@review.Id">
+            <div class="review-header">
+                <div class="reviewer-info">
+                    <div class="reviewer-avatar">
+                        @(review.User?.FullName?.Substring(0, 1).ToUpper() ?? "C")
+                    </div>
+                    <div>
+                        <div class="reviewer-name">@(review.User?.FullName ?? "Customer")</div>
+                        <div class="review-meta">
+                            <span>@review.ReviewDate.ToString("MMM d, yyyy")</span>
+                            @if (review.EditCount > 0)
+                            {
+                                <span class="text-warning"><i class="bi bi-pencil"></i> Edited @review.EditCount times</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="star-rating">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <i class="bi bi-star-fill star @(i <= review.Rating ? "" : "empty")"></i>
+                        }
+                    </div>
+                    @if (review.IsPinned)
+                    {
+                        <span class="badge-pinned"><i class="bi bi-pin-fill"></i> Pinned</span>
+                    }
+                </div>
+            </div>
+            
+            <div class="review-body">
+                @if (review.Product != null)
+                {
+                    <div class="product-info">
+                        @if (review.Product.Images?.Any() == true)
+                        {
+                            <img src="@review.Product.Images.First().Url" alt="@review.Product.Title" />
+                        }
+                        else
+                        {
+                            <div style="width:48px;height:48px;background:#e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-box text-muted"></i>
+                            </div>
+                        }
+                        <div>
+                            <div class="product-name">@review.Product.Title</div>
+                            <div class="product-id">Product ID: #@review.ProductId</div>
+                        </div>
+                    </div>
+                }
+                
+                @if (!string.IsNullOrEmpty(review.Title))
+                {
+                    <strong class="d-block mb-2">@review.Title</strong>
+                }
+                
+                <div class="review-text">@review.Comment</div>
+                
+                @if (review.Images?.Any() == true)
+                {
+                    <div class="review-images">
+                        @foreach (var img in review.Images)
+                        {
+                            <img src="@img.ImageUrl" alt="Review image" onclick="openLightbox('@img.ImageUrl')" />
+                        }
+                    </div>
+                }
+                
+                @if (!string.IsNullOrEmpty(review.SellerResponse))
+                {
+                    <div class="seller-response">
+                        <div class="seller-response-label">
+                            <i class="bi bi-shop"></i> Your Response
+                            <span class="ms-2" style="font-weight:400;text-transform:none;">(@review.SellerResponseDate?.ToString("MMM d, yyyy"))</span>
+                        </div>
+                        <div class="seller-response-text">@review.SellerResponse</div>
+                    </div>
+                }
+                
+                @if (!string.IsNullOrEmpty(review.AdminNote) && review.IsAdminNoteVisible)
+                {
+                    <div class="admin-note-badge">
+                        <i class="bi bi-shield-check"></i>
+                        <strong>Admin Note:</strong> @review.AdminNote
+                    </div>
+                }
+                
+                @if (review.IsLocked)
+                {
+                    <div class="admin-note-badge" style="background:#fee2e2;color:#b91c1c;">
+                        <i class="bi bi-lock-fill"></i>
+                        This review is locked by admin
+                    </div>
+                }
+            </div>
+            
+            <div class="review-footer">
+                <div class="review-badges">
+                    @if (review.IsVerifiedPurchase)
+                    {
+                        <span class="badge-verified"><i class="bi bi-patch-check-fill"></i> Verified</span>
+                    }
+                    @if (review.HelpfulCount > 0)
+                    {
+                        <span class="text-muted" style="font-size:0.8rem;">
+                            <i class="bi bi-hand-thumbs-up"></i> @review.HelpfulCount helpful
+                        </span>
+                    }
+                </div>
+                
+                <div class="review-actions">
+                    <button class="action-btn action-btn-pin @(review.IsPinned ? "active" : "")" 
+                            onclick="togglePin(@review.Id)" title="@(review.IsPinned ? "Unpin" : "Pin") this review">
+                        <i class="bi bi-pin-angle@(review.IsPinned ? "-fill" : "")"></i>
+                    </button>
+                    @if (!review.IsLocked)
+                    {
+                        @if (string.IsNullOrEmpty(review.SellerResponse))
+                        {
+                            <button class="action-btn action-btn-primary" onclick="showResponseModal(@review.Id)">
+                                <i class="bi bi-reply"></i> Respond
+                            </button>
+                        }
+                        else
+                        {
+                            <a href="@Url.Action("Details", new { id = review.Id })" class="action-btn action-btn-secondary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                        }
+                    }
+                    <button class="action-btn action-btn-secondary" onclick="showReportModal(@review.Id)" title="Report to Admin">
+                        <i class="bi bi-flag"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+    
+    <!-- Pagination -->
+    @if ((int)ViewBag.TotalPages > 1)
+    {
+        <div class="pagination-wrap">
+            @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+            {
+                <a href="@Url.Action("Index", new { tab = "reviews", filter = currentFilter, sort = currentSort, productId = currentProductId, page = i })" 
+                   class="page-btn @(i == (int)ViewBag.CurrentPage ? "active" : "")">@i</a>
+            }
+        </div>
+    }
+}
+else
+{
+    <div class="empty-state">
+        <i class="bi bi-star"></i>
+        <h5>No Reviews Yet</h5>
+        <p>When customers review your products, they'll appear here</p>
+    </div>
+}
+
+<!-- Response Modal -->
+<div class="modal fade" id="responseModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;overflow:hidden;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;">
+                <h5 class="modal-title"><i class="bi bi-reply me-2"></i>Respond to Review</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="Respond" method="post">
+                <div class="modal-body" style="padding:1.5rem;">
+                    <input type="hidden" name="reviewId" id="responseReviewId" />
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Your Response</label>
+                        <textarea name="response" class="form-control" rows="4" 
+                                  placeholder="Thank the customer or address their concerns professionally..." required
+                                  style="border-radius:10px;"></textarea>
+                        <div class="form-text"><i class="bi bi-lightbulb me-1"></i>A thoughtful response builds customer trust</div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border:none;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn text-white" style="background:linear-gradient(135deg,#10b981,#059669);">
+                        <i class="bi bi-send me-1"></i>Submit Response
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Report to Admin Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;overflow:hidden;">
+            <div class="modal-header" style="background:#fbbf24;color:#1e293b;border:none;">
+                <h5 class="modal-title"><i class="bi bi-flag me-2"></i>Request Admin Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="RequestAdminReview" method="post">
+                <div class="modal-body" style="padding:1.5rem;">
+                    <input type="hidden" name="reviewId" id="reportReviewId" />
+                    <p class="text-muted mb-3">Report this review if you believe it's fake, abusive, or violates guidelines.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Reason for Report</label>
+                        <select name="reason" class="form-select" required style="border-radius:10px;">
+                            <option value="">Select a reason...</option>
+                            <option value="Fake review - never purchased">Fake review - never purchased</option>
+                            <option value="Abusive or inappropriate language">Abusive or inappropriate language</option>
+                            <option value="Competitor sabotage">Competitor sabotage</option>
+                            <option value="Wrong product reviewed">Wrong product reviewed</option>
+                            <option value="Other violation">Other violation</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border:none;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-send me-1"></i>Submit Report
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Image Lightbox -->
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+    <span class="lightbox-close">&times;</span>
+    <img src="" id="lightboxImg" alt="Review Image" />
+</div>
+
+<script>
+    function applyFilters() {
+        const productId = document.getElementById('productFilter').value;
+        const sort = document.getElementById('sortFilter').value;
+        const currentFilter = '@currentFilter' || '';
+        
+        let url = '@Url.Action("Index")?tab=reviews';
+        if (productId) url += '&productId=' + productId;
+        if (sort) url += '&sort=' + sort;
+        if (currentFilter) url += '&filter=' + currentFilter;
+        
+        window.location.href = url;
+    }
+    
+    function showResponseModal(reviewId) {
+        document.getElementById('responseReviewId').value = reviewId;
+        new bootstrap.Modal(document.getElementById('responseModal')).show();
+    }
+    
+    function showReportModal(reviewId) {
+        document.getElementById('reportReviewId').value = reviewId;
+        new bootstrap.Modal(document.getElementById('reportModal')).show();
+    }
+    
+    function togglePin(reviewId) {
+        fetch('@Url.Action("TogglePin")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+            },
+            body: 'reviewId=' + reviewId
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+    
+    function openLightbox(src) {
+        document.getElementById('lightboxImg').src = src;
+        document.getElementById('lightbox').classList.add('active');
+    }
+    
+    function closeLightbox() {
+        document.getElementById('lightbox').classList.remove('active');
+    }
+</script>

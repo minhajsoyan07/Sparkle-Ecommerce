@@ -1,0 +1,265 @@
+/* ============================================
+   CATEGORIES MANAGEMENT CSS
+   Professional styling for enhanced category management
+   ============================================ */
+
+:root {
+    --category-primary: #4B49AC;
+    --category-success: #57b657;
+    --category-warning: #ffc107;
+    --category-danger: #dc3545;
+    --category-border: #dee2e6;
+    --category-hover: #f8f9fa;
+}
+
+/* ============================================
+   CATEGORIES TABLE
+   ============================================ */
+
+.categories-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.categories-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.categories-table th {
+    padding: 1rem 1.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+}
+
+.categories-table th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.categories-table th:last-child {
+    border-top-right-radius: 8px;
+}
+
+.categories-table tbody tr {
+    transition: all 0.2s ease;
+    border-bottom: 1px solid var(--category-border);
+}
+
+.categories-table tbody tr:hover {
+    background-color: var(--category-hover);
+    transform: scale(1.005);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.categories-table td {
+    padding: 1.25rem;
+    vertical-align: middle;
+}
+
+/* ============================================
+   CATEGORY VISUAL (IMAGE/ICON)
+   ============================================ */
+
+.category-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.category-image {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 2px solid var(--category-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.category-image:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.category-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--category-border);
+    transition: all 0.3s ease;
+}
+
+.category-icon-wrapper.default {
+    background: #f8f9fa;
+    border: 2px dashed var(--category-border);
+}
+
+.category-icon-wrapper i {
+    font-size: 1.75rem;
+    color: white;
+}
+
+.category-icon-wrapper.default i {
+    color: #6c757d;
+}
+
+.category-icon-wrapper:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* ============================================
+   CATEGORY INFO
+   ============================================ */
+
+.category-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.category-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.category-description {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin: 0;
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.category-slug {
+    font-size: 0.85rem;
+    background: #f8f9fa;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid var(--category-border);
+    color: #495057;
+    font-family: 'Courier New', monospace;
+    display: inline-block;
+}
+
+/* ============================================
+   ACTION BUTTONS
+   ============================================ */
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.action-buttons .btn {
+    transition: all 0.2s ease;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+
+.empty-state {
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.empty-state i {
+    font-size: 3.5rem;
+}
+
+.empty-state h5 {
+    font-weight: 600;
+    margin-top: 1rem;
+}
+
+/* ============================================
+   BADGES
+   ============================================ */
+
+.badge {
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+}
+
+.bg-primary-subtle {
+    background-color: #e7f3ff !important;
+}
+
+.text-primary {
+    color: var(--category-primary) !important;
+}
+
+.bg-success-subtle {
+    background-color: #d4edda !important;
+}
+
+.text-success {
+    color: var(--category-success) !important;
+}
+
+.bg-warning-subtle {
+    background-color: #fff3cd !important;
+}
+
+.text-warning {
+    color: #856404 !important;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .categories-table {
+        font-size: 0.875rem;
+    }
+
+    .categories-table th,
+    .categories-table td {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .category-visual {
+        width: 40px;
+    }
+
+    .category-image,
+    .category-icon-wrapper {
+        width: 48px;
+        height: 48px;
+    }
+
+    .category-icon-wrapper i {
+        font-size: 1.25rem;
+    }
+
+    .category-description {
+        display: none;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}

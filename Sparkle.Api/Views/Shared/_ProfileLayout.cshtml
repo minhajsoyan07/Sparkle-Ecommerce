@@ -1,0 +1,109 @@
+@inject Microsoft.AspNetCore.Identity.UserManager<Sparkle.Domain.Identity.ApplicationUser> UserManager
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    var activeController = ViewContext.RouteData.Values["controller"]?.ToString()?.ToLower();
+    var activeAction = ViewContext.RouteData.Values["action"]?.ToString()?.ToLower();
+    
+    var user = await UserManager.GetUserAsync(User);
+}
+
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Sidebar -->
+        <div class="col-lg-auto tw-w-full lg:tw-w-[270px]">
+            <div class="tw-sticky tw-top-24 tw-z-10">
+                <!-- User Profile Card -->
+                <div class="tw-bg-white tw-rounded-lg tw-mb-4 tw-border tw-border-slate-200 tw-shadow-sm tw-relative tw-flex tw-flex-col tw-items-center tw-overflow-hidden">
+                    <!-- Flat peach top accent -->
+                    <div class="tw-absolute tw-top-0 tw-left-0 tw-right-0 tw-h-12 tw-bg-[#FFF7ED]"></div>
+
+                    <div class="tw-w-16 tw-h-16 tw-rounded-full tw-bg-white tw-flex tw-items-center tw-justify-center tw-p-1 tw-shadow-sm tw-mb-1.5 tw-z-10 tw-relative tw-mt-3">
+                        <div class="tw-w-full tw-h-full tw-rounded-full tw-bg-slate-50 tw-flex tw-items-center tw-justify-center tw-overflow-hidden tw-border-[3px] tw-border-white tw-shadow-inner">
+                            @if (!string.IsNullOrEmpty(user?.ProfilePhotoPath))
+                            {
+                                <img id="sidebarAvatarImg" src="@user.ProfilePhotoPath" class="tw-w-full tw-h-full tw-object-cover" alt="Profile Photo" />
+                            }
+                            else
+                            {
+                                <i id="sidebarAvatarIcon" class="bi bi-person-fill tw-text-3xl tw-text-[#2E86C1]"></i>
+                                <img id="sidebarAvatarImg" src="" class="tw-w-full tw-h-full tw-object-cover" alt="Profile Photo" style="display:none;" />
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="tw-w-full tw-text-center tw-z-10 tw-px-2 tw-mb-3">
+                        <p class="tw-text-slate-900 tw-mb-0" style="font-size: 13px;">@(user?.FullName ?? "Minhajul Islam")</p>
+                        
+                        <div class="tw-flex tw-flex-col tw-items-center">
+                            <div class="tw-flex tw-items-center tw-gap-1">
+                                <i class="bi bi-envelope tw-text-slate-400" style="font-size: 10px;"></i>
+                                @if (!string.IsNullOrEmpty(user?.Email)) {
+                                    <p class="tw-text-slate-500 tw-mb-0" style="font-size: 12px;">@user.Email</p>
+                                }
+                            </div>
+                            
+                            <div class="tw-flex tw-items-center tw-gap-1">
+                                <i class="bi bi-geo-alt tw-text-slate-400" style="font-size: 10px;"></i>
+                                @if (!string.IsNullOrEmpty(user?.Address)) {
+                                    <p class="tw-text-slate-500 tw-mb-0" style="font-size: 12px;">@user.Address</p>
+                                } else {
+                                    <p class="tw-text-slate-400 tw-mb-0" style="font-size: 12px;">Not provided</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="/account-info/edit" class="tw-flex tw-items-center tw-justify-center tw-w-full tw-bg-[#FFF7ED] tw-py-3 tw-px-2 tw-transition-colors hover:tw-bg-[#FFEDD5] tw-no-underline tw-rounded-none tw-mt-auto tw-border-t tw-border-slate-100">
+                        <div class="tw-flex tw-items-center tw-gap-1.5">
+                            <i class="bi bi-pencil-square tw-text-[#EA580C]" style="font-size: 12px;"></i>
+                            <span class="tw-text-[#EA580C]" style="font-size: 12px;">Edit Profile</span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Navigation Menu -->
+                <div class="tw-bg-white tw-rounded-sm tw-border tw-border-slate-200">
+                    <nav class="tw-flex tw-flex-col tw-py-1">
+                        <a href="/account-info" class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-font-medium tw-text-[15px] tw-transition-colors tw-no-underline @(activeController == "profile" && (activeAction == "index" || activeAction == "editprofile") ? "tw-bg-orange-50 tw-text-orange-600 tw-border-l-2 tw-border-l-orange-500" : "tw-text-slate-600 hover:tw-bg-slate-50 hover:tw-text-slate-900 tw-border-l-2 tw-border-l-transparent")">
+                            <div class="tw-flex tw-items-center tw-gap-3.5"><i class="bi bi-grid tw-text-[18px] @(activeController == "profile" && (activeAction == "index" || activeAction == "editprofile") ? "tw-text-orange-500" : "tw-text-slate-400")"></i> Dashboard</div>
+                        </a>
+                        
+                        <a href="/orders" class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-font-medium tw-text-[15px] tw-transition-colors tw-no-underline @(activeController == "order" ? "tw-bg-orange-50 tw-text-orange-600 tw-border-l-2 tw-border-l-orange-500" : "tw-text-slate-600 hover:tw-bg-slate-50 hover:tw-text-slate-900 tw-border-l-2 tw-border-l-transparent")">
+                            <div class="tw-flex tw-items-center tw-gap-3.5"><i class="bi bi-box-seam tw-text-[18px] @(activeController == "order" ? "tw-text-orange-500" : "tw-text-slate-400")"></i> Orders</div>
+                        </a>
+
+                        <a href="/wishlist" class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-font-medium tw-text-[15px] tw-transition-colors tw-no-underline @(activeController == "wishlist" ? "tw-bg-orange-50 tw-text-orange-600 tw-border-l-2 tw-border-l-orange-500" : "tw-text-slate-600 hover:tw-bg-slate-50 hover:tw-text-slate-900 tw-border-l-2 tw-border-l-transparent")">
+                            <div class="tw-flex tw-items-center tw-gap-3.5"><i class="bi bi-heart tw-text-[18px] @(activeController == "wishlist" ? "tw-text-orange-500" : "tw-text-slate-400")"></i> Wishlist</div>
+                        </a>
+
+                        <a href="/report" class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-font-medium tw-text-[15px] tw-transition-colors tw-no-underline @(activeController == "report" ? "tw-bg-orange-50 tw-text-orange-600 tw-border-l-2 tw-border-l-orange-500" : "tw-text-slate-600 hover:tw-bg-slate-50 hover:tw-text-slate-900 tw-border-l-2 tw-border-l-transparent")">
+                            <div class="tw-flex tw-items-center tw-gap-3.5"><i class="bi bi-flag tw-text-[18px] @(activeController == "report" ? "tw-text-orange-500" : "tw-text-slate-400")"></i> Reports</div>
+                        </a>
+
+                        <a href="/review" class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-font-medium tw-text-[15px] tw-transition-colors tw-no-underline @(activeController == "review" ? "tw-bg-orange-50 tw-text-orange-600 tw-border-l-2 tw-border-l-orange-500" : "tw-text-slate-600 hover:tw-bg-slate-50 hover:tw-text-slate-900 tw-border-l-2 tw-border-l-transparent")">
+                            <div class="tw-flex tw-items-center tw-gap-3.5"><i class="bi bi-star tw-text-[18px] @(activeController == "review" ? "tw-text-orange-500" : "tw-text-slate-400")"></i> Reviews</div>
+                        </a>
+
+                        <a href="/Chat" class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-font-medium tw-text-[15px] tw-transition-colors tw-no-underline @(activeController == "chat" ? "tw-bg-orange-50 tw-text-orange-600 tw-border-l-2 tw-border-l-orange-500" : "tw-text-slate-600 hover:tw-bg-slate-50 hover:tw-text-slate-900 tw-border-l-2 tw-border-l-transparent")">
+                            <div class="tw-flex tw-items-center tw-gap-3.5"><i class="bi bi-chat-dots tw-text-[18px] @(activeController == "chat" ? "tw-text-orange-500" : "tw-text-slate-400")"></i> Messages</div>
+                        </a>
+
+                        <a href="/settings" class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-font-medium tw-text-[15px] tw-transition-colors tw-no-underline @(activeController == "settings" ? "tw-bg-orange-50 tw-text-orange-600 tw-border-l-2 tw-border-l-orange-500" : "tw-text-slate-600 hover:tw-bg-slate-50 hover:tw-text-slate-900 tw-border-l-2 tw-border-l-transparent")">
+                            <div class="tw-flex tw-items-center tw-gap-3.5"><i class="bi bi-gear tw-text-[18px] @(activeController == "settings" ? "tw-text-orange-500" : "tw-text-slate-400")"></i> Settings</div>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="col-lg tw-min-w-0">
+            
+            @RenderBody()
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

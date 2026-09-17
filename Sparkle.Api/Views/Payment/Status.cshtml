@@ -1,0 +1,116 @@
+@model Sparkle.Api.Models.ViewModels.PaymentStatusViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = Model.Status + " - Payment";
+    
+    var icon = Model.Type switch {
+        "success" => "bi-check-circle-fill",
+        "failed" => "bi-x-circle-fill",
+        "cancelled" => "bi-dash-circle-fill",
+        _ => "bi-info-circle-fill"
+    };
+    
+    var color = Model.Type switch {
+        "success" => "#10b981",
+        "failed" => "#ef4444",
+        "cancelled" => "#f59e0b",
+        _ => "#6366f1"
+    };
+
+    var subTitle = Model.Type switch {
+        "success" => "Thank you for your purchase!",
+        "failed" => "Something went wrong with your payment.",
+        "cancelled" => "The payment process was cancelled.",
+        _ => ""
+    };
+}
+
+<div class="container py-5 my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card border-0 shadow-lg overflow-hidden" style="border-radius: 24px;">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4 animate-pop-in">
+                        <div class="d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px; border-radius: 50%; background: @(color)15; color: @color;">
+                            <i class="bi @icon" style="font-size: 3.5rem;"></i>
+                        </div>
+                    </div>
+                    
+                    <h1 class="fw-bold mb-2">@Model.Status</h1>
+                    <p class="fs-5 text-muted mb-4">@subTitle</p>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Message))
+                    {
+                        <div class="alert @(Model.Type == "success" ? "alert-success" : "alert-light") border-0 mb-4 px-4 py-3" style="border-radius: 16px;">
+                            <p class="mb-0 small fw-medium">@Model.Message</p>
+                        </div>
+                    }
+
+                    <div class="bg-light rounded-4 p-4 mb-4 text-start">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Transaction ID</span>
+                            <span class="fw-bold small font-monospace text-uppercase">@(Model.TransactionId ?? "N/A")</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Order Reference</span>
+                            <span class="fw-bold small">#@Model.OrderIds</span>
+                        </div>
+                        @if (Model.Amount > 0)
+                        {
+                            <div class="d-flex justify-content-between pt-2 border-top">
+                                <span class="text-muted small">Total Paid</span>
+                                <span class="fw-bold text-dark">৳@Model.Amount.ToString("N2")</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="d-grid gap-3">
+                        @if (Model.Type == "success")
+                        {
+                            <a href="/account-info/orders" class="btn btn-primary btn-lg py-3 fw-bold shadow-sm" style="border-radius: 14px;">
+                                <i class="bi bi-bag-check me-2"></i> Track My Orders
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="/checkout/payment?orderIds=@Model.OrderIds" class="btn btn-primary btn-lg py-3 fw-bold shadow-sm" style="border-radius: 14px;">
+                                <i class="bi bi-arrow-repeat me-2"></i> Try Again
+                            </a>
+                        }
+                        <a href="/" class="btn btn-outline-light text-dark border py-3 fw-semibold" style="border-radius: 14px;">
+                            Return to Homepage
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-center mt-4 text-muted small">
+                Having trouble? <a href="/home/contact" class="text-primary text-decoration-none fw-semibold">Contact Support</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    body { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); min-height: 100vh; }
+    
+    .animate-pop-in {
+        animation: pop-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    @@keyframes pop-in {
+        0% { transform: scale(0.5); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        border: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3) !important;
+    }
+</style>

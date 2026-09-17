@@ -1,0 +1,107 @@
+@model List<Sparkle.Domain.Users.UserAddress>
+@{
+    ViewData["Title"] = "Your Addresses";
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<div class="tw-bg-white tw-rounded-2xl tw-border tw-border-slate-100 tw-overflow-hidden tw-shadow-sm">
+    <!-- Header -->
+    <div class="tw-px-6 tw-py-4 tw-border-b tw-border-slate-50 tw-flex tw-justify-between tw-items-center">
+        <div>
+            <h6 class="tw-font-bold tw-text-slate-900 tw-text-base tw-mb-0">
+                <i class="bi bi-geo-alt tw-mr-1.5 tw-text-orange-500"></i> Address Book
+            </h6>
+            <p class="tw-text-[11px] tw-text-slate-500 tw-mb-0">Manage your shipping and billing locations</p>
+        </div>
+        <a href="/account-info/addresses/create" class="tw-bg-orange-500 tw-text-white tw-px-4 tw-py-2 tw-rounded-xl tw-text-xs tw-font-bold hover:tw-bg-orange-600 tw-transition-all tw-shadow-lg tw-shadow-orange-500/20 tw-flex tw-items-center tw-gap-2 tw-no-underline">
+            <i class="bi bi-plus-lg"></i> Add Address
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="tw-text-center tw-py-16 tw-px-6">
+            <div class="tw-w-16 tw-h-16 tw-mx-auto tw-mb-4 tw-bg-slate-50 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-text-slate-300">
+                <i class="bi bi-geo-alt tw-text-2xl"></i>
+            </div>
+            <h6 class="tw-font-bold tw-text-slate-900 tw-text-base tw-mb-1">No addresses found</h6>
+            <p class="tw-text-xs tw-text-slate-500 tw-mb-0">You haven't added any addresses yet. Add one to speed up checkout.</p>
+        </div>
+    }
+    else
+    {
+        <div class="tw-p-6">
+            <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
+                @foreach (var address in Model)
+                {
+                    <div class="tw-border tw-rounded-2xl tw-p-5 tw-relative hover:tw-shadow-xl hover:tw-shadow-slate-200/40 tw-transition-all tw-duration-300 @(address.IsDefault || address.IsDefaultBilling ? "tw-border-orange-100 tw-bg-orange-50/20" : "tw-border-slate-100 tw-bg-white")">
+                        <div class="tw-flex tw-gap-1.5 tw-absolute tw-top-4 tw-right-4">
+                            @if (address.IsDefault)
+                            {
+                                <span class="tw-bg-orange-500 tw-text-white tw-text-[9px] tw-font-bold tw-px-2 tw-py-0.5 tw-rounded-lg tw-uppercase tw-tracking-wider">Default</span>
+                            }
+                            @if (address.IsDefaultBilling)
+                            {
+                                <span class="tw-bg-slate-800 tw-text-white tw-text-[9px] tw-font-bold tw-px-2 tw-py-0.5 tw-rounded-lg tw-uppercase tw-tracking-wider">Billing</span>
+                            }
+                        </div>
+                        
+                        <div class="tw-mb-3">
+                            <h6 class="tw-font-bold tw-text-slate-900 tw-text-sm tw-mb-1">@address.FullName</h6>
+                            <div class="tw-flex tw-items-center tw-gap-2 tw-text-[11px] tw-text-slate-500 tw-font-medium">
+                                <i class="bi bi-phone"></i> @address.PhoneNumber
+                            </div>
+                        </div>
+                        
+                        <div class="tw-text-xs tw-text-slate-600 tw-mb-5 tw-leading-relaxed tw-pr-8">
+                            <span class="tw-block tw-font-medium">@address.AddressLine1</span>
+                            <span class="tw-text-slate-500">@address.City - @address.PostalCode, @address.Country</span>
+                        </div>
+                        
+                        <div class="tw-flex tw-gap-4 tw-pt-3 tw-border-t tw-border-slate-100/50">
+                            <a href="/account-info/addresses/edit/@address.Id" class="tw-text-[11px] tw-font-bold tw-text-blue-600 hover:tw-text-blue-700 tw-no-underline tw-flex tw-items-center tw-gap-1">
+                                <i class="bi bi-pencil-square"></i> Edit
+                            </a>
+                            
+                            <button type="button" 
+                                    class="tw-text-[11px] tw-font-bold tw-text-red-500 hover:tw-text-red-600 tw-bg-transparent tw-border-0 tw-p-0 tw-flex tw-items-center tw-gap-1"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteModal-@address.Id">
+                                <i class="bi bi-trash3"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Delete Confirmation Modal -->
+                    <div class="modal fade" id="deleteModal-@address.Id" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content tw-rounded-3xl tw-border-0 tw-shadow-2xl">
+                                <div class="modal-body tw-p-8 tw-text-center">
+                                    <div class="tw-w-16 tw-h-16 tw-bg-red-50 tw-text-red-500 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-4">
+                                        <i class="bi bi-trash3 tw-text-2xl"></i>
+                                    </div>
+                                    <h5 class="tw-font-bold tw-text-slate-900 tw-mb-2">Delete Address?</h5>
+                                    <p class="tw-text-slate-500 tw-text-sm tw-mb-8">
+                                        Are you sure you want to remove this address? This action cannot be undone.
+                                    </p>
+                                    
+                                    <div class="tw-grid tw-grid-cols-2 tw-gap-3">
+                                        <button type="button" class="tw-px-6 tw-py-3 tw-rounded-xl tw-font-bold tw-text-xs tw-text-slate-600 tw-bg-slate-50 hover:tw-bg-slate-100 tw-transition-all" data-bs-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                        <form asp-action="DeleteAddress" asp-route-id="@address.Id" method="post">
+                                            <button type="submit" class="tw-w-full tw-px-6 tw-py-3 tw-rounded-xl tw-font-bold tw-text-xs tw-text-white tw-bg-red-500 hover:tw-bg-red-600 tw-transition-all tw-shadow-lg tw-shadow-red-500/20">
+                                                Delete Permanent
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+

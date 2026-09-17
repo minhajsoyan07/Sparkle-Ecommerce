@@ -1,0 +1,150 @@
+@model Sparkle.Api.Models.ReportViewModel
+@{
+    ViewData["Title"] = "Report " + Model.TargetType;
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<style>
+    .rep-create-grid { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── Card ── */
+    .rep-card {
+        background: #fff;
+        border: 1px solid #edf2f7;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        overflow: hidden;
+    }
+    .rep-card-head {
+        padding: 20px 24px;
+        border-bottom: 1px solid #f7fafc;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .rep-card-head i { font-size: 18px; color: #f56565; }
+    .rep-card-head h2 { font-size: 16px; font-weight: 700; color: #2d3748; margin: 0; }
+
+    .rep-card-body { padding: 24px; }
+
+    /* ── Target Info ── */
+    .target-banner {
+        background: #f7fafc;
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    .target-icon {
+        width: 44px; height: 44px;
+        background: #fff;
+        border: 1px solid #edf2f7;
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px; color: #a0aec0;
+    }
+    .target-details { flex: 1; }
+    .target-label { font-size: 10px; font-weight: 800; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
+    .target-name { font-size: 14px; font-weight: 700; color: #2d3748; display: block; margin-top: 2px; }
+    .target-uid { font-size: 11px; color: #3182ce; font-weight: 600; margin-top: 2px; }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 12px; font-weight: 700; color: #4a5568; margin-bottom: 8px; }
+    .form-select, .form-textarea {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 14px;
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        outline: none;
+        transition: all 0.2s;
+    }
+    .form-select:focus, .form-textarea:focus { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49,130,206,0.05); }
+
+    .btn-submit {
+        background: #f56565;
+        color: #fff;
+        border: none;
+        padding: 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        width: 100%;
+        transition: all 0.2s;
+    }
+    .btn-submit:hover { background: #e53e3e; transform: translateY(-1px); }
+    
+    .btn-cancel {
+        display: block;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 600;
+        color: #a0aec0;
+        text-decoration: none;
+        margin-top: 12px;
+    }
+    .btn-cancel:hover { color: #718096; }
+</style>
+
+<div class="rep-create-grid">
+    <div class="rep-card">
+        <div class="rep-card-head">
+            <i class="bi bi-flag-fill"></i>
+            <h2>Report @Model.TargetType</h2>
+        </div>
+
+        <div class="rep-card-body">
+            <!-- Target Banner with Unique ID -->
+            <div class="target-banner">
+                <div class="target-icon">
+                    <i class="bi @(Model.TargetType == "Product" ? "bi-box-seam" : "bi-shop")"></i>
+                </div>
+                <div class="target-details">
+                    <div class="target-label">Reporting @Model.TargetType</div>
+                    <span class="target-name">@ViewBag.TargetName</span>
+                    <div class="target-uid">Unique ID: #@Model.TargetId</div>
+                    @if (ViewBag.SellerName != null)
+                    {
+                        <div style="font-size: 11px; color: #a0aec0; margin-top: 4px;">by @ViewBag.SellerName</div>
+                    }
+                </div>
+            </div>
+
+            <form asp-action="Create" method="post">
+                <input type="hidden" asp-for="TargetType" />
+                <input type="hidden" asp-for="TargetId" />
+
+                <div class="form-group">
+                    <label asp-for="Reason" class="form-label">Reason for reporting</label>
+                    <select asp-for="Reason" class="form-select" required>
+                        <option value="">Select a reason...</option>
+                        <option value="Fake Product">Fake/Counterfeit Product</option>
+                        <option value="Misleading Information">Misleading Information</option>
+                        <option value="Inappropriate Content">Inappropriate Content</option>
+                        <option value="Scam or Fraud">Scam or Fraud</option>
+                        <option value="Other">Other Issues</option>
+                    </select>
+                    <span asp-validation-for="Reason" class="text-danger small"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Description" class="form-label">Detailed Description</label>
+                    <textarea asp-for="Description" class="form-textarea" rows="5" placeholder="Explain the issue in detail to help our moderators understand..." required></textarea>
+                    <span asp-validation-for="Description" class="text-danger small"></span>
+                </div>
+
+                <button type="submit" class="btn-submit">Submit Report</button>
+                <a href="javascript:history.back()" class="btn-cancel">Cancel and go back</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,56 @@
+@model Sparkle.Api.Areas.Admin.Controllers.PaymentSettingsViewModel
+@{
+    ViewData["Title"] = "Payment Settings";
+    Layout = "_SettingsLayout";
+}
+
+<h4 class="mb-4">Payment Configuration</h4>
+
+<form method="post" asp-action="SavePayments">
+    <input asp-for="EnableCOD" type="hidden" value="false" />
+    <input asp-for="EnableBkash" type="hidden" value="true" />
+    <input asp-for="EnableStripe" type="hidden" value="false" />
+    <input asp-for="BkashMerchantNumber" type="hidden" value="" />
+    <input asp-for="StripePublishableKey" type="hidden" value="" />
+    <input asp-for="StripeSecretKey" type="hidden" value="" />
+
+    <div class="mb-4">
+        <label asp-for="Currency" class="form-label">Store Currency</label>
+        <select asp-for="Currency" class="form-select w-auto">
+            <option value="BDT">BDT (Bangladeshi Taka)</option>
+        </select>
+        <div class="form-text">SSLCommerz checkout is configured for Bangladesh payments in BDT.</div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex align-items-start gap-3">
+                <div class="rounded bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                    <i class="bi bi-shield-check fs-4"></i>
+                </div>
+                <div>
+                    <h5 class="card-title mb-1">SSLCommerz Hosted Checkout</h5>
+                    <p class="card-text text-muted small mb-3">
+                        Customers are redirected to SSLCommerz for real Bangladesh payment processing. Card, bKash, Nagad, Rocket, and EMI options are handled by the gateway.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge text-bg-light border">bKash</span>
+                        <span class="badge text-bg-light border">Nagad</span>
+                        <span class="badge text-bg-light border">Rocket</span>
+                        <span class="badge text-bg-light border">Visa</span>
+                        <span class="badge text-bg-light border">Mastercard</span>
+                        <span class="badge text-bg-light border">EMI</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info small">
+        Merchant credentials are read from application configuration under <code>SSLCommerz</code>. Use real live credentials and the live API URL in production.
+    </div>
+
+    <div class="d-flex justify-content-end mt-4">
+        <button type="submit" class="btn btn-primary px-4">Save Changes</button>
+    </div>
+</form>

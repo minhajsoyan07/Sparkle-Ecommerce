@@ -1,0 +1,203 @@
+@model List<Sparkle.Domain.Marketing.Coupon>
+@{
+    ViewData["Title"] = "Coupon Management";
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    var searchQuery = ViewBag.SearchQuery as string;
+    var currentStatus = ViewBag.CurrentStatus as string ?? "all";
+    var now = DateTime.UtcNow;
+}
+
+<div class="container-fluid p-4">
+    <div class="content-header mb-4">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-ticket-perforated-fill fs-3 me-3 text-primary"></i>
+            <div>
+                <h2 class="content-title mb-0">Coupon Management</h2>
+                <p class="text-muted mb-0">Create and manage discount coupons</p>
+            </div>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn btn-primary px-4">
+                <i class="bi bi-plus-lg me-2"></i>Create Coupon
+            </a>
+        </div>
+    </div>
+    
+     <!-- Status Tabs -->
+    <div class="mb-4 d-flex gap-2 flex-wrap">
+        <a href="?status=all&q=@searchQuery" class="btn @(currentStatus == "all" ? "btn-secondary text-white fw-medium" : "btn-outline-secondary border-secondary-subtle text-muted") d-flex align-items-center gap-2">
+            All
+        </a>
+        <a href="?status=active&q=@searchQuery" class="btn @(currentStatus == "active" ? "btn-success text-white fw-bold" : "btn-outline-success border-success-subtle text-success") d-flex align-items-center gap-2">
+            Active <span class="badge @(currentStatus == "active" ? "bg-white text-success" : "bg-success-subtle text-success border border-success-subtle")">@ViewBag.ActiveCount</span>
+        </a>
+        <a href="?status=scheduled&q=@searchQuery" class="btn @(currentStatus == "scheduled" ? "btn-info text-dark fw-bold" : "btn-outline-info border-info-subtle text-info") d-flex align-items-center gap-2">
+            Scheduled <span class="badge @(currentStatus == "scheduled" ? "bg-white text-info" : "bg-info-subtle text-info border border-info-subtle")">@ViewBag.ScheduledCount</span>
+        </a>
+        <a href="?status=expired&q=@searchQuery" class="btn @(currentStatus == "expired" ? "btn-warning text-dark fw-bold" : "btn-outline-warning border-warning-subtle text-warning") d-flex align-items-center gap-2">
+            Expired <span class="badge @(currentStatus == "expired" ? "bg-white text-warning" : "bg-warning-subtle text-warning border border-warning-subtle")">@ViewBag.ExpiredCount</span>
+        </a>
+        <a href="?status=disabled&q=@searchQuery" class="btn @(currentStatus == "disabled" ? "btn-danger text-white fw-bold" : "btn-outline-danger border-danger-subtle text-danger") d-flex align-items-center gap-2">
+            Disabled <span class="badge @(currentStatus == "disabled" ? "bg-white text-danger" : "bg-danger-subtle text-danger border border-danger-subtle")">@ViewBag.DisabledCount</span>
+        </a>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+             <!-- Search -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                     <form method="get" class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="status" value="@currentStatus" />
+                        <div class="input-group" style="max-width: 400px;">
+                            <span class="input-group-text bg-white border-end-0 ps-3">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" name="q" class="form-control border-start-0 ps-0" 
+                                   placeholder="Search code..." 
+                                   value="@searchQuery" style="height: 45px;">
+                            <button type="submit" class="btn btn-primary px-4 fw-medium" style="height: 45px;">Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="text-uppercase small text-muted border-0">
+                        <tr>
+                            <th class="ps-3 py-3 fw-bold">Coupon</th>
+                            <th class="py-3 fw-bold">Discount</th>
+                            <th class="py-3 fw-bold">Usage</th>
+                            <th class="py-3 fw-bold">Validity</th>
+                            <th class="py-3 fw-bold">Status</th>
+                            <th class="py-3 fw-bold text-end pe-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        @if (Model.Any())
+                        {
+                            @foreach (var coupon in Model)
+                            {
+                                var isActive = coupon.IsActive && coupon.StartDate <= now && coupon.EndDate >= now;
+                                var isScheduled = coupon.StartDate > now;
+                                var isExpired = coupon.EndDate < now;
+                                
+                                <tr>
+                                    <td class="ps-3 py-3">
+                                        <div class="fw-bold font-monospace fs-6">@coupon.Code</div>
+                                        <div class="text-muted small">@coupon.Name</div>
+                                    </td>
+                                    <td class="py-3">
+                                        @if (coupon.DiscountType == "Percentage")
+                                        {
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">@coupon.DiscountValue% OFF</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">৳@coupon.DiscountValue OFF</span>
+                                        }
+                                        @if (coupon.MinimumPurchaseAmount > 0)
+                                        {
+                                            <div class="text-muted small mt-1">Min: ৳@coupon.MinimumPurchaseAmount</div>
+                                        }
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="fw-medium">@coupon.CurrentUsageCount / @(coupon.MaxUsageTotal?.ToString() ?? "∞")</div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="small">
+                                            <div class="mb-1"><i class="bi bi-calendar-event me-1 text-muted"></i> @coupon.StartDate.ToString("MMM dd") - @coupon.EndDate.ToString("MMM dd")</div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        @if (!coupon.IsActive)
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Disabled</span>
+                                        }
+                                        else if (isExpired)
+                                        {
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Expired</span>
+                                        }
+                                        else if (isScheduled)
+                                        {
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle">Scheduled</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>
+                                        }
+                                    </td>
+                                    <td class="text-end pe-3 py-3">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a asp-action="Edit" asp-route-id="@coupon.Id" class="btn btn-sm btn-outline-primary" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a asp-action="Usage" asp-route-id="@coupon.Id" class="btn btn-sm btn-outline-info" title="Usage History">
+                                                <i class="bi bi-clock-history"></i>
+                                            </a>
+                                            <form asp-action="ToggleStatus" asp-route-id="@coupon.Id" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm @(coupon.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="@(coupon.IsActive ? "Disable" : "Enable")">
+                                                    <i class="bi @(coupon.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <i class="bi bi-ticket-perforated display-4 text-muted mb-3 d-block"></i>
+                                    <p class="text-muted">No coupons found.</p>
+                                    <a asp-action="Create" class="btn btn-primary">Create Your First Coupon</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (totalPages > 1)
+            {
+                <div class="d-flex justify-content-center mt-4">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" href="?page=@(currentPage - 1)&status=@currentStatus&q=@searchQuery">Previous</a>
+                            </li>
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                <li class="page-item @(currentPage == i ? "active" : "")">
+                                    <a class="page-link" href="?page=@i&status=@currentStatus&q=@searchQuery">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link" href="?page=@(currentPage + 1)&status=@currentStatus&q=@searchQuery">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</div>

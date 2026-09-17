@@ -1,0 +1,430 @@
+@using Sparkle.Domain.Orders
+@model Sparkle.Domain.Orders.Order
+@{
+    var langCookie = Context.Request.Cookies["sparkle-lang"] == "bn" ? "bn" : "en";
+    var isBangla = langCookie == "bn";
+    var cancellableStatuses = new[] { OrderStatus.Pending, OrderStatus.Confirmed, OrderStatus.Processing, OrderStatus.SellerPreparing, OrderStatus.OnHold };
+    var canCancel = cancellableStatuses.Contains(Model.Status);
+    var cancelReturnUrl = Context.Request.Path + Context.Request.QueryString;
+    ViewData["Title"] = (isBangla ? "অর্ডার ট্র্যাক করুন #" : "Track Order #") + Model.Id;
+}
+
+<style>
+    :root {
+        --primary: #f97316;
+        --primary-soft: #fff7ed;
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-400: #94a3b8;
+        --slate-500: #64748b;
+        --slate-800: #1e293b;
+        --slate-900: #0f172a;
+    }
+
+    .tracking-container {
+        font-family: 'Inter', sans-serif;
+        padding: 2rem 0;
+        min-height: 80vh;
+        background: var(--slate-50);
+    }
+
+    /* Modern Card */
+    .modern-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        border: 1px solid var(--slate-100);
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .card-header-clean {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--slate-100);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: white;
+    }
+
+    .card-body-clean {
+        padding: 24px;
+    }
+
+    /* Timeline */
+    .timeline-vertical {
+        position: relative;
+        padding: 10px 0 10px 30px;
+    }
+    .timeline-vertical::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 14px;
+        width: 2px;
+        background: var(--slate-100);
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+    }
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -30px;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        z-index: 1;
+    }
+    .marker-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid var(--slate-200);
+        transition: all 0.3s;
+    }
+    .timeline-item.completed .marker-dot {
+        background: #10b981;
+        border-color: #10b981;
+        box-shadow: 0 0 0 4px #ecfdf5;
+    }
+    .timeline-item.active .marker-dot {
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px var(--primary-soft);
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); }
+        70% { box-shadow: 0 0 0 8px rgba(249, 115, 22, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+    }
+
+    .timeline-content {
+        padding-left: 10px;
+    }
+    
+    .timeline-title {
+        font-weight: 700;
+        color: var(--slate-800);
+        margin-bottom: 4px;
+        font-size: 1rem;
+    }
+    .timeline-time {
+        font-size: 0.85rem;
+        color: var(--slate-400);
+        margin-bottom: 6px;
+    }
+    .timeline-desc {
+        font-size: 0.9rem;
+        color: var(--slate-500);
+        background: var(--slate-50);
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid var(--slate-100);
+    }
+
+    /* Map Placeholder */
+    .map-placeholder {
+        background: #e2e8f0;
+        border-radius: 12px;
+        height: 300px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--slate-500);
+        text-align: center;
+        position: relative;
+        border: 1px solid var(--slate-200);
+    }
+    
+    .live-indicator {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: white;
+        padding: 5px 12px;
+        border-radius: 99px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        color: #ef4444;
+    }
+    .blinking-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #ef4444;
+        animation: blink 1s infinite;
+    }
+    @@keyframes blink { 50% { opacity: 0; } }
+
+    .btn-back {
+        text-decoration: none;
+        color: var(--slate-500);
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+    .btn-back:hover { color: var(--primary); }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 6px 12px;
+        border-radius: 99px;
+    }
+    .badge-pending { background: #fff7ed; color: #c2410c; }
+    .badge-processing { background: #eff6ff; color: #1d4ed8; }
+    .badge-shipped { background: #eef2ff; color: #4338ca; }
+    .badge-delivered { background: #f0fdf4; color: #15803d; }
+    .badge-cancelled { background: #fef2f2; color: #b91c1c; }
+    .track-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .track-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .track-action {
+        height: 34px;
+        border-radius: 9px;
+        padding: 0 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--slate-200);
+        background: #fff;
+        color: var(--slate-800);
+        font-size: .76rem;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .track-action.danger { color: #dc2626; border-color: #fecaca; }
+    .track-action.danger:hover { background: #fef2f2; color: #b91c1c; }
+    @@media (max-width: 575px) {
+        .track-topbar { align-items: flex-start; flex-direction: column; }
+    }
+
+</style>
+
+<div class="tracking-container">
+    <div class="container">
+        
+        <a href="/orders/@Model.Id" class="btn-back">
+            <i class="bi bi-arrow-left"></i> @(isBangla ? "অর্ডার ডিটেইলস" : "Back to Order Details")
+        </a>
+        <div class="track-actions mb-3">
+            <a href="/orders/@Model.Id/download" class="track-action" target="_blank"><i class="bi bi-file-earmark-arrow-down"></i> Slip</a>
+            @if (canCancel)
+            {
+                <form action="/orders/@Model.Id/cancel" method="post" class="m-0" onsubmit="return confirm('Cancel this order? Stock will be released and sellers will see it as cancelled.');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@cancelReturnUrl" />
+                    <input type="hidden" name="reason" value="Cancelled by customer from tracking page." />
+                    <button type="submit" class="track-action danger"><i class="bi bi-x-circle"></i> Cancel Order</button>
+                </form>
+            }
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Column: Timeline -->
+            <div class="col-lg-5">
+                <div class="modern-card">
+                    <div class="card-header-clean">
+                        <h5 class="mb-0 fw-bold text-dark">@(isBangla ? "অর্ডার স্ট্যাটাস" : "Order Journey")</h5>
+                        @{
+                            var statusClass = Model.Status.ToString() switch {
+                                "Pending" => "badge-pending",
+                                "Processing" => "badge-processing",
+                                "Shipped" => "badge-shipped",
+                                "Delivered" => "badge-delivered",
+                                "Cancelled" => "badge-cancelled",
+                                _ => "badge-pending"
+                            };
+                        }
+                        <span class="status-badge @statusClass">@Model.Status</span>
+                    </div>
+                    <div class="card-body-clean">
+                        <div class="timeline-vertical">
+                            <!-- Order Placed -->
+                            <div class="timeline-item @(Model.Status >= Sparkle.Domain.Orders.OrderStatus.Pending ? "completed" : "")">
+                                <div class="timeline-marker">
+                                    <div class="marker-dot"></div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">@(isBangla ? "অর্ডার প্লেসড" : "Order Placed")</div>
+                                    <div class="timeline-time">@Model.CreatedAt.ToString("MMM dd, yyyy • h:mm tt")</div>
+                                    <div class="timeline-desc">
+                                        Your order has been placed successfully and is waiting for confirmation.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Processing -->
+                            <div class="timeline-item @(Model.Status > Sparkle.Domain.Orders.OrderStatus.Pending ? "completed" : "") 
+                                         @(Model.Status == Sparkle.Domain.Orders.OrderStatus.Processing ? "active" : "")">
+                                <div class="timeline-marker">
+                                    <div class="marker-dot"></div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">@(isBangla ? "প্রসেসিং" : "Processing")</div>
+                                    <div class="timeline-time" id="processingTime">
+                                        @(Model.Status >= Sparkle.Domain.Orders.OrderStatus.Processing ? "In Progress" : "Upcoming")
+                                    </div>
+                                    <div class="timeline-desc text-muted">
+                                        @(isBangla ? "বিক্রেতা আপনার অর্ডার প্রস্তুত করছে।" : "Seller is preparing your order for shipment.")
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Shipped -->
+                            <div class="timeline-item @(Model.Status > Sparkle.Domain.Orders.OrderStatus.Shipped ? "completed" : "") 
+                                         @(Model.Status == Sparkle.Domain.Orders.OrderStatus.Shipped ? "active" : "")">
+                                <div class="timeline-marker">
+                                    <div class="marker-dot"></div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">@(isBangla ? "শিপড" : "Shipped")</div>
+                                    <div class="timeline-time" id="shippedTime">
+                                         @(Model.Status >= Sparkle.Domain.Orders.OrderStatus.Shipped ? "On the way" : "Upcoming")
+                                    </div>
+                                    <div class="timeline-desc text-muted">
+                                        @(isBangla ? "আপনার অর্ডারটি আমাদের ডেলিভারি পার্টনারের কাছে হস্তান্তর করা হয়েছে।" : "Your package is with our delivery partner.")
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Delivered -->
+                            <div class="timeline-item @(Model.Status == Sparkle.Domain.Orders.OrderStatus.Delivered ? "completed" : "")">
+                                <div class="timeline-marker">
+                                    <div class="marker-dot"></div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">@(isBangla ? "ডেলিভারড" : "Delivered")</div>
+                                    <div class="timeline-time" id="deliveredTime">
+                                        @(Model.Status == Sparkle.Domain.Orders.OrderStatus.Delivered ? "Delivered" : "Estimated Arrival")
+                                    </div>
+                                    <div class="timeline-desc text-muted">
+                                        @(isBangla ? "প্যাকেজটি সফলভাবে আপনার ঠিকানায় পৌঁছেছে।" : "Package has been delivered to your address.")
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Map & Address -->
+            <div class="col-lg-7">
+                <div class="modern-card mb-4">
+                    <div class="card-header-clean">
+                        <h5 class="mb-0 fw-bold text-dark">@(isBangla ? "লাইভ ট্র্যাকিং" : "Live Tracking")</h5>
+                        @if (Model.Status == Sparkle.Domain.Orders.OrderStatus.Shipped)
+                        {
+                            <span class="badge bg-danger">LIVE</span>
+                        }
+                    </div>
+                    <div class="card-body-clean p-0">
+                         <div class="map-placeholder">
+                             @if (Model.Status == Sparkle.Domain.Orders.OrderStatus.Shipped)
+                             {
+                                 <div class="live-indicator">
+                                     <div class="blinking-dot"></div> Live
+                                 </div>
+                             }
+                             
+                             <div class="mb-3">
+                                <i class="bi bi-geo-alt-fill text-danger" style="font-size: 3rem;"></i>
+                             </div>
+                             <h6 class="fw-bold text-dark">@(isBangla ? "লাইভ ট্র্যাকিং ম্যাপ" : "Live Tracking Map")</h6>
+                             <p class="small px-4" style="max-width: 400px;">
+                                 @(isBangla ? "অর্ডার শিপ হলে ডেলিভারি পার্টনারের অবস্থান এখানে দেখাবে" : "Real-time delivery partner location will update here once the order is shipped.")
+                             </p>
+
+                             <div id="liveLocation" class="mt-3 bg-white p-3 rounded shadow-sm border" style="display:none; min-width: 250px;">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted small">Current Location:</span>
+                                    <span class="fw-bold small" id="currentLocation">--</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted small">ETA:</span>
+                                    <span class="fw-bold text-primary small" id="eta">--</span>
+                                </div>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="modern-card">
+                    <div class="card-body-clean d-flex align-items-start gap-3">
+                        <div style="width: 48px; height: 48px; background: #eff6ff; color: #2563eb; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                            <i class="bi bi-house-door"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-1">@(isBangla ? "ডেলিভারি ঠিকানা" : "Delivery Address")</h6>
+                            <p class="text-muted small mb-0 line-height-lg">
+                                <strong>@Model.ShippingFullName</strong><br>
+                                @Model.ShippingPhone<br>
+                                @Model.ShippingAddressLine1, @Model.ShippingCity<br>
+                                @Model.ShippingDivision @Model.ShippingPostalCode
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@latest/dist/browser/signalr.min.js"></script>
+<script>
+    const orderId = @Model.Id;
+    
+    // Connect to OrderTracking SignalR Hub
+    const trackingConnection = new signalR.HubConnectionBuilder()
+        .withUrl("/hubs/ordertracking")
+        .withAutomaticReconnect()
+        .build();
+
+    trackingConnection.on("ReceiveOrderUpdate", (orderIdReceived, status, timestamp) => {
+        if (orderIdReceived === orderId) {
+            location.reload(); 
+        }
+    });
+
+    trackingConnection.on("ReceiveLocationUpdate", (orderIdReceived, location, eta) => {
+        if (orderIdReceived === orderId) {
+            document.getElementById('liveLocation').style.display = 'block';
+            document.getElementById('currentLocation').textContent = location;
+            document.getElementById('eta').textContent = eta;
+        }
+    });
+
+    trackingConnection.start()
+        .then(() => {
+            trackingConnection.invoke("JoinOrderTracking", orderId);
+        })
+        .catch(err => { console.error("SignalR Connection Error: ", err) });
+</script>

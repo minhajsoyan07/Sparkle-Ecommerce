@@ -1,0 +1,514 @@
+@model IEnumerable<Sparkle.Domain.Orders.Order>
+@{
+    ViewData["Title"] = "Order Confirmation";
+    var langCookie = Context.Request.Cookies["sparkle-lang"] == "bn" ? "bn" : "en";
+    var isBangla = langCookie == "bn";
+    var firstOrder = Model.First();
+    var isCod = Model.Any(o => o.PaymentMethod == Sparkle.Domain.Orders.PaymentMethodType.CashOnDelivery);
+    var isPaid = Model.All(o => o.PaymentStatus == Sparkle.Domain.Orders.PaymentStatus.Paid);
+    var showSuccess = isCod || isPaid;
+    var allItems = Model.SelectMany(o => o.OrderItems).ToList();
+    var firstItem = allItems.FirstOrDefault()?.ProductName ?? "Product";
+    var itemCount = allItems.Count;
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@@400;500;600;700&display=swap');
+
+    .conf-page {
+        font-family: 'Inter', -apple-system, sans-serif;
+        background: #f6f7f9;
+        min-height: 90vh;
+        padding: 2rem 0 4rem;
+        color: #111827;
+    }
+
+    /* ── Hero ── */
+    .conf-hero {
+        text-align: center;
+        padding: 2rem 1rem 1.5rem;
+    }
+    .conf-icon-ring {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+        font-size: 1.5rem;
+    }
+    .conf-icon-ring.success { background: #dcfce7; color: #16a34a; }
+    .conf-icon-ring.pending { background: #fef9c3; color: #ca8a04; }
+
+    .conf-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 0.35rem;
+        letter-spacing: -0.02em;
+    }
+    .conf-sub {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin-bottom: 1.5rem;
+        max-width: 420px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.6;
+    }
+
+    /* ── Order ID chip ── */
+    .order-id-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 0.8rem;
+        color: #374151;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .order-id-chip .label {
+        color: #9ca3af;
+        font-weight: 500;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .order-id-chip .value {
+        font-weight: 700;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        color: #111827;
+    }
+
+    /* ── CTA Buttons ── */
+    .conf-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 2.5rem;
+    }
+    .btn-conf {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 6px 16px !important;
+        border-radius: 7px !important;
+        font-size: 0.82rem !important;
+        font-weight: 600 !important;
+        line-height: 1.4 !important;
+        text-decoration: none !important;
+        border: none !important;
+        cursor: pointer !important;
+        transition: all 0.18s ease !important;
+    }
+    .btn-conf i { font-size: 13px !important; }
+    .btn-conf.primary {
+        background: #f97316;
+        color: #fff;
+    }
+    .btn-conf.primary:hover { background: #ea6a08; color: #fff; }
+    .btn-conf.pay {
+        background: #16a34a;
+        color: #fff;
+    }
+    .btn-conf.pay:hover { background: #15803d; color: #fff; }
+    .btn-conf.ghost {
+        background: #fff;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    .btn-conf.ghost:hover { background: #f9fafb; color: #111827; }
+
+    /* ── Cards ── */
+    .conf-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        margin-bottom: 14px;
+        overflow: hidden;
+    }
+    .conf-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        border-bottom: 1px solid #f3f4f6;
+        background: #fafafa;
+    }
+    .seller-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .seller-icon {
+        width: 30px;
+        height: 30px;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #f97316;
+        font-size: 14px;
+    }
+    .seller-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #111827;
+    }
+    .track-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #f97316;
+        text-decoration: none;
+        padding: 4px 11px !important;
+        border: 1px solid #fed7aa;
+        border-radius: 6px;
+        background: #fff7ed;
+        transition: all 0.15s;
+        line-height: 1.4;
+    }
+    .track-link i { font-size: 13px !important; }
+    .track-link:hover { background: #f97316; color: #fff; border-color: #f97316; }
+
+    /* ── Items ── */
+    .conf-items { padding: 0 20px; }
+    .conf-item {
+        display: grid;
+        grid-template-columns: 50px 1fr auto;
+        gap: 14px;
+        align-items: center;
+        padding: 14px 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    .conf-item:last-child { border-bottom: none; }
+    .conf-item-img {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
+    }
+    .conf-item-name {
+        font-size: 0.83rem;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 3px;
+        line-height: 1.4;
+    }
+    .conf-item-meta {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .conf-item-meta .dot { width: 3px; height: 3px; background: #d1d5db; border-radius: 50%; }
+    .conf-item-price {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #111827;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    /* ── Totals ── */
+    .conf-totals {
+        padding: 16px 20px;
+        border-top: 1px solid #f3f4f6;
+        background: #fafafa;
+    }
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        margin-bottom: 8px;
+        color: #6b7280;
+    }
+    .total-row:last-child { margin-bottom: 0; }
+    .total-row.grand {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #111827;
+        padding-top: 10px;
+        margin-top: 6px;
+        border-top: 1px solid #e5e7eb;
+    }
+    .total-row.grand .amount { color: #f97316; font-size: 1.05rem; }
+    .total-row.discount { color: #16a34a; }
+
+    /* ── Right sidebar ── */
+    .sidebar-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .sidebar-section {
+        padding: 18px 20px;
+    }
+    .sidebar-section + .sidebar-section {
+        border-top: 1px solid #f3f4f6;
+    }
+    .sidebar-section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #9ca3af;
+        margin-bottom: 14px;
+    }
+    .sidebar-section-title .s-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+    }
+    .sidebar-section-title .s-icon.geo { background: #eff6ff; color: #3b82f6; }
+    .sidebar-section-title .s-icon.pay { background: #f0fdf4; color: #16a34a; }
+
+    .info-row { margin-bottom: 12px; }
+    .info-row:last-child { margin-bottom: 0; }
+    .info-key {
+        font-size: 0.7rem;
+        color: #9ca3af;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 3px;
+    }
+    .info-value {
+        font-size: 0.83rem;
+        font-weight: 500;
+        color: #111827;
+        line-height: 1.5;
+    }
+    .info-value .muted { color: #6b7280; font-weight: 400; }
+
+    /* ── Status badge ── */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+    }
+    .status-badge .dot {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+    }
+    .status-badge.paid { background: #dcfce7; color: #15803d; }
+    .status-badge.paid .dot { background: #16a34a; }
+    .status-badge.pending { background: #fefce8; color: #a16207; }
+    .status-badge.pending .dot { background: #eab308; }
+    .status-badge.failed { background: #fef2f2; color: #dc2626; }
+    .status-badge.failed .dot { background: #ef4444; }
+
+    /* Payment method chip */
+    .method-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        background: #f3f4f6;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #374151;
+    }
+    .method-chip i { color: #6b7280; }
+</style>
+
+<div class="conf-page">
+    <div class="container" style="max-width: 960px;">
+
+        <!-- Hero -->
+        <div class="conf-hero">
+            <div class="conf-icon-ring @(showSuccess ? "success" : "pending")">
+                <i class="bi @(showSuccess ? "bi-check-lg" : "bi-clock-history")"></i>
+            </div>
+            <h1 class="conf-title">
+                @if (showSuccess) { @(isBangla ? "অর্ডার সফল হয়েছে!" : "Order Placed Successfully") }
+                else { @(isBangla ? "অর্ডার গ্রহণ করা হয়েছে" : "Order Received") }
+            </h1>
+            <p class="conf-sub">
+                @if (showSuccess) { @(isBangla ? "আমাদের সাথে কেনাকাটা করার জন্য ধন্যবাদ।" : "Thank you for shopping with Sparkle. We'll notify you when your order ships.") }
+                else { @(isBangla ? "পেমেন্ট সম্পন্ন হলে আমরা অর্ডারটি প্রসেস করব।" : "Your payment is pending. We'll process your order once payment is confirmed.") }
+            </p>
+
+            <!-- Order ID Chip -->
+            <div>
+                <div class="order-id-chip">
+                    <i class="bi bi-receipt" style="color:#9ca3af; font-size:14px;"></i>
+                    <span class="label">Order</span>
+                    <span class="value">@string.Join(" · ", Model.Select(o => "#" + o.OrderNumber))</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="conf-actions">
+                @if (!showSuccess) {
+                    <a href="/payment/gateway?method=@firstOrder.PaymentMethod.ToString().ToLower()&orderIds=@string.Join(",", Model.Select(o => o.Id))" class="btn-conf pay">
+                        <i class="bi bi-credit-card"></i> @(isBangla ? "পেমেন্ট করুন" : "Pay Now")
+                    </a>
+                }
+                <a href="/account-info/orders" class="btn-conf @(showSuccess ? "primary" : "ghost")">
+                    <i class="bi bi-bag-check"></i> @(isBangla ? "অর্ডার দেখুন" : "View My Orders")
+                </a>
+                <a href="/" class="btn-conf ghost">
+                    <i class="bi bi-arrow-left"></i> @(isBangla ? "আরও কেনাকাটা" : "Continue Shopping")
+                </a>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="row g-4">
+            <!-- Left: Order Cards -->
+            <div class="col-lg-8">
+                @foreach (var order in Model) {
+                    <div class="conf-card">
+                        <!-- Seller header -->
+                        <div class="conf-card-header">
+                            <div class="seller-label">
+                                <div class="seller-icon">
+                                    <i class="bi bi-shop"></i>
+                                </div>
+                                <span class="seller-name">@(order.Seller?.ShopName ?? "Sparkle Shop")</span>
+                            </div>
+                            <a href="/orders/track/@order.Id" class="track-link">
+                                Track Order <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+
+                        <!-- Items -->
+                        <div class="conf-items">
+                            @foreach (var item in order.OrderItems) {
+                                <div class="conf-item">
+                                    <img src="@(!string.IsNullOrEmpty(item.ProductImage) ? item.ProductImage : (item.Product?.Images?.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url ?? "https://placehold.co/100"))"
+                                         class="conf-item-img" alt="@item.ProductName" />
+                                    <div>
+                                        <div class="conf-item-name">@item.ProductName</div>
+                                        <div class="conf-item-meta">
+                                            @if (!string.IsNullOrEmpty(item.VariantName)) {
+                                                <span>@item.VariantName</span>
+                                                <span class="dot"></span>
+                                            }
+                                            <span>Qty: @item.Quantity</span>
+                                        </div>
+                                    </div>
+                                    <div class="conf-item-price">৳@item.TotalPrice.ToString("N0")</div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Totals -->
+                        <div class="conf-totals">
+                            <div class="total-row">
+                                <span>Subtotal</span>
+                                <span>৳@order.SubTotal.ToString("N0")</span>
+                            </div>
+                            <div class="total-row">
+                                <span>Shipping</span>
+                                <span>৳@order.ShippingCost.ToString("N0")</span>
+                            </div>
+                            @if (order.DiscountAmount > 0) {
+                                <div class="total-row discount">
+                                    <span><i class="bi bi-tag me-1"></i>Discount</span>
+                                    <span>−৳@order.DiscountAmount.ToString("N0")</span>
+                                </div>
+                            }
+                            <div class="total-row grand">
+                                <span>Total</span>
+                                <span class="amount">৳@order.TotalAmount.ToString("N0")</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Right: Delivery + Payment -->
+            <div class="col-lg-4">
+                <div class="sidebar-card">
+                    <!-- Delivery -->
+                    <div class="sidebar-section">
+                        <div class="sidebar-section-title">
+                            <span class="s-icon geo"><i class="bi bi-geo-alt-fill"></i></span>
+                            Delivery Details
+                        </div>
+                        <div class="info-row">
+                            <div class="info-key">Shipping Address</div>
+                            <div class="info-value">
+                                @firstOrder.ShippingFullName
+                                <div class="muted" style="margin-top:2px;">
+                                    @firstOrder.ShippingAddressLine1
+                                    @if (!string.IsNullOrEmpty(firstOrder.ShippingAddressLine2)) { <br /> @firstOrder.ShippingAddressLine2 }
+                                    <br />@firstOrder.ShippingCity — @firstOrder.ShippingPostalCode
+                                </div>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-key">Contact</div>
+                            <div class="info-value">
+                                <i class="bi bi-telephone" style="color:#9ca3af; font-size:12px; margin-right:4px;"></i>
+                                @firstOrder.ShippingPhone
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment -->
+                    <div class="sidebar-section">
+                        <div class="sidebar-section-title">
+                            <span class="s-icon pay"><i class="bi bi-credit-card-2-front-fill"></i></span>
+                            Payment
+                        </div>
+                        <div class="info-row">
+                            <div class="info-key">Method</div>
+                            <div class="info-value">
+                                <span class="method-chip">
+                                    <i class="bi @(firstOrder.PaymentMethod == Sparkle.Domain.Orders.PaymentMethodType.CashOnDelivery ? "bi-cash-stack" : "bi-credit-card")"></i>
+                                    @firstOrder.PaymentMethod.ToString().Replace("CashOnDelivery", "Cash on Delivery")
+                                </span>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-key">Status</div>
+                            <div class="info-value">
+                                @{
+                                    var payStatus = firstOrder.PaymentStatus;
+                                    var badgeClass = payStatus == Sparkle.Domain.Orders.PaymentStatus.Paid ? "paid" : 
+                                                     payStatus.ToString().ToLower().Contains("fail") ? "failed" : "pending";
+                                }
+                                <span class="status-badge @badgeClass">
+                                    <span class="dot"></span>
+                                    @payStatus
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

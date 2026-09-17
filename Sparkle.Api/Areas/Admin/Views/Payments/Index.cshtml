@@ -1,0 +1,184 @@
+@model IEnumerable<Sparkle.Api.Areas.Admin.Controllers.PaymentsController.TransactionViewModel>
+@{
+    ViewData["Title"] = "Payments & Transactions";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Payments & Transactions</h4>
+        <p class="text-muted mb-0">Track all platform payments and transactions</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/Admin/Payments/Commissions" class="btn btn-outline-primary">
+            <i class="bi bi-percent"></i> Commissions
+        </a>
+        <a href="/Admin/Payments/Payouts" class="btn btn-outline-success">
+            <i class="bi bi-wallet2"></i> Payouts
+        </a>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-currency-dollar text-success fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Total Revenue</h6>
+                        <h3 class="mb-0">৳@(((decimal)ViewBag.TotalRevenue).ToString("N0"))</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-hourglass-split text-warning fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Pending Payouts</h6>
+                        <h3 class="mb-0">৳@(((decimal)ViewBag.PendingPayouts).ToString("N0"))</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-percent text-primary fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Platform Commission</h6>
+                        <h3 class="mb-0">৳@(((decimal)ViewBag.TotalCommission).ToString("N0"))</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="Processing" selected="@(ViewBag.StatusFilter == "Processing")">Processing</option>
+                    <option value="Shipped" selected="@(ViewBag.StatusFilter == "Shipped")">Shipped</option>
+                    <option value="Delivered" selected="@(ViewBag.StatusFilter == "Delivered")">Delivered</option>
+                    <option value="Cancelled" selected="@(ViewBag.StatusFilter == "Cancelled")">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">From Date</label>
+                <input type="date" name="from" class="form-control" value="@(ViewBag.FromDate?.ToString("yyyy-MM-dd"))">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">To Date</label>
+                <input type="date" name="to" class="form-control" value="@(ViewBag.ToDate?.ToString("yyyy-MM-dd"))">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0">Transaction History</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Order #</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Payment Method</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tx in Model)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <span class="fw-medium">@tx.OrderNumber</span>
+                            </td>
+                            <td>@tx.CustomerName</td>
+                            <td class="fw-bold text-success">৳@tx.Amount.ToString("N0")</td>
+                            <td>
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                    @tx.PaymentMethod
+                                </span>
+                            </td>
+                            <td>
+                                @{
+                                    var statusClass = tx.Status switch
+                                    {
+                                        "Delivered" => "success",
+                                        "Shipped" => "info",
+                                        "Processing" => "warning",
+                                        "Cancelled" => "danger",
+                                        _ => "secondary"
+                                    };
+                                }
+                                <span class="badge bg-@statusClass">@tx.Status</span>
+                            </td>
+                            <td class="text-muted">@tx.Date.ToString("MMM dd, yyyy")</td>
+                            <td class="text-end pe-4">
+                                <a href="/Admin/Payments/Details/@tx.OrderId" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                No transactions found
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    @if ((int)ViewBag.TotalPages > 1)
+    {
+        <div class="card-footer bg-white">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == (int)ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="?page=@i&status=@ViewBag.StatusFilter">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    }
+</div>

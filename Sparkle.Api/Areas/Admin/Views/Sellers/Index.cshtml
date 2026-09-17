@@ -1,0 +1,209 @@
+@using Sparkle.Domain.Sellers
+@model List<Seller>
+@{
+    ViewData["Title"] = "Seller Management";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var currentStatus = ViewBag.CurrentStatus as string ?? "all";
+    var searchQuery = ViewBag.SearchQuery as string;
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+}
+
+<style>
+    .hover-primary:hover { color: var(--bs-primary) !important; border-color: var(--bs-primary) !important; background: var(--bs-primary-bg-subtle) !important; }
+    .hover-info:hover { color: var(--bs-info) !important; border-color: var(--bs-info) !important; background: var(--bs-info-bg-subtle) !important; }
+    .hover-bg-light:hover { background-color: var(--bs-gray-100) !important; }
+</style>
+
+<div class="container-fluid p-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div class="mb-3 mb-md-0">
+            <h2 class="h3 fw-bold mb-1">Seller Management</h2>
+            <p class="text-muted mb-0">Review applications and manage seller accounts</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Repair" class="btn btn-warning text-dark fw-bold shadow-sm">
+                <i class="bi bi-wrench me-2"></i> Repair Accounts
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Tabs -->
+    <div class="mb-4 d-flex gap-2 flex-wrap">
+        <a href="?status=all&q=@searchQuery" class="btn @(currentStatus == "all" ? "btn-secondary text-white fw-medium" : "btn-outline-secondary border-secondary-subtle text-muted") d-flex align-items-center gap-2">
+            All Sellers
+        </a>
+        <a href="?status=pending&q=@searchQuery" class="btn @(currentStatus == "pending" ? "btn-warning text-dark fw-bold" : "btn-outline-secondary border-secondary-subtle text-muted") d-flex align-items-center gap-2">
+            Pending <span class="badge bg-white text-dark shadow-sm">@ViewBag.PendingCount</span>
+        </a>
+        <a href="?status=approved&q=@searchQuery" class="btn @(currentStatus == "approved" ? "btn-success text-white fw-bold" : "btn-outline-success border-success-subtle text-success") d-flex align-items-center gap-2">
+            Approved <span class="badge @(currentStatus == "approved" ? "bg-white text-success" : "bg-success-subtle text-success border border-success-subtle")">@ViewBag.ApprovedCount</span>
+        </a>
+        <a href="?status=rejected&q=@searchQuery" class="btn @(currentStatus == "rejected" ? "btn-danger text-white fw-bold" : "btn-outline-danger border-danger-subtle text-danger") d-flex align-items-center gap-2">
+            Rejected <span class="badge @(currentStatus == "rejected" ? "bg-white text-danger" : "bg-danger-subtle text-danger border border-danger-subtle")">@ViewBag.RejectedCount</span>
+        </a>
+        <a href="?status=isolated&q=@searchQuery" class="btn @(currentStatus == "isolated" ? "btn-dark text-white fw-bold" : "btn-outline-dark border-secondary-subtle text-muted") d-flex align-items-center gap-2">
+            Isolated <span class="badge @(currentStatus == "isolated" ? "bg-white text-dark" : "bg-light text-dark border")">@ViewBag.IsolatedCount</span>
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+             <!-- Search -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <form method="get" class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="status" value="@currentStatus" />
+                        
+                        <div class="input-group" style="max-width: 400px;">
+                            <span class="input-group-text bg-white border-end-0 ps-3">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" name="q" class="form-control border-start-0 ps-0" 
+                                   placeholder="Search shop name, email..." 
+                                   value="@searchQuery" style="height: 45px;">
+                            <button type="submit" class="btn btn-primary px-4 fw-medium" style="background-color: #0d6efd; border-color: #0d6efd;">Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="text-uppercase small text-muted border-0">
+                        <tr>
+                            <th class="ps-3 py-3 fw-bold" style="width: 30%;">Shop Info</th>
+                            <th class="py-3 fw-bold" style="width: 25%;">Contact</th>
+                            <th class="py-3 fw-bold" style="width: 15%;">Location</th>
+                            <th class="py-3 fw-bold" style="width: 15%;">Performance</th>
+                            <th class="py-3 fw-bold" style="width: 10%;">Status</th>
+                            <th class="py-3 fw-bold text-end pe-3" style="width: 5%;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                    @if (Model.Any())
+                    {
+                        foreach (var seller in Model)
+                        {
+                            <tr>
+                                <td class="ps-3 py-3">
+                                    <div class="d-flex align-items-center">
+                                         <div class="bg-light rounded d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                                            <i class="bi bi-shop text-muted fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark mb-1">@seller.ShopName</div>
+                                            <div class="small text-muted">ID: #@seller.Id</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3">
+                                    <div class="mb-1 d-flex align-items-center text-dark">
+                                        <i class="bi bi-envelope text-muted me-2 small"></i> @seller.Email
+                                    </div>
+                                    <div class="small text-muted d-flex align-items-center">
+                                        <i class="bi bi-telephone me-2 small"></i> @seller.MobileNumber
+                                    </div>
+                                </td>
+                                <td class="py-3">
+                                    @if(!string.IsNullOrEmpty(seller.City))
+                                    {
+                                        <span class="text-dark"><i class="bi bi-geo-alt text-muted me-1"></i> @seller.City</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted fst-italic">-</span>
+                                    }
+                                </td>
+                                <td class="py-3">
+                                    <div class="d-flex gap-2">
+                                         <div class="text-center px-1">
+                                            <div class="fw-bold text-dark">@seller.TotalProducts</div>
+                                            <div class="text-muted" style="font-size: 9px; text-transform: uppercase;">Prod</div>
+                                        </div>
+                                        <div class="vr opacity-25"></div>
+                                        <div class="text-center px-1">
+                                            <div class="fw-bold text-dark">@seller.TotalSales</div>
+                                            <div class="text-muted" style="font-size: 9px; text-transform: uppercase;">Orders</div>
+                                        </div>
+                                         <div class="vr opacity-25"></div>
+                                        <div class="text-center px-1">
+                                            <div class="fw-bold text-warning">@seller.Rating <i class="bi bi-star-fill" style="font-size: 8px;"></i></div>
+                                            <div class="text-muted" style="font-size: 9px; text-transform: uppercase;">Rating</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3">
+                                    @{
+                                        var subtleClass = seller.Status switch {
+                                            SellerStatus.Approved => "bg-success-subtle text-success border border-success-subtle",
+                                            SellerStatus.Pending => "bg-warning-subtle text-warning border border-warning-subtle",
+                                            SellerStatus.Rejected => "bg-danger-subtle text-danger border border-danger-subtle",
+                                            SellerStatus.Isolated => "bg-dark-subtle text-dark border border-dark-subtle",
+                                            _ => "bg-secondary-subtle text-secondary"
+                                        };
+                                    }
+                                    <span class="badge @subtleClass px-2 py-1 rounded-2 fw-semibold">
+                                        @seller.Status
+                                    </span>
+                                </td>
+                                <td class="py-3 text-end pe-3">
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <a href="/Admin/Sellers/Details/@seller.Id" class="btn btn-light btn-sm border text-muted hover-primary" data-bs-toggle="tooltip" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="/shop/@seller.Id" target="_blank" class="btn btn-light btn-sm border text-muted hover-info" data-bs-toggle="tooltip" title="View Shop">
+                                            <i class="bi bi-shop"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="text-muted d-flex flex-column align-items-center">
+                                    <i class="bi bi-shop display-4 mb-3 opacity-25"></i>
+                                    <span class="fw-medium">No sellers found</span>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (totalPages > 1)
+            {
+                <div class="d-flex justify-content-center pt-4 border-top">
+                    <nav>
+                        <ul class="pagination mb-0">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link border-0 text-muted" href="?page=@(currentPage - 1)&q=@searchQuery&status=@currentStatus">
+                                    <i class="bi bi-chevron-left me-1"></i> Prev
+                                </a>
+                            </li>
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link border-0 rounded-circle mx-1 d-flex align-items-center justify-content-center @(currentPage == i ? "bg-primary text-white shadow-sm" : "text-muted hover-bg-light")" 
+                                       style="width: 32px; height: 32px; font-weight: 500;"
+                                       href="?page=@i&q=@searchQuery&status=@currentStatus">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link border-0 text-muted" href="?page=@(currentPage + 1)&q=@searchQuery&status=@currentStatus">
+                                    Next <i class="bi bi-chevron-right ms-1"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</div>

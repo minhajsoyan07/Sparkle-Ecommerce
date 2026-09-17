@@ -1,0 +1,545 @@
+@model List<Sparkle.Domain.Catalog.Product>
+
+@{
+    ViewData["Title"] = "Inventory";
+    Layout = "~/Areas/Seller/Views/Shared/_SellerLayout.cshtml";
+    
+    // Get filter state from ViewBag (set by controller)
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalProducts = ViewBag.TotalProducts ?? Model.Count;
+    int activeCount = ViewBag.ActiveCount ?? Model.Count(p => p.IsActive);
+    int inactiveCount = ViewBag.InactiveCount ?? Model.Count(p => !p.IsActive);
+    string currentSearch = ViewBag.CurrentSearch ?? "";
+    string currentStatus = ViewBag.CurrentStatus ?? "all";
+    string currentSort = ViewBag.CurrentSort ?? "newest";
+}
+
+<style>
+    :root {
+        --primary: #f97316;
+        --primary-dark: #ea580c;
+        --success: #22c55e;
+        --danger: #ef4444;
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-500: #64748b;
+        --slate-700: #334155;
+        --slate-800: #1e293b;
+    }
+
+    /* Toolbar */
+    .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: #fff;
+        padding: 10px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--slate-200);
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .tab-group {
+        display: flex;
+        gap: 4px;
+        background: var(--slate-100);
+        padding: 4px;
+        border-radius: 8px;
+    }
+    .tab-link {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--slate-500);
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tab-link:hover { color: var(--slate-700); }
+    .tab-link.active { background: #fff; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .tab-link .count {
+        background: var(--slate-200);
+        color: var(--slate-600);
+        padding: 2px 7px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+    .tab-link.active .count { background: var(--primary); color: #fff; }
+    .divider { width: 1px; height: 28px; background: var(--slate-200); }
+    .search-box {
+        flex: 1;
+        min-width: 200px;
+        position: relative;
+    }
+    .search-box i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--slate-500);
+    }
+    .search-input {
+        width: 100%;
+        padding: 10px 12px 10px 36px;
+        border: 1px solid var(--slate-200);
+        border-radius: 8px;
+        font-size: 0.85rem;
+        background: var(--slate-50);
+    }
+    .search-input:focus { outline: none; border-color: var(--primary); background: #fff; }
+
+    /* Pagination in toolbar */
+    .pagination-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .page-btn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--slate-200);
+        background: #fff;
+        border-radius: 6px;
+        color: var(--slate-600);
+        font-weight: 600;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.15s ease;
+    }
+    .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .page-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .page-info { font-size: 0.8rem; color: var(--slate-500); margin-right: 8px; }
+
+    .btn-add {
+        padding: 10px 18px;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s ease;
+    }
+    .btn-add:hover { background: var(--primary-dark); color: #fff; }
+
+    /* Table */
+    .table-card {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid var(--slate-100);
+        overflow: hidden;
+        width: 100%;
+    }
+    .products-table { width: 100%; border-collapse: collapse; }
+    .products-table th {
+        background: var(--slate-50);
+        padding: 12px 16px;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--slate-500);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--slate-100);
+    }
+    .products-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--slate-100);
+        font-size: 0.9rem;
+        color: var(--slate-700);
+    }
+    .products-table tr:last-child td { border-bottom: none; }
+    .products-table tbody tr:hover { background: var(--slate-50); }
+
+    .product-cell { display: flex; align-items: center; gap: 12px; }
+    .product-img {
+        width: 50px; height: 50px; border-radius: 8px;
+        object-fit: cover; border: 1px solid var(--slate-200);
+    }
+    .product-placeholder {
+        width: 50px; height: 50px; border-radius: 8px;
+        background: var(--slate-100); display: flex;
+        align-items: center; justify-content: center;
+        color: var(--slate-500);
+    }
+    .product-info h5 { margin: 0; font-size: 0.9rem; font-weight: 700; color: var(--slate-800); }
+    .product-info p { margin: 2px 0 0; font-size: 0.75rem; color: var(--slate-500); }
+    .category-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        background: var(--slate-100);
+        color: var(--slate-600);
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .price { font-weight: 700; color: var(--slate-800); }
+    .price-old { font-size: 0.75rem; color: var(--slate-500); text-decoration: line-through; }
+    .status-active { color: var(--success); font-weight: 600; font-size: 0.85rem; }
+    .status-inactive { color: var(--danger); font-weight: 600; font-size: 0.85rem; }
+    .action-btn {
+        padding: 6px 10px;
+        border: 1px solid var(--slate-200);
+        background: #fff;
+        border-radius: 6px;
+        color: var(--slate-600);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+    .action-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+    .action-group { display: flex; gap: 6px; }
+
+    .empty-box { text-align: center; padding: 60px 40px; }
+    .empty-box i { font-size: 2.5rem; color: var(--slate-300); margin-bottom: 12px; }
+    .empty-box h4 { font-size: 1rem; color: var(--slate-600); margin: 0 0 8px; }
+    .empty-box a { color: var(--primary); font-weight: 600; text-decoration: none; }
+
+    /* Filter Dropdown */
+    .filter-dropdown {
+        position: relative;
+    }
+    .filter-btn {
+        padding: 10px 16px;
+        border: 1px solid var(--slate-200);
+        background: #fff;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--slate-700);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.15s ease;
+    }
+    .filter-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+    .filter-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        margin-top: 8px;
+        background: #fff;
+        border: 1px solid var(--slate-200);
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+        min-width: 200px;
+        z-index: 1000;
+        overflow: hidden;
+    }
+    .filter-menu.show {
+        display: block;
+        animation: fadeIn 0.15s ease;
+    }
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .filter-menu-header {
+        padding: 12px 16px 8px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--slate-500);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--slate-100);
+    }
+    .filter-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 10px 16px;
+        border: none;
+        background: transparent;
+        font-size: 0.85rem;
+        color: var(--slate-700);
+        cursor: pointer;
+        text-align: left;
+        text-decoration: none;
+        transition: all 0.15s ease;
+    }
+    .filter-option:hover {
+        background: var(--slate-50);
+        color: var(--primary);
+    }
+    .filter-option.active {
+        background: rgba(249, 115, 22, 0.1);
+        color: var(--primary);
+        font-weight: 600;
+    }
+    .filter-option i {
+        font-size: 1rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    /* Inventory column */
+    .inventory-stock {
+        font-weight: 600;
+        color: var(--slate-700);
+    }
+    .inventory-low {
+        color: var(--danger);
+    }
+</style>
+
+<!-- Toolbar with Server-Side Filtering -->
+<div class="toolbar">
+    <!-- Search Form (server-side) -->
+    <form method="get" class="search-box" id="searchForm">
+        <input type="hidden" name="status" value="@currentStatus" />
+        <input type="hidden" name="sort" value="@currentSort" />
+        <i class="bi bi-search"></i>
+        <input type="text" class="search-input" name="q" id="searchInput" 
+               placeholder="Search by name, SKU, or ID..." value="@currentSearch" />
+    </form>
+    <div class="divider"></div>
+    
+    <!-- Sort/Filter Dropdown (server-side) -->
+    <div class="filter-dropdown">
+        <button class="filter-btn" type="button" id="filterToggle">
+            <i class="bi bi-funnel"></i> Filter
+            <i class="bi bi-chevron-down"></i>
+        </button>
+        <div class="filter-menu" id="filterMenu">
+            <div class="filter-menu-header">SORT BY</div>
+            <a href="?q=@currentSearch&status=@currentStatus&sort=name-asc" class="filter-option @(currentSort == "name-asc" ? "active" : "")"><i class="bi bi-sort-alpha-down"></i> Name (A-Z)</a>
+            <a href="?q=@currentSearch&status=@currentStatus&sort=name-desc" class="filter-option @(currentSort == "name-desc" ? "active" : "")"><i class="bi bi-sort-alpha-up"></i> Name (Z-A)</a>
+            <a href="?q=@currentSearch&status=@currentStatus&sort=newest" class="filter-option @(currentSort == "newest" ? "active" : "")"><i class="bi bi-calendar-minus"></i> Newest First</a>
+            <a href="?q=@currentSearch&status=@currentStatus&sort=oldest" class="filter-option @(currentSort == "oldest" ? "active" : "")"><i class="bi bi-calendar-plus"></i> Oldest First</a>
+            <a href="?q=@currentSearch&status=@currentStatus&sort=stock-high" class="filter-option @(currentSort == "stock-high" ? "active" : "")"><i class="bi bi-box-seam"></i> High Stock</a>
+            <a href="?q=@currentSearch&status=@currentStatus&sort=stock-low" class="filter-option @(currentSort == "stock-low" ? "active" : "")"><i class="bi bi-box"></i> Low Stock</a>
+            <a href="?q=@currentSearch&status=@currentStatus&sort=price-high" class="filter-option @(currentSort == "price-high" ? "active" : "")"><i class="bi bi-currency-dollar"></i> Price (High-Low)</a>
+            <a href="?q=@currentSearch&status=@currentStatus&sort=price-low" class="filter-option @(currentSort == "price-low" ? "active" : "")"><i class="bi bi-cash"></i> Price (Low-High)</a>
+        </div>
+    </div>
+    <div class="divider"></div>
+    
+    <!-- Status Tabs (server-side as links) -->
+    <div class="tab-group">
+        <a href="?q=@currentSearch&status=all&sort=@currentSort" class="tab-link @(currentStatus == "all" ? "active" : "")">All <span class="count">@totalProducts</span></a>
+        <a href="?q=@currentSearch&status=active&sort=@currentSort" class="tab-link @(currentStatus == "active" ? "active" : "")">Active <span class="count">@activeCount</span></a>
+        <a href="?q=@currentSearch&status=inactive&sort=@currentSort" class="tab-link @(currentStatus == "inactive" ? "active" : "")">Inactive <span class="count">@inactiveCount</span></a>
+    </div>
+    <div class="divider"></div>
+    
+    <!-- Pagination (preserves filter state) -->
+    @if (totalPages > 1)
+    {
+        <div class="pagination-group">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <a href="?q=@currentSearch&status=@currentStatus&sort=@currentSort&page=@i" class="page-btn @(i == currentPage ? "active" : "")">@i</a>
+            }
+            <a href="?q=@currentSearch&status=@currentStatus&sort=@currentSort&page=@(currentPage < totalPages ? currentPage + 1 : totalPages)" class="page-btn">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+        <div class="divider"></div>
+    }
+    
+    <a asp-action="Create" class="btn-add"><i class="bi bi-plus-lg"></i> Add a Product</a>
+</div>
+
+<!-- Products Table -->
+<div class="table-card">
+    @if (!Model.Any())
+    {
+        <div class="empty-box">
+            <i class="bi bi-box-seam"></i>
+            <h4>No Products Yet</h4>
+            <a asp-action="Create">Add your first product</a>
+        </div>
+    }
+    else
+    {
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th>Product Details</th>
+                    <th>Category</th>
+                    <th>Inventory</th>
+                    <th>Pricing</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="productsBody">
+                @foreach (var product in Model)
+                {
+                    var totalStock = product.Variants?.Sum(v => v.Stock) ?? 0;
+                    <tr data-name="@product.Title" 
+                        data-status="@(product.IsActive ? "active" : "inactive")"
+                        data-price="@product.Price"
+                        data-stock="@totalStock"
+                        data-date="@product.CreatedAt.Ticks">
+                        <td>
+                            <div class="product-cell">
+                                @if (product.Images.Any())
+                                {
+                                    <img src="@product.Images.First().Url" class="product-img" alt="@product.Title" />
+                                }
+                                else
+                                {
+                                    <div class="product-placeholder"><i class="bi bi-image"></i></div>
+                                }
+                                <div class="product-info">
+                                    <h5>@product.Title</h5>
+                                    <p><i class="bi bi-upc-scan"></i> @product.Id</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="category-badge">@(product.Category?.Name ?? "Uncategorized")</span></td>
+                        <td>
+                            <span class="inventory-stock @(totalStock < 10 ? "inventory-low" : "")">
+                                @totalStock
+                            </span>
+                        </td>
+                        <td>
+                            <div class="price">৳ @product.Price.ToString("N0")</div>
+                            @if (product.DiscountPercent > 0)
+                            {
+                                <div class="price-old">৳ @product.BasePrice.ToString("N0")</div>
+                            }
+                        </td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                                @* Moderation Status *@
+                                @{
+                                    var moderationStatus = product.ModerationStatus;
+                                    var statusColor = "";
+                                    var statusIcon = "";
+                                    var statusText = "";
+                                    
+                                    switch (moderationStatus)
+                                    {
+                                        case Sparkle.Domain.Catalog.ProductModerationStatus.Pending:
+                                            statusColor = "#fbbf24";
+                                            statusIcon = "bi-clock-fill";
+                                            statusText = "Pending Review";
+                                            break;
+                                        case Sparkle.Domain.Catalog.ProductModerationStatus.Approved:
+                                            statusColor = "#22c55e";
+                                            statusIcon = "bi-check-circle-fill";
+                                            statusText = "Approved";
+                                            break;
+                                        case Sparkle.Domain.Catalog.ProductModerationStatus.Rejected:
+                                            statusColor = "#ef4444";
+                                            statusIcon = "bi-x-circle-fill";
+                                            statusText = "Rejected";
+                                            break;
+                                        case Sparkle.Domain.Catalog.ProductModerationStatus.Suspended:
+                                            statusColor = "#6c757d";
+                                            statusIcon = "bi-pause-circle-fill";
+                                            statusText = "Suspended";
+                                            break;
+                                    }
+                                }
+                                
+                                <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600; color: @statusColor;">
+                                    <i class="bi @statusIcon"></i> @statusText
+                                </span>
+                                
+                                @* Active/Inactive Status *@
+                                @if (product.IsActive)
+                                {
+                                    <span class="status-active"><i class="bi bi-eye-fill"></i> Visible</span>
+                                }
+                                else
+                                {
+                                    <span class="status-inactive"><i class="bi bi-eye-slash-fill"></i> Hidden</span>
+                                }
+                            </div>
+                        </td>
+                        <td style="text-align: right;">
+                            <div class="action-group">
+                                <a asp-action="Edit" asp-route-id="@product.Id" class="action-btn" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@product.Id" method="post" style="display:inline;" 
+                                      onsubmit="return confirm('Delete @product.Title?');">
+                                    <button type="submit" class="action-btn danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<script>
+(function() {
+    // Filter Dropdown Toggle
+    const filterToggle = document.getElementById('filterToggle');
+    const filterMenu = document.getElementById('filterMenu');
+    
+    if (filterToggle && filterMenu) {
+        filterToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            filterMenu.classList.toggle('show');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!filterMenu.contains(e.target) && !filterToggle.contains(e.target)) {
+                filterMenu.classList.remove('show');
+            }
+        });
+    }
+
+    // Search form - submit on Enter or after typing stops (debounce)
+    const searchInput = document.getElementById('searchInput');
+    const searchForm = document.getElementById('searchForm');
+    let debounceTimer;
+    
+    if (searchInput && searchForm) {
+        // Submit on Enter key
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchForm.submit();
+            }
+        });
+        
+        // Auto-submit after 500ms of no typing (optional - for better UX)
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                if (searchInput.value.length >= 2 || searchInput.value.length === 0) {
+                    searchForm.submit();
+                }
+            }, 800);
+        });
+    }
+})();
+</script>

@@ -1,0 +1,306 @@
+@{
+    ViewData["Title"] = "Write a Review";
+    Layout = "_ProfileLayout";
+    var product = ViewBag.Product as Sparkle.Domain.Catalog.Product;
+    var eligibility = ViewBag.Eligibility as Sparkle.Api.Services.ReviewEligibility;
+}
+
+<style>
+    .rev-create-grid { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Header ── */
+    .rev-create-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+    }
+    .rev-create-header h5 { font-size: 16px; font-weight: 700; color: #2d3748; margin: 0; }
+    .rev-create-header p { font-size: 12px; color: #718096; margin: 2px 0 0 0; }
+
+    /* ── Product Info Card ── */
+    .rev-prod-card {
+        background: #fff;
+        border: 1px solid #edf2f7;
+        border-radius: 16px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .rev-prod-img {
+        width: 60px; height: 60px;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 1px solid #edf2f7;
+    }
+    .rev-prod-info { flex: 1; min-width: 0; }
+    .rev-prod-title { font-size: 14px; font-weight: 700; color: #2d3748; margin-bottom: 2px; }
+    .rev-prod-meta { font-size: 11px; color: #a0aec0; display: flex; align-items: center; gap: 10px; }
+    .rev-prod-meta span { display: flex; align-items: center; gap: 4px; }
+    .rev-prod-meta i { font-size: 12px; color: #cbd5e0; }
+    .verified-badge { background: #f0fff4; color: #38a169; padding: 2px 8px; border-radius: 99px; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+
+    /* ── Form Card ── */
+    .rev-form-card {
+        background: #fff;
+        border: 1px solid #edf2f7;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        overflow: hidden;
+    }
+    .form-section { padding: 20px 24px; border-bottom: 1px solid #f7fafc; }
+    .form-section:last-child { border-bottom: none; }
+    
+    .section-lbl { font-size: 11px; font-weight: 700; color: #4a5568; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+    .section-lbl i { font-size: 14px; color: #cbd5e0; }
+
+    /* ── Star Rating ── */
+    .star-rating { display: flex; gap: 6px; margin-bottom: 8px; }
+    .star-btn {
+        background: none; border: none; padding: 0;
+        font-size: 28px; color: #edf2f7; cursor: pointer;
+        transition: all 0.2s;
+    }
+    .star-btn:hover { transform: scale(1.1); color: #ecc94b; }
+    .star-btn.active { color: #f6ad55; }
+    .rating-desc { font-size: 11px; font-weight: 600; color: #a0aec0; }
+
+    /* ── Sub Ratings ── */
+    .sub-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .sub-item { }
+    .sub-lbl { font-size: 11px; font-weight: 600; color: #718096; margin-bottom: 6px; }
+    .sub-stars { display: flex; gap: 4px; }
+    .sub-star { font-size: 16px; color: #edf2f7; cursor: pointer; transition: color 0.2s; }
+    .sub-star.active { color: #f6ad55; }
+
+    /* ── Text Inputs ── */
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 11px; font-weight: 600; color: #718096; margin-bottom: 6px; }
+    .form-input, .form-textarea {
+        width: 100%;
+        padding: 10px 14px;
+        font-size: 13px;
+        border: 1px solid #edf2f7;
+        border-radius: 10px;
+        outline: none;
+        transition: all 0.2s;
+    }
+    .form-input:focus, .form-textarea:focus { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49,130,206,0.05); }
+
+    /* ── Image Upload ── */
+    .upload-area {
+        border: 1px dashed #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fcfdfe;
+    }
+    .upload-area:hover { border-color: #3182ce; background: #f0f7ff; }
+    .upload-area i { font-size: 24px; color: #cbd5e0; margin-bottom: 4px; display: block; }
+    .upload-area span { font-size: 11px; font-weight: 600; color: #718096; }
+
+    .preview-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .preview-item {
+        width: 50px; height: 50px;
+        border-radius: 8px;
+        position: relative;
+        border: 1px solid #edf2f7;
+        overflow: hidden;
+    }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .remove-btn {
+        position: absolute; top: 2px; right: 2px;
+        width: 16px; height: 16px; border-radius: 4px;
+        background: rgba(0,0,0,0.5); color: #fff;
+        border: none; font-size: 10px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Footer ── */
+    .form-footer {
+        padding: 20px 24px;
+        background: #fafcfe;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .btn-cancel { font-size: 12px; font-weight: 700; color: #718096; text-decoration: none; }
+    .btn-submit {
+        background: #1a202c;
+        color: #fff;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-submit:hover:not(:disabled) { background: #2d3748; transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    @@media (max-width: 640px) {
+        .sub-grid { grid-template-columns: 1fr; gap: 12px; }
+    }
+</style>
+
+<div class="rev-create-grid">
+    <div class="rev-create-header">
+        <div>
+            <h5>Write a Review</h5>
+            <p>Your feedback helps millions of shoppers</p>
+        </div>
+        <div class="verified-badge">Verified Purchase</div>
+    </div>
+
+    @if (product != null)
+    {
+        <div class="rev-prod-card">
+            <img src="@(product.Images?.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url ?? "/images/placeholder.jpg")" class="rev-prod-img" />
+            <div class="rev-prod-info">
+                <div class="rev-prod-title">@product.Title</div>
+                <div class="rev-prod-meta">
+                    <span><i class="bi bi-shop"></i> @(product.Seller?.ShopName ?? "Sparkle Store")</span>
+                    @if (eligibility?.PurchaseDate.HasValue == true)
+                    {
+                        <span><i class="bi bi-calendar-check"></i> Bought on @eligibility.PurchaseDate.Value.ToString("dd MMM yyyy")</span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data" id="reviewForm" class="rev-form-card">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="productId" value="@product?.Id" />
+        <input type="hidden" name="rating" id="ratingInput" value="0" />
+        <input type="hidden" name="qualityRating" id="qualityRatingInput" value="" />
+        <input type="hidden" name="valueForMoneyRating" id="valueRatingInput" value="" />
+        <input type="hidden" name="accuracyRating" id="accuracyRatingInput" value="" />
+
+        <div class="form-section">
+            <div class="section-lbl"><i class="bi bi-star"></i> Overall Satisfaction</div>
+            <div class="star-rating" id="mainRating">
+                <button type="button" class="star-btn" data-rating="1"><i class="bi bi-star-fill"></i></button>
+                <button type="button" class="star-btn" data-rating="2"><i class="bi bi-star-fill"></i></button>
+                <button type="button" class="star-btn" data-rating="3"><i class="bi bi-star-fill"></i></button>
+                <button type="button" class="star-btn" data-rating="4"><i class="bi bi-star-fill"></i></button>
+                <button type="button" class="star-btn" data-rating="5"><i class="bi bi-star-fill"></i></button>
+            </div>
+            <div class="rating-desc" id="ratingText">Select your rating</div>
+        </div>
+
+        <div class="form-section">
+            <div class="section-lbl"><i class="bi bi-chat-left-dots"></i> Review Details</div>
+            <div class="form-group">
+                <label class="form-label">Review Title (Optional)</label>
+                <input type="text" name="title" class="form-input" placeholder="Summarize your experience..." maxlength="100" />
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Your Experience</label>
+                <textarea name="comment" class="form-textarea" rows="4" placeholder="What did you like or dislike about this product?"></textarea>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="section-lbl"><i class="bi bi-list-stars"></i> Detailed Ratings</div>
+            <div class="sub-grid">
+                <div class="sub-item">
+                    <div class="sub-lbl">Product Quality</div>
+                    <div class="sub-stars" data-target="qualityRatingInput">
+                        @for (int i = 1; i <= 5; i++) { <i class="bi bi-star-fill sub-star" data-value="@i"></i> }
+                    </div>
+                </div>
+                <div class="sub-item">
+                    <div class="sub-lbl">Value for Money</div>
+                    <div class="sub-stars" data-target="valueRatingInput">
+                        @for (int i = 1; i <= 5; i++) { <i class="bi bi-star-fill sub-star" data-value="@i"></i> }
+                    </div>
+                </div>
+                <div class="sub-item">
+                    <div class="sub-lbl">Matches Description</div>
+                    <div class="sub-stars" data-target="accuracyRatingInput">
+                        @for (int i = 1; i <= 5; i++) { <i class="bi bi-star-fill sub-star" data-value="@i"></i> }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="section-lbl"><i class="bi bi-camera"></i> Photos (Optional)</div>
+            <label class="upload-area" for="imageUpload">
+                <i class="bi bi-plus-circle"></i>
+                <span>Add up to 5 photos</span>
+            </label>
+            <input type="file" name="images" id="imageUpload" multiple accept="image/*" class="d-none" />
+            <div class="preview-list" id="previewContainer"></div>
+        </div>
+
+        <div class="form-footer">
+            <a href="@Url.Action("Index")" class="btn-cancel">Cancel</a>
+            <button type="submit" class="btn-submit" id="submitBtn" disabled>Post Review</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ratingTexts = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+        const mainStars = document.querySelectorAll('#mainRating .star-btn');
+        const ratingInput = document.getElementById('ratingInput');
+        const ratingText = document.getElementById('ratingText');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        mainStars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = parseInt(this.dataset.rating);
+                ratingInput.value = rating;
+                mainStars.forEach((s, index) => s.classList.toggle('active', index < rating));
+                ratingText.textContent = ratingTexts[rating];
+                ratingText.style.color = '#f6ad55';
+                submitBtn.disabled = false;
+            });
+        });
+        
+        document.querySelectorAll('.sub-stars').forEach(container => {
+            const stars = container.querySelectorAll('.sub-star');
+            const targetId = container.dataset.target;
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const value = parseInt(this.dataset.value);
+                    document.getElementById(targetId).value = value;
+                    stars.forEach((s, index) => s.classList.toggle('active', index < value));
+                });
+            });
+        });
+        
+        const imageUpload = document.getElementById('imageUpload');
+        const previewContainer = document.getElementById('previewContainer');
+        imageUpload.addEventListener('change', function() {
+            previewContainer.innerHTML = '';
+            const files = Array.from(this.files).slice(0, 5);
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const item = document.createElement('div');
+                    item.className = 'preview-item';
+                    item.innerHTML = `<img src="${e.target.result}" /><button type="button" class="remove-btn" onclick="removeImage(${index})"><i class="bi bi-x"></i></button>`;
+                    previewContainer.appendChild(item);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    });
+
+    function removeImage(index) {
+        const input = document.getElementById('imageUpload');
+        const dt = new DataTransfer();
+        Array.from(input.files).forEach((file, i) => { if (i !== index) dt.items.add(file); });
+        input.files = dt.files;
+        input.dispatchEvent(new Event('change'));
+    }
+</script>

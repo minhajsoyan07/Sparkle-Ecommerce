@@ -1,0 +1,257 @@
+@model Sparkle.Domain.Orders.Shipment
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Label - @Model.ShipmentNumber</title>
+    <style>
+        @@import url('https://fonts.googleapis.com/css2?family=Libre+Barcode+128&family=Roboto+Mono:wght@400;700&family=Roboto:wght@400;700;900&display=swap');
+
+        :root {
+            --label-width: 101.6mm; /* 4 inches */
+            --label-height: 152.4mm; /* 6 inches */
+        }
+
+        body {
+            background: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            justify-content: center;
+        }
+
+        .no-print {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            font-family: sans-serif;
+        }
+
+        .btn-secondary {
+            background: #64748b;
+        }
+
+        .label-container {
+            width: var(--label-width);
+            height: var(--label-height);
+            background: white;
+            position: relative;
+            box-sizing: border-box;
+            padding: 5mm;
+            border: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Border box sections */
+        .section {
+            border-bottom: 2px solid #000;
+            padding: 5px 0;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 40px;
+        }
+
+        .courier-name {
+            font-size: 24px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .routing-code {
+            font-size: 32px;
+            font-weight: 900;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .addresses {
+            display: flex;
+            font-size: 12px;
+            padding: 10px 0;
+        }
+
+        .from-address {
+            width: 40%;
+            padding-right: 10px;
+            border-right: 1px dashed #ccc;
+        }
+
+        .to-address {
+            width: 60%;
+            padding-left: 10px;
+        }
+
+        .address-label {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .address-name {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .address-phone {
+            font-family: 'Roboto Mono', monospace;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .barcode-section {
+            text-align: center;
+            padding: 15px 0;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .barcode {
+            font-family: 'Libre Barcode 128', cursive;
+            font-size: 60px;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .tracking-number {
+            font-family: 'Roboto Mono', monospace;
+            font-weight: bold;
+            font-size: 16px;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+
+        .footer {
+            font-size: 10px;
+            display: flex;
+            justify-content: space-between;
+            margin-top: auto;
+        }
+
+        .ref-code {
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        @@media print {
+            body {
+                background: white;
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none;
+            }
+            .label-container {
+                border: none;
+                width: 100%;
+                height: 100%;
+                page-break-after: always;
+            }
+            @@page {
+                size: 101.6mm 152.4mm;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print">
+        <button onclick="window.print()" class="btn">Print Label</button>
+        <button onclick="window.close()" class="btn btn-secondary">Close</button>
+    </div>
+
+    <div class="label-container">
+        <!-- Section 1: Courier Header -->
+        <div class="section header">
+            <span class="courier-name">@Model.CourierName</span>
+            <span style="font-weight: bold; border: 2px solid black; padding: 2px 5px; border-radius: 4px;">STD</span>
+        </div>
+
+        <!-- Section 2: Big Routing Code (Mock) -->
+        <div class="section routing-code">
+            DHK-@(Model.ShippingPostalCode.Length >= 2 ? Model.ShippingPostalCode.Substring(0, 2) : "00")
+        </div>
+
+        <!-- Section 3: Addresses -->
+        <div class="section addresses">
+            <div class="from-address">
+                <div class="address-label">Sender</div>
+                <div class="address-name">@Model.Seller?.ShopName</div>
+                <div>@Model.Seller?.BusinessAddress</div>
+                <div>@Model.Seller?.City, @Model.Seller?.Country</div>
+                <div class="address-phone">@Model.Seller?.MobileNumber</div>
+            </div>
+            <div class="to-address">
+                <div class="address-label">Recipient</div>
+                <div class="address-name">@Model.RecipientName</div>
+                <div>@Model.ShippingAddress</div>
+                <div>@Model.ShippingCity - @Model.ShippingPostalCode</div>
+                <div class="address-phone">Phone: @Model.RecipientPhone</div>
+            </div>
+        </div>
+
+        <!-- Section 4: Order Info -->
+        <div class="section" style="font-size: 12px; padding: 5px 0;">
+             <strong>Order:</strong> #@Model.OrderId 
+             <span style="float: right;"><strong>Weight:</strong> @(Model.WeightKg ?? 1.0m) kg</span>
+             <br/>
+             <strong>Date:</strong> @(Model.CreatedAt.ToString("dd-MMM-yyyy"))
+             <span style="float: right;"><strong>Boxes:</strong> @Model.NumberOfBoxes</span>
+        </div>
+
+        <!-- Section 5: Barcode -->
+        <div class="section barcode-section">
+            <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px;">TRACKING ID</div>
+            <!-- Using Google Font for Barcode -->
+            <div class="barcode">@Model.TrackingNumber</div>
+            <div class="tracking-number">@Model.TrackingNumber</div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="ref-code">REF: @Model.ShipmentNumber</div>
+            <div>Sparkle Logistics</div>
+        </div>
+    </div>
+
+</body>
+</html>

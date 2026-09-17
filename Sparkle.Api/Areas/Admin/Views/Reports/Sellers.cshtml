@@ -1,0 +1,131 @@
+<style>
+    :root {
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-500: #64748b;
+        --slate-900: #0f172a;
+    }
+
+    .report-header {
+        margin-bottom: 2rem;
+    }
+
+    .table-card {
+        background: white;
+        border: 1px solid var(--slate-200);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .report-table th {
+        background: var(--slate-50);
+        padding: 1rem 1.5rem;
+        text-align: left;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--slate-500);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--slate-200);
+    }
+
+    .report-table td {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--slate-100);
+        font-size: 0.85rem;
+        color: var(--slate-800);
+    }
+
+    .badge-minimal {
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        text-transform: uppercase;
+    }
+
+    .badge-rank { background: var(--slate-100); color: var(--slate-900); }
+    .badge-top1 { background: #fefce8; color: #854d0e; }
+
+    .btn-minimal {
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+    }
+</style>
+
+<div class="report-header d-flex justify-content-between align-items-center">
+    <div>
+        <h4 class="fw-bold mb-1" style="font-size: 24px; color: var(--slate-900);">Seller Performance</h4>
+        <p class="text-muted mb-0" style="font-size: 14px;">Ranking and efficiency metrics for active vendors.</p>
+    </div>
+    <a href="/Admin/Reports" class="btn btn-outline-secondary btn-minimal">
+        <i class="bi bi-arrow-left me-1"></i> Dashboard
+    </a>
+</div>
+
+<div class="table-card">
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th style="padding-left: 1.5rem;">Rank</th>
+                <th>Seller</th>
+                <th>Catalog</th>
+                <th>Sales</th>
+                <th>Rating</th>
+                <th style="padding-right: 1.5rem;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int rank = 1;
+                foreach (var seller in Model)
+                {
+                    <tr>
+                        <td style="padding-left: 1.5rem;">
+                            <span class="badge-minimal @(rank == 1 ? "badge-top1" : "badge-rank")">#@rank</span>
+                        </td>
+                        <td class="fw-bold text-dark">@seller.SellerName</td>
+                        <td class="text-muted small">@seller.TotalProducts items / @seller.TotalOrders orders</td>
+                        <td class="fw-bold text-dark">৳@seller.TotalSales.ToString("N0")</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-1">
+                                <i class="bi bi-star-fill text-warning" style="font-size: 0.75rem;"></i>
+                                <span class="fw-bold">@seller.Rating.ToString("F1")</span>
+                            </div>
+                        </td>
+                        <td style="padding-right: 1.5rem;">
+                            @{
+                                var badgeClass = seller.Status switch
+                                {
+                                    "Approved" => "bg-success text-white",
+                                    "Pending" => "bg-warning text-dark",
+                                    "Rejected" => "bg-danger text-white",
+                                    _ => "bg-secondary text-white"
+                                };
+                            }
+                            <span class="badge-minimal @badgeClass" style="font-size: 0.6rem;">@seller.Status</span>
+                        </td>
+                    </tr>
+                    rank++;
+                }
+            }
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-slate-400">
+                        <i class="bi bi-inbox d-block mb-2" style="font-size: 2rem;"></i>
+                        No seller performance data found.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

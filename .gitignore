@@ -1,0 +1,133 @@
+## Visual Studio files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+**/Properties/launchSettings.json
+
+## NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+
+## Visual Studio cache/options directory
+.vs/
+.vscode/
+
+## Files built by Visual Studio
+*_i.c
+*_p.c
+*_h.h
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+## Backup & report files from converting
+_UpgradeReport_Files/
+Backup*/
+UpgradeLog*.XML
+UpgradeLog*.htm
+ServiceFabricBackup/
+*.rptproj.bak
+
+## SQL Server files
+*.mdf
+*.ldf
+*.ndf
+
+## Entity Framework
+*.edmx.diagram
+*.edmx.sql
+
+## User-specific files
+appsettings.Development.json
+appsettings.Production.json
+*.db
+*.db-shm
+*.db-wal
+
+## Rider
+.idea/
+*.sln.iml
+
+## Mac
+.DS_Store
+
+## Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+## =============================================
+## PROJECT-SPECIFIC: Build artifact redirects
+## Directory.Build.props redirects bin→bin_safe
+## and obj→obj_safe to avoid MSBuild file locks.
+## These folders are GENERATED and must NOT be committed.
+## =============================================
+**/bin_safe/
+**/obj_safe/
+
+## Node / Tailwind CSS toolchain
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+
+## Secrets & environment overrides
+appsettings.*.json
+!appsettings.json
+secrets.json
+.env
+.env.*
+
+## Scratch & local installer files
+scratch/
+installers/
+Install_SQL_Server.exe

@@ -1,0 +1,379 @@
+@model List<Sparkle.Domain.Reviews.ProductReview>
+@{
+    ViewData["Title"] = "Review Moderation";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var currentFilter = ViewBag.CurrentFilter as string;
+    var currentSearch = ViewBag.CurrentSearch as string;
+}
+
+<style>
+    :root {
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-500: #64748b;
+        --slate-700: #334155;
+        --slate-800: #1e293b;
+        --slate-900: #0f172a;
+        --primary: #6366f1;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.25rem;
+        border-radius: 12px;
+        border: 1px solid var(--slate-200);
+        transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.05);
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--slate-500);
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--slate-900);
+    }
+
+    .filter-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 0.25rem;
+        background: var(--slate-100);
+        padding: 0.25rem;
+        border-radius: 10px;
+    }
+
+    .filter-tab {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        color: var(--slate-500);
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .filter-tab:hover {
+        color: var(--slate-900);
+    }
+
+    .filter-tab.active {
+        background: white;
+        color: var(--slate-900);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .review-table-container {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid var(--slate-200);
+        overflow: hidden;
+    }
+
+    .review-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .review-table th {
+        background: var(--slate-50);
+        padding: 0.875rem 1rem;
+        text-align: left;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--slate-500);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--slate-200);
+    }
+
+    .review-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--slate-100);
+        vertical-align: middle;
+        font-size: 0.85rem;
+    }
+
+    .reviewer-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--slate-100);
+        color: var(--slate-500);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        font-weight: 700;
+    }
+
+    .star-rating {
+        color: #f59e0b;
+        font-size: 0.8rem;
+    }
+
+    .status-badge {
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .status-pending { background: #fffbeb; color: #b45309; }
+    .status-approved { background: #f0fdf4; color: #15803d; }
+    .status-rejected { background: #fef2f2; color: #b91c1c; }
+
+    .action-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--slate-200);
+        background: white;
+        color: var(--slate-500);
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .action-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--slate-50);
+    }
+
+    .action-btn i { font-size: 0.85rem; }
+
+    .product-thumb {
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        object-fit: cover;
+    }
+</style>
+
+<div class="page-header">
+    <h4 class="fw-bold mb-1" style="font-size: 24px; color: var(--slate-900);">Review Moderation</h4>
+    <p class="text-muted mb-0" style="font-size: 14px;">Manage and monitor customer feedback across the platform.</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Total Reviews</div>
+        <div class="stat-value">@ViewBag.TotalReviews</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Pending Approval</div>
+        <div class="stat-value text-warning">@ViewBag.PendingCount</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Reported</div>
+        <div class="stat-value text-danger">@ViewBag.ReportedCount</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Avg. Rating</div>
+        <div class="stat-value">@(((double)ViewBag.AverageRating).ToString("F1")) <span style="font-size: 0.8rem; color: #f59e0b;">★</span></div>
+    </div>
+</div>
+
+<div class="filter-bar">
+    <div class="filter-tabs">
+        <a href="@Url.Action("Index")" class="filter-tab @(string.IsNullOrEmpty(currentFilter) ? "active" : "")">
+            All (@ViewBag.TotalReviews)
+        </a>
+        <a href="@Url.Action("Index", new { filter = "pending" })" class="filter-tab @(currentFilter == "pending" ? "active" : "")">
+            <i class="bi bi-clock me-1"></i>Pending (@ViewBag.PendingCount)
+        </a>
+        <a href="@Url.Action("Index", new { filter = "reported" })" class="filter-tab @(currentFilter == "reported" ? "active" : "")">
+            <i class="bi bi-flag me-1"></i>Reported (@ViewBag.ReportedCount)
+        </a>
+        <a href="@Url.Action("Index", new { filter = "approved" })" class="filter-tab @(currentFilter == "approved" ? "active" : "")">
+            Approved (@ViewBag.ApprovedCount)
+        </a>
+        <a href="@Url.Action("Index", new { filter = "rejected" })" class="filter-tab @(currentFilter == "rejected" ? "active" : "")">
+            Rejected (@ViewBag.RejectedCount)
+        </a>
+    </div>
+    
+    <form action="@Url.Action("Index")" method="get" class="d-flex gap-2">
+        <input type="hidden" name="filter" value="@currentFilter" />
+        <input type="text" name="search" value="@currentSearch" class="form-control form-control-sm" 
+               placeholder="Search reviews..." style="width: 200px; border-radius: 20px;" />
+        <button type="submit" class="btn btn-sm btn-primary" style="border-radius: 20px;">
+            <i class="bi bi-search"></i>
+        </button>
+    </form>
+</div>
+
+<div class="review-table-container">
+    <table class="review-table">
+        <thead>
+            <tr>
+                <th style="width: 40px; padding-left: 1.5rem;"><input type="checkbox" id="selectAll" class="form-check-input" /></th>
+                <th>Reviewer</th>
+                <th>Product</th>
+                <th>Rating</th>
+                <th>Comment</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th class="text-end" style="padding-right: 1.5rem;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Any())
+            {
+                foreach (var review in Model)
+                {
+                    <tr>
+                        <td style="padding-left: 1.5rem;">
+                            <input type="checkbox" name="reviewIds" value="@review.Id" class="review-checkbox form-check-input" />
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="reviewer-avatar">
+                                    @(review.User?.FullName?.Substring(0, 1).ToUpper() ?? "?")
+                                </div>
+                                <div>
+                                    <div class="fw-semibold text-dark">@(review.User?.FullName ?? "Unknown")</div>
+                                    @if (review.IsVerifiedPurchase)
+                                    {
+                                        <div class="text-success" style="font-size: 0.65rem; font-weight: 700;">
+                                            <i class="bi bi-patch-check-fill"></i> VERIFIED
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                @if (review.Product?.Images?.Any() == true)
+                                {
+                                    <img src="@review.Product.Images.First().Url" alt="" class="product-thumb" />
+                                }
+                                <span class="text-truncate" style="max-width: 150px; font-weight: 500;">
+                                    @review.Product?.Title
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="star-rating">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    @(i <= review.Rating ? "★" : "☆")
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-muted text-truncate" style="max-width: 250px;" title="@review.Comment">
+                                @review.Comment
+                            </div>
+                            @if (review.ReportCount > 0)
+                            {
+                                <div class="text-danger mt-1" style="font-size: 0.65rem; font-weight: 700;">
+                                    <i class="bi bi-flag-fill"></i> @review.ReportCount REPORTS
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            @{
+                                var statusClass = review.Status switch
+                                {
+                                    "Approved" => "status-approved",
+                                    "Rejected" => "status-rejected",
+                                    _ => "status-pending"
+                                };
+                            }
+                            <span class="status-badge @statusClass">@review.Status</span>
+                        </td>
+                        <td>
+                            <span class="text-muted" style="font-size: 0.75rem;">@review.ReviewDate.ToString("MMM d, yyyy")</span>
+                        </td>
+                        <td class="text-end" style="padding-right: 1.5rem;">
+                            <div class="d-flex justify-content-end gap-1">
+                                @if (review.Status != "Approved")
+                                {
+                                    <form asp-action="Approve" method="post" style="display:inline;">
+                                        <input type="hidden" name="id" value="@review.Id" />
+                                        <button type="submit" class="action-btn" title="Approve" style="color: #15803d;">
+                                            <i class="bi bi-check2"></i>
+                                        </button>
+                                    </form>
+                                }
+                                @if (review.Status != "Rejected")
+                                {
+                                    <form asp-action="Reject" method="post" style="display:inline;">
+                                        <input type="hidden" name="id" value="@review.Id" />
+                                        <button type="submit" class="action-btn" title="Reject" style="color: #b91c1c;">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </form>
+                                }
+                                <a href="@Url.Action("Details", new { id = review.Id })" class="action-btn" title="View Details">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="8" class="text-center py-5">
+                        <i class="bi bi-chat-square-text text-slate-200" style="font-size: 2.5rem;"></i>
+                        <p class="text-muted mt-2 mb-0">No reviews found</p>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if ((int)ViewBag.TotalPages > 1)
+{
+    <div class="d-flex justify-content-center gap-2 mt-4">
+        @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+        {
+            <a href="@Url.Action("Index", new { filter = currentFilter, search = currentSearch, page = i })" 
+               class="btn btn-sm @(i == (int)ViewBag.CurrentPage ? "btn-primary" : "btn-outline-secondary")">@i</a>
+        }
+    </div>
+}
+
+<script>
+    document.getElementById('selectAll').addEventListener('change', function() {
+        document.querySelectorAll('.review-checkbox').forEach(cb => cb.checked = this.checked);
+    });
+</script>

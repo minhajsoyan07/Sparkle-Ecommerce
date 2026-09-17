@@ -1,0 +1,284 @@
+@using Sparkle.Domain.Logistics
+@model Hub
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title d-flex align-items-center gap-2">
+            @Model.Name
+            <span class="badge bg-@(Model.OperationalStatus == HubOperationalStatus.Operational ? "success" : Model.OperationalStatus == HubOperationalStatus.Maintenance ? "warning" : "danger") fs-6">
+                @Model.OperationalStatus
+            </span>
+        </h2>
+        <p class="text-muted font-monospace mb-0">@Model.HubCode</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Hubs" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back
+        </a>
+        <a asp-action="EditHub" asp-route-id="@Model.Id" class="btn btn-primary">
+            <i class="bi bi-pencil me-2"></i>Edit Hub
+        </a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row g-4">
+    <!-- Main Info -->
+    <div class="col-lg-8">
+        <div class="content-card mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-info-circle me-2" style="color: var(--sk-primary);"></i>Hub Information</h5>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="text-muted small">Type</div>
+                    <div>
+                        <span class="badge bg-@(Model.Type == HubType.Central ? "danger" : Model.Type == HubType.Regional ? "warning text-dark" : "info") fs-6">
+                            @Model.Type Hub
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-muted small">Capacity</div>
+                    @{
+                        var usage = Model.Capacity > 0 ? (Model.CurrentInventory * 100 / Model.Capacity) : 0;
+                    }
+                    <div class="progress mb-1" style="height: 8px; max-width: 150px;">
+                        <div class="progress-bar bg-@(usage > 80 ? "danger" : usage > 50 ? "warning" : "success")" style="width: @usage%"></div>
+                    </div>
+                    <div class="fw-bold">@Model.CurrentInventory / @Model.Capacity items (@usage%)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt me-2" style="color: var(--sk-primary);"></i>Location</h5>
+            <address class="mb-0">
+                <strong>@Model.Address</strong><br>
+                @Model.Area, @Model.District<br>
+                @Model.Division @Model.PostalCode
+            </address>
+            @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+            {
+                <div class="mt-3">
+                    <a href="https://maps.google.com/?q=@Model.Latitude,@Model.Longitude" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-map me-1"></i>View on Map
+                    </a>
+                </div>
+            }
+        </div>
+
+        <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-bicycle me-2 text-success"></i>Assigned Riders</h5>
+                <span class="badge bg-success">@(Model.AssignedRiders?.Count ?? 0)</span>
+            </div>
+            @if (Model.AssignedRiders?.Any() == true)
+            {
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Rider</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var rider in Model.AssignedRiders)
+                            {
+                                <tr>
+                                    <td>
+                                        <a asp-action="RiderDetails" asp-route-id="@rider.Id" class="text-decoration-none">
+                                            <strong>@rider.Name</strong>
+                                            <small class="text-muted d-block">@rider.Phone</small>
+                                        </a>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark">@rider.Type</span></td>
+                                    <td><span class="badge bg-@(rider.Status == RiderStatus.Active ? "success-subtle text-success" : "secondary-subtle text-secondary")">@rider.Status</span></td>
+                                    <td><i class="bi bi-star-fill text-warning"></i> @rider.Rating.ToString("0.0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-bicycle display-6 text-muted mb-2"></i>
+                    <p class="text-muted mb-0">No riders assigned</p>
+                </div>
+            }
+        </div>
+
+        <!-- Inventory Section -->
+        <div class="content-card mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-box-seam me-2" style="color: var(--sk-primary);"></i>Hub Inventory</h5>
+                <span class="badge bg-primary">@(Model.Inventory?.Count ?? 0)</span>
+            </div>
+            
+            @if (Model.Inventory?.Any() == true)
+            {
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Received</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Inventory.OrderByDescending(i => i.ReceivedAt))
+                            {
+                                <tr>
+                                    <td class="font-monospace">#@item.Order?.OrderNumber (@item.OrderId)</td>
+                                    <td>
+                                        <div>@item.ReceivedAt.ToString("MMM dd")</div>
+                                        <small class="text-muted">@item.ReceivedAt.ToString("HH:mm")</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">@item.Status</span>
+                                    </td>
+                                    <td>
+                                        @if (item.Status == "Received" || item.Status == "Sorting" || item.Status == "Ready")
+                                        {
+                                            <button class="btn btn-sm btn-primary" onclick="openDispatchModal(@item.OrderId)">
+                                                <i class="bi bi-send"></i> Dispatch
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-inbox fs-2 mb-2"></i>
+                    <p>No inventory items currently in hub</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Modal for Dispatch -->
+    <div class="modal fade" id="dispatchModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Dispatch Delivery</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="dispatchForm">
+                        <input type="hidden" id="dispatchOrderId" name="orderId" />
+                        <input type="hidden" name="sourceHubId" value="@Model.Id" />
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Select Rider</label>
+                            <select class="form-select" name="riderId" required>
+                                <option value="">-- Choose Rider --</option>
+                                @if (Model.AssignedRiders != null)
+                                {
+                                    @foreach (var rider in Model.AssignedRiders.Where(r => r.Status == RiderStatus.Active))
+                                    {
+                                        <option value="@rider.Id">@rider.Name (@rider.Phone)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitDispatch()">Create Delivery</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+            function openDispatchModal(orderId) {
+                $('#dispatchOrderId').val(orderId);
+                new bootstrap.Modal(document.getElementById('dispatchModal')).show();
+            }
+
+            function submitDispatch() {
+                var data = $('#dispatchForm').serialize();
+                $.post('/Admin/Logistics/CreateDelivery', data, function(res) {
+                    if(res.success) location.reload();
+                    else alert('Error: ' + res.message);
+                });
+            }
+        </script>
+    }
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <div class="content-card mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-telephone me-2" style="color: var(--sk-primary);"></i>Contact</h5>
+            @if (!string.IsNullOrEmpty(Model.ManagerName))
+            {
+                <div class="mb-3">
+                    <div class="text-muted small">Manager</div>
+                    <div class="fw-bold">@Model.ManagerName</div>
+                    @if (!string.IsNullOrEmpty(Model.ManagerPhone))
+                    {
+                        <div class="small"><i class="bi bi-phone me-1"></i>@Model.ManagerPhone</div>
+                    }
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.ContactPhone))
+            {
+                <div class="mb-3">
+                    <div class="text-muted small">Hub Phone</div>
+                    <div><i class="bi bi-telephone me-1"></i>@Model.ContactPhone</div>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.ContactEmail))
+            {
+                <div>
+                    <div class="text-muted small">Email</div>
+                    <div><i class="bi bi-envelope me-1"></i>@Model.ContactEmail</div>
+                </div>
+            }
+        </div>
+
+        <div class="card card-tale">
+            <div class="stats-card-body">
+                <div class="stats-label">Current Inventory</div>
+                <div class="d-flex justify-content-between mt-2">
+                    <div class="text-center">
+                        <div class="h4 fw-bold mb-0">@(Model.Inventory?.Count(i => i.Status == "Received") ?? 0)</div>
+                        <small style="opacity: 0.8;">Received</small>
+                    </div>
+                    <div class="text-center">
+                        <div class="h4 fw-bold mb-0">@(Model.Inventory?.Count(i => i.Status == "Sorting") ?? 0)</div>
+                        <small style="opacity: 0.8;">Sorting</small>
+                    </div>
+                    <div class="text-center">
+                        <div class="h4 fw-bold mb-0">@(Model.Inventory?.Count(i => i.Status == "Ready") ?? 0)</div>
+                        <small style="opacity: 0.8;">Ready</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

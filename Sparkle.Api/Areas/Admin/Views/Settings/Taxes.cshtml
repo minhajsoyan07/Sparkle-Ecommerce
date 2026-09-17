@@ -1,0 +1,65 @@
+@{
+    ViewData["Title"] = "Tax Settings";
+    Layout = "_SettingsLayout";
+}
+
+<h4 class="mb-4">Tax Rules</h4>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-2"></i>
+    Configure tax rates based on customer location.
+</div>
+
+<form>
+    <div class="mb-3">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="pricesIncludeTax">
+            <label class="form-check-label" for="pricesIncludeTax">
+                All prices include tax
+            </label>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="chargeTaxOnShipping">
+            <label class="form-check-label" for="chargeTaxOnShipping">
+                Charge tax on shipping rates
+            </label>
+        </div>
+    </div>
+
+    <hr />
+
+    <h5 class="mb-3">Tax Rates</h5>
+    <table class="table table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Region</th>
+                <th>Tax Name</th>
+                <th>Rate (%)</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Bangladesh (Default)</td>
+                <td>VAT</td>
+                <td>
+                    <input type="number" class="form-control form-control-sm" value="5" style="width: 80px;">
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <button type="button" class="btn btn-outline-primary btn-sm mb-4">
+        <i class="bi bi-plus-lg me-1"></i> Add Rate
+    </button>
+
+    <div>
+        <button type="submit" class="btn btn-primary">Save Settings</button>
+    </div>
+</form>

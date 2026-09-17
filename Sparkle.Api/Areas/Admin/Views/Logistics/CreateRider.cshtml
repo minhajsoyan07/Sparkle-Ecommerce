@@ -1,0 +1,113 @@
+@using Sparkle.Domain.Logistics
+@model Rider
+@{
+    ViewData["Title"] = "Add New Rider";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var hubs = ViewBag.Hubs as List<Hub> ?? new List<Hub>();
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title">Add New Rider</h2>
+        <p class="text-muted">Register a new delivery rider</p>
+    </div>
+    <a asp-action="Riders" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back to Riders
+    </a>
+</div>
+
+<div class="content-card">
+    <form asp-action="CreateRider" method="post">
+        @Html.AntiForgeryToken()
+        
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Personal Info -->
+                <h6 class="fw-bold mb-3 text-success"><i class="bi bi-person me-2"></i>Personal Information</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <input asp-for="Name" class="form-control" placeholder="e.g., Mohammad Ali">
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Rider Code <span class="text-danger">*</span></label>
+                        <input asp-for="RiderCode" class="form-control" placeholder="e.g., RDR-001">
+                        <span asp-validation-for="RiderCode" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Phone <span class="text-danger">*</span></label>
+                        <input asp-for="Phone" class="form-control" placeholder="e.g., 01700000000">
+                        <span asp-validation-for="Phone" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <input asp-for="Email" type="email" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">NID Number</label>
+                        <input asp-for="NidNumber" class="form-control">
+                    </div>
+                </div>
+                
+                <!-- Vehicle -->
+                <h6 class="fw-bold mb-3 text-success"><i class="bi bi-truck me-2"></i>Vehicle Information</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Vehicle Type</label>
+                        <select asp-for="VehicleType" class="form-select">
+                            <option value="">-- Select --</option>
+                            <option value="Bicycle">Bicycle</option>
+                            <option value="Motorcycle">Motorcycle</option>
+                            <option value="Van">Van</option>
+                            <option value="Pickup Truck">Pickup Truck</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Vehicle Number</label>
+                        <input asp-for="VehicleNumber" class="form-control" placeholder="e.g., DHA-12-3456">
+                    </div>
+                </div>
+                
+                <!-- Assignment -->
+                <h6 class="fw-bold mb-3 text-success"><i class="bi bi-building me-2"></i>Assignment</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Assigned Hub</label>
+                        <select asp-for="AssignedHubId" class="form-select">
+                            <option value="">-- No Hub Assigned --</option>
+                            @foreach (var hub in hubs)
+                            {
+                                <option value="@hub.Id">@hub.Name (@hub.District)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Rider Type <span class="text-danger">*</span></label>
+                        <select asp-for="Type" class="form-select">
+                            <option value="@RiderType.Both">Both (Pickup & Delivery)</option>
+                            <option value="@RiderType.Pickup">Pickup Only</option>
+                            <option value="@RiderType.Delivery">Delivery Only</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label>
+                        <select asp-for="Status" class="form-select">
+                            <option value="@RiderStatus.Active">Active</option>
+                            <option value="@RiderStatus.Inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Riders" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-2"></i>Add Rider
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

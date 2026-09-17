@@ -1,0 +1,79 @@
+@model Sparkle.Domain.Orders.Shipment
+@using Sparkle.Domain.Orders
+
+@{
+    ViewData["Title"] = "Update Shipment Status";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h3 fw-bold mb-1">Update Status</h2>
+                <div class="text-muted">
+                    Shipment <span class="fw-bold text-dark">#@Model.ShipmentNumber</span>
+                </div>
+            </div>
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                Cancel
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form asp-action="UpdateStatus" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    
+                    @if(TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger mb-4">@TempData["Error"]</div>
+                    }
+
+                    <div class="mb-4">
+                         <div class="p-3 bg-light rounded border mb-3">
+                             <div class="small text-muted text-uppercase fw-bold mb-1">Current Status</div>
+                             <span class="badge bg-primary fs-6">@Model.Status</span>
+                         </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">New Status <span class="text-danger">*</span></label>
+                        <select name="status" class="form-select" required>
+                            <option value="">-- Select Status --</option>
+                            @foreach (ShipmentStatus status in Enum.GetValues(typeof(ShipmentStatus)))
+                            {
+                                if (status != ShipmentStatus.Pending && status > Model.Status) 
+                                {
+                                    <option value="@status">@status</option>
+                                }
+                            }
+                        </select>
+                        <div class="form-text">Select the new status for this shipment. Status flow is sequential.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Status Message <span class="text-danger">*</span></label>
+                        <input type="text" name="message" class="form-control" placeholder="e.g. Package arrived at local facility" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Location</label>
+                        <input type="text" name="location" class="form-control" placeholder="e.g. Dhaka Hub" />
+                    </div>
+
+                    <div class="mb-4">
+                         <label class="form-label fw-bold">Tracking Number</label>
+                         <input type="text" name="trackingNumber" class="form-control" value="@Model.TrackingNumber" />
+                         <div class="form-text">Update if tracking number has changed or was missing.</div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary fw-bold">
+                            Update Status
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

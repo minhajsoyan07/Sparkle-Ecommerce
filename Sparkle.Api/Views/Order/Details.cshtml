@@ -1,0 +1,701 @@
+@using Sparkle.Domain.Orders
+@model Sparkle.Domain.Orders.Order
+@{
+    var langCookie = Context.Request.Cookies["sparkle-lang"] == "bn" ? "bn" : "en";
+    var isBangla = langCookie == "bn";
+    
+    var relatedOrders = ViewBag.RelatedOrders as List<Sparkle.Domain.Orders.Order> ?? new List<Sparkle.Domain.Orders.Order>();
+    var allOrders = relatedOrders.Any() ? relatedOrders : new List<Sparkle.Domain.Orders.Order> { Model };
+    var isGrouped = relatedOrders.Count > 1;
+
+    var displayOrderNumber = !string.IsNullOrEmpty(Model.ParentOrderNumber) ? Model.ParentOrderNumber : Model.OrderNumber;
+    var allItems = allOrders.SelectMany(o => o.OrderItems ?? new List<Sparkle.Domain.Orders.OrderItem>()).ToList();
+    var allSellers = allOrders.Select(o => o.Seller).Where(s => s != null).Distinct().ToList();
+    
+    var totalSubtotal = allOrders.Sum(o => o.SubTotal);
+    var totalShipping = allOrders.Sum(o => o.ShippingCost);
+    var totalDiscount = allOrders.Sum(o => o.DiscountAmount);
+    var totalAmount = allOrders.Sum(o => o.TotalAmount);
+    var cancellableStatuses = new[] { OrderStatus.Pending, OrderStatus.Confirmed, OrderStatus.Processing, OrderStatus.SellerPreparing, OrderStatus.OnHold };
+    var canCancel = allOrders.Any(o => cancellableStatuses.Contains(o.Status));
+    var hasTrackingNumber = allOrders.Any(o => !string.IsNullOrWhiteSpace(o.TrackingNumber));
+    var estimatedDelivery = allOrders
+        .Where(o => o.EstimatedDeliveryDate.HasValue)
+        .Select(o => o.EstimatedDeliveryDate!.Value)
+        .DefaultIfEmpty(Model.OrderDate.AddDays(3))
+        .Max();
+    var latestTracking = allOrders
+        .SelectMany(o => o.TrackingHistory ?? new List<OrderTracking>())
+        .OrderByDescending(t => t.TrackedAt)
+        .FirstOrDefault();
+    var cancelReturnUrl = Context.Request.Path + Context.Request.QueryString;
+
+    int StatusStep(OrderStatus status) => status switch
+    {
+        OrderStatus.Cancelled => 0,
+        OrderStatus.Pending => 1,
+        OrderStatus.Confirmed => 2,
+        OrderStatus.Processing or OrderStatus.SellerPreparing or OrderStatus.ReadyForHandover or OrderStatus.OnHold => 3,
+        OrderStatus.PickupScheduled or OrderStatus.PickedUp or OrderStatus.ReceivedAtHub or OrderStatus.QCPassed or OrderStatus.Sorting or OrderStatus.Shipped or OrderStatus.OutForDelivery or OrderStatus.DeliveryAttempted => 4,
+        OrderStatus.Delivered => 5,
+        _ => 1
+    };
+    
+    ViewData["Title"] = (isBangla ? "অর্ডার বিস্তারিত #" : "Order Details #") + displayOrderNumber;
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<style>
+    :root {
+        --primary: #f97316;
+        --primary-light: #fff7ed;
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-400: #94a3b8;
+        --slate-500: #64748b;
+        --slate-800: #1e293b;
+        --slate-900: #0f172a;
+    }
+
+    .details-container {
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Cards */
+    .modern-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        border: 1px solid var(--slate-100);
+        margin-bottom: 16px;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .card-header-clean {
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--slate-100);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .card-header-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        background: var(--primary-light);
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--slate-800);
+        margin: 0;
+    }
+
+    .card-body-clean {
+        padding: 16px 18px;
+    }
+
+    /* Product List */
+    .product-list-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px dashed var(--slate-200);
+    }
+    .product-list-item:last-child {
+        border-bottom: none;
+    }
+    
+    .product-thumb {
+        width: 58px;
+        height: 58px;
+        border-radius: 9px;
+        object-fit: cover;
+        background: var(--slate-50);
+        border: 1px solid var(--slate-200);
+    }
+    
+    /* Order Summary Side */
+    .summary-label {
+        color: var(--slate-500);
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+    .summary-value {
+        color: var(--slate-900);
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    /* Status Badges */
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 9999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+    }
+    .status-pending { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
+    .status-processing { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .status-shipped { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
+    .status-delivered { background: #f0fdf4; color: #15803d; border: 1px solid #86efac; }
+    .status-cancelled { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+
+    /* Timeline */
+    .order-tracker {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        margin: 14px 4px 4px;
+    }
+    .order-tracker::before {
+        content: '';
+        position: absolute;
+        top: 13px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--slate-200);
+        z-index: 0;
+    }
+    .tracker-step {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        background: transparent;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+    .step-dot {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid var(--slate-200);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--slate-400);
+        transition: all 0.3s ease;
+    }
+    .step-dot.active {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 0 0 4px var(--primary-light);
+    }
+    .step-dot.completed {
+        border-color: #10b981;
+        background: #10b981;
+        color: white;
+    }
+    .step-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--slate-500);
+    }
+    .step-label.active {
+        color: var(--slate-900);
+    }
+
+    /* Price Table */
+    .price-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        color: var(--slate-500);
+        font-size: 0.9rem;
+    }
+    .price-row-total {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 2px dashed var(--slate-200);
+        color: var(--slate-900);
+        font-weight: 800;
+        font-size: 1.25rem;
+    }
+
+    /* Action Bar */
+    .action-bar {
+        background: white;
+        border: 1px solid var(--slate-200);
+        border-radius: 12px;
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--slate-600);
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .btn-back:hover {
+        color: var(--slate-900);
+    }
+    .btn-back i {
+        font-size: 1.1rem;
+        transition: transform 0.2s;
+    }
+    .btn-back:hover i {
+        transform: translateX(-3px);
+    }
+
+    .btn-invoice {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--slate-600);
+        background: transparent;
+        border: 1px solid var(--slate-200);
+        font-weight: 500;
+        font-size: 0.75rem;
+        text-decoration: none;
+        padding: 5px 12px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+    .btn-invoice:hover {
+        background: var(--slate-50);
+        border-color: var(--slate-300);
+        color: var(--slate-900);
+    }
+    .btn-invoice i {
+        font-size: 0.85rem;
+    }
+    .status-overview {
+        display: grid;
+        grid-template-columns: minmax(180px, 1.4fr) repeat(3, minmax(120px, 1fr));
+        gap: 10px;
+        align-items: stretch;
+        margin-bottom: 8px;
+    }
+    .status-chip-card {
+        background: rgba(255,255,255,0.76);
+        border: 1px solid var(--slate-100);
+        border-radius: 12px;
+        padding: 10px 12px;
+        min-width: 0;
+    }
+    .status-chip-card .label {
+        color: var(--slate-500);
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        margin-bottom: 3px;
+    }
+    .status-chip-card .value {
+        color: var(--slate-900);
+        font-size: 0.88rem;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+    .status-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        margin-top: 10px;
+    }
+    .btn-order-action {
+        height: 30px;
+        border-radius: 8px;
+        padding: 0 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: 1px solid var(--slate-200);
+        background: #fff;
+        color: var(--slate-700);
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all .2s;
+    }
+    .btn-order-action:hover { background: var(--slate-50); color: var(--slate-900); border-color: var(--slate-300); }
+    .btn-order-action.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn-order-action.primary:hover { background: #ea580c; border-color: #ea580c; }
+    .btn-order-action.danger { color: #dc2626; border-color: #fee2e2; }
+    .btn-order-action.danger:hover { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+    .compact-note { color: var(--slate-500); font-size: 0.75rem; margin-top: 8px; }
+    .item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-order-action:focus, .btn-order-action:active, .mini-link:focus, .mini-link:active { 
+        outline: none !important; 
+        box-shadow: none !important; 
+    }
+    .mini-link { 
+        color: var(--slate-600); 
+        text-decoration: none; 
+        font-size: .7rem; 
+        font-weight: 700; 
+        display: inline-flex; 
+        align-items: center; 
+        gap: 5px; 
+        border: 1px solid var(--slate-200); 
+        padding: 5px 12px; 
+        border-radius: 8px; 
+        background: #fff;
+        transition: all 0.2s ease;
+    }
+    .mini-link:hover { 
+        color: var(--primary); 
+        border-color: #fed7aa; 
+        background: #fff7ed;
+        transform: translateY(-1px);
+    }
+    .mini-link i { font-size: 0.9rem; }
+    .product-thumb { width: 54px; height: 54px; border-radius: 10px; object-fit: cover; background: var(--slate-50); border: 1px solid var(--slate-100); }
+    .item-title { font-size: 0.92rem; font-weight: 700; color: var(--slate-800); margin-bottom: 3px; line-height: 1.4; }
+    .price-main { font-size: 1.1rem; font-weight: 800; color: var(--slate-900); }
+    .price-unit { font-size: 0.72rem; color: var(--slate-500); }
+    @@media (max-width: 991px) {
+        .status-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .status-actions { justify-content: flex-start; }
+    }
+    @@media (max-width: 575px) {
+        .status-overview { grid-template-columns: 1fr; }
+        .action-bar { align-items: flex-start; flex-direction: column; }
+        .product-list-item { align-items: flex-start; }
+        .product-thumb { margin-right: 0 !important; }
+    }
+</style>
+
+<div class="details-container">
+    <div class="action-bar">
+        <a href="/orders" class="btn-back">
+            <i class="bi bi-arrow-left"></i> @(isBangla ? "অর্ডারে ফিরে যান" : "Back to Orders")
+        </a>
+        <div class="d-flex flex-wrap gap-2 justify-content-end">
+            @if (isGrouped)
+            {
+                <a href="/orders/download-combined?ids=@string.Join(",", allOrders.Select(o => o.Id))" class="btn-order-action" target="_blank" title="Download combined order slip as PDF">
+                    <i class="bi bi-file-earmark-arrow-down"></i> @(isBangla ? "স্লিপ" : "Slip")
+                </a>
+            }
+            else
+            {
+                <a href="/orders/@Model.Id/download" class="btn-order-action" target="_blank" title="Download order slip as PDF">
+                    <i class="bi bi-file-earmark-arrow-down"></i> @(isBangla ? "স্লিপ" : "Slip")
+                </a>
+            }
+            @if (canCancel)
+            {
+                <button type="button" class="btn-order-action danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                    <i class="bi bi-x-circle"></i> @(isBangla ? "বাতিল করুন" : "Cancel")
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Status Tracker -->
+    <div class="modern-card mb-3" style="background: linear-gradient(to right, #ffffff, #fff7ed);">
+        <div class="card-body-clean" style="padding: 16px 20px;">
+            @{
+                var steps = new[] { "Cancel", "Pending", "Confirmed", "Processing", "Shipped", "Delivered" };
+                var currentStatusIndex = StatusStep(Model.Status);
+            }
+            <div class="status-overview" style="margin-bottom: 20px; gap: 12px;">
+                <div class="status-chip-card">
+                    <div class="label">Current Status</div>
+                    <div class="value">@Model.Status</div>
+                </div>
+                <div class="status-chip-card">
+                    <div class="label">Estimated Delivery</div>
+                    <div class="value">@estimatedDelivery.ToString("dd MMM yyyy")</div>
+                </div>
+                <div class="status-chip-card">
+                    <div class="label">Tracking</div>
+                    <div class="value">@(hasTrackingNumber ? string.Join(", ", allOrders.Where(o => !string.IsNullOrWhiteSpace(o.TrackingNumber)).Select(o => o.TrackingNumber)) : "Preparing")</div>
+                </div>
+                <div class="status-chip-card">
+                    <div class="label">Last Update</div>
+                    <div class="value">@(latestTracking?.StatusMessage ?? "Order received")</div>
+                </div>
+            </div>
+            
+            <div class="order-tracker px-2 px-md-4">
+                @for (int i = 0; i < steps.Length; i++)
+                {
+                    var status = steps[i];
+                    var isCompleted = i < currentStatusIndex || (i == 5 && Model.Status == OrderStatus.Delivered);
+                    var isActive = i == currentStatusIndex;
+                    var isCancelledState = i == 0;
+                    
+                    bool showAsCompleted = isCompleted;
+                    bool showAsActive = isActive;
+                    
+                    if (isCancelledState && Model.Status != OrderStatus.Cancelled)
+                    {
+                        showAsCompleted = false;
+                        showAsActive = false;
+                    }
+
+                    <div class="tracker-step" style="flex: 1;">
+                        <div class="step-dot @(showAsCompleted ? "completed" : "") @(showAsActive ? (Model.Status == OrderStatus.Cancelled ? "bg-danger border-danger text-white" : "active") : "") mx-auto">
+                            @if (showAsCompleted) { <i class="bi bi-check-lg"></i> }
+                            else if (showAsActive) { <i class="bi bi-circle-fill" style="font-size: 8px;"></i> }
+                            else { <i class="bi bi-circle" style="font-size: 8px;"></i> }
+                        </div>
+                        <div class="step-label @(showAsActive ? "active" : "") mt-2" style="@(showAsActive && Model.Status == OrderStatus.Cancelled ? "color: #dc2626;" : "")">@status</div>
+                    </div>
+                }
+            </div>
+
+            @if (Model.Status == OrderStatus.Cancelled && !string.IsNullOrWhiteSpace(Model.CancellationReason))
+            {
+                <div class="text-center py-2 text-danger mt-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <span class="small">@Model.CancellationReason</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            
+            <!-- Seller Info -->
+            @if (allSellers.Any())
+            {
+                <div class="modern-card">
+                    <div class="card-body-clean" style="padding: 16px 20px;">
+                        <p class="text-muted mb-2 text-uppercase" style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px;">@(isBangla ? "বিক্রেতা সমূহ" : "Sellers in this order")</p>
+                        @foreach (var seller in allSellers)
+                        {
+                            var sellerProductId = allItems.FirstOrDefault(i => i.SellerId == seller!.Id || i.Product?.SellerId == seller!.Id)?.ProductId;
+                            <div class="d-flex align-items-center gap-3 mb-2 pb-2 border-bottom border-light">
+                                <div style="width: 34px; height: 34px; flex-shrink: 0; border-radius: 8px; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">
+                                    <i class="bi bi-shop"></i>
+                                </div>
+                                <div style="min-width: 0;">
+                                    <div class="text-dark fw-bold text-truncate" style="font-size: 0.85rem;">@seller!.ShopName</div>
+                                </div>
+                                <div class="ms-auto d-flex flex-wrap gap-2 justify-content-end">
+                                    <a href="/shop/@seller.Id" class="mini-link">
+                                        <i class="bi bi-shop"></i> Store
+                                    </a>
+                                    <a href="/Chat/StartChat?sellerId=@seller.Id@(sellerProductId.HasValue ? $"&productId={sellerProductId.Value}" : "")" class="mini-link">
+                                        <i class="bi bi-chat-dots"></i> Chat
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Items -->
+            <div class="modern-card">
+                <div class="card-header-clean" style="padding: 12px 20px;">
+                    <div class="card-header-icon" style="width: 32px; height: 32px; font-size: 0.9rem;">
+                        <i class="bi bi-bag"></i>
+                    </div>
+                    <span class="card-title" style="font-size: 0.9rem;">@(isBangla ? "অর্ডার আইটেম" : "Order Items") <span class="text-muted fw-normal ms-2" style="font-size: 0.8rem;">(@allItems.Count)</span></span>
+                </div>
+                <div class="card-body-clean pt-0" style="padding: 0 20px 12px 20px;">
+                    @foreach (var item in allItems)
+                    {
+                        <div class="product-list-item" style="padding: 12px 0;">
+                            <img src="@(!string.IsNullOrEmpty(item.ProductImage) ? item.ProductImage : (item.Product?.Images?.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url ?? "https://placehold.co/100"))" alt="@item.ProductName" class="product-thumb me-3" />
+                            
+                            <div class="flex-grow-1">
+                                <div class="item-title">@item.ProductName</div>
+                                @if (!string.IsNullOrEmpty(item.VariantName))
+                                {
+                                    <div class="text-muted" style="font-size: 0.75rem; margin-bottom: 4px;">
+                                        Variant: @item.VariantName
+                                    </div>
+                                }
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="badge bg-light text-dark border-0 px-2 py-1" style="font-size: 0.65rem; font-weight: 700;">QTY: @item.Quantity</span>
+                                    @if (isGrouped && item.Product?.Seller != null)
+                                    {
+                                        <span class="text-muted" style="font-size: 0.7rem;"><i class="bi bi-shop"></i> @item.Product?.Seller?.ShopName</span>
+                                    }
+                                    
+                                    <div class="item-actions ms-1">
+                                        <a href="/home/product/@item.ProductId" class="mini-link"><i class="bi bi-arrow-up-right-circle"></i> Product</a>
+                                        @if ((Model.Status == OrderStatus.Delivered || item.ItemStatus == OrderStatus.Delivered) && !item.IsReviewed)
+                                        {
+                                            <a href="/home/product/@item.ProductId?writeReview=1#reviews" class="mini-link"><i class="bi bi-star"></i> Review</a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-end ms-3">
+                                <div class="price-main">৳@item.TotalPrice.ToString("N0")</div>
+                                <div class="price-unit">৳@item.UnitPrice.ToString("N0") / unit</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Shipping Details -->
+            <div class="modern-card">
+                <div class="card-header-clean" style="padding: 12px 20px;">
+                    <div class="card-header-icon" style="background: #eff6ff; color: #3b82f6; width: 32px; height: 32px; font-size: 0.9rem;">
+                        <i class="bi bi-geo-alt"></i>
+                    </div>
+                    <span class="card-title" style="font-size: 0.9rem;">@(isBangla ? "শিপিং ঠিকানা" : "Shipping Address")</span>
+                </div>
+                <div class="card-body-clean" style="padding: 16px 20px;">
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="summary-label">Full Name</label>
+                            <div class="summary-value">@Model.ShippingFullName</div>
+                        </div>
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="summary-label">Phone</label>
+                            <div class="summary-value">@Model.ShippingPhone</div>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <label class="summary-label">Address</label>
+                            <div class="summary-value line-height-lg">
+                                @Model.ShippingAddressLine1<br />
+                                @Model.ShippingCity - @Model.ShippingPostalCode<br />
+                                @Model.ShippingCountry
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Summary -->
+        <div class="col-lg-4">
+            <div class="modern-card position-sticky" style="top: 24px;">
+                <div class="card-header-clean bg-light" style="padding: 12px 20px;">
+                    <div class="card-header-icon" style="background: #f8fafc; color: #64748b; width: 32px; height: 32px; font-size: 0.9rem;">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                    <span class="card-title" style="font-size: 0.9rem;">@(isBangla ? "সারাংশ" : "Order Summary")</span>
+                </div>
+                <div class="card-body-clean" style="padding: 16px 20px;">
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 d-flex justify-content-between align-items-start border-bottom pb-3 mb-1">
+                            <div>
+                                <div class="summary-label">@(isBangla ? "অর্ডার আইডি" : "Order ID")</div>
+                                <div class="summary-value text-primary font-monospace mt-1" style="word-break: break-all; font-size: 0.9rem;">#@displayOrderNumber</div>
+                            </div>
+                            <div class="text-end ms-2">
+                                <div class="summary-label">@(isBangla ? "তারিখ" : "Date")</div>
+                                <div class="summary-value mt-1" style="white-space: nowrap; font-size: 0.9rem;">@Model.OrderDate.ToString("dd MMM yyyy")</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="summary-label mb-2">Payment</div>
+                            <span class="badge @(Model.PaymentStatus == Sparkle.Domain.Orders.PaymentStatus.Paid ? "bg-success" : "bg-warning text-dark") px-3 py-1" style="font-size: 0.7rem;">
+                                @Model.PaymentStatus
+                            </span>
+                        </div>
+                        <div class="col-6 text-end">
+                            <div class="summary-label mb-2">Status</div>
+                             @{
+                                var distinctStatuses = allOrders.Select(o => o.Status).Distinct().ToList();
+                                var displayStatus = distinctStatuses.Count > 1 ? "Multi-Status" : distinctStatuses.First().ToString();
+                                var statusClass = displayStatus switch {
+                                    "Pending" => "status-pending",
+                                    "Confirmed" => "status-processing",
+                                    "Processing" => "status-processing",
+                                    "Shipped" => "status-shipped",
+                                    "Delivered" => "status-delivered",
+                                    "Cancelled" => "status-cancelled",
+                                    "Multi-Status" => "status-shipped",
+                                    _ => "status-pending"
+                                };
+                            }
+                            <span class="status-pill @statusClass" style="font-size: 0.7rem;">@displayStatus</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <div class="price-row">
+                            <span>Subtotal</span>
+                            <span>৳@totalSubtotal.ToString("N0")</span>
+                        </div>
+                        <div class="price-row">
+                            <span>Delivery Fee</span>
+                            <span>৳@totalShipping.ToString("N0")</span>
+                        </div>
+                        @if (totalDiscount > 0)
+                        {
+                            <div class="price-row text-success">
+                                <span>Discount</span>
+                                <span>-৳@totalDiscount.ToString("N0")</span>
+                            </div>
+                        }
+                        <div class="price-row-total mt-3 pt-3 border-top">
+                            <span>Total</span>
+                            <span class="text-primary" style="font-size: 1.4rem;">৳@totalAmount.ToString("N0")</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-light p-3 text-center border-top">
+                    <small class="text-muted" style="font-size: 0.7rem;"><i class="bi bi-shield-check me-1"></i> Secure Transaction</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @if (canCancel)
+    {
+        <!-- Cancel Confirmation Modal (Moved to Scripts section to render at body bottom and avoid z-index/stacking context issues) -->
+        <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-hidden="true" style="z-index: 9999;">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+                    <div class="modal-body p-4 text-center">
+                        <div class="mb-4">
+                            <div class="mx-auto bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; font-size: 1.75rem;">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">Cancel this order?</h5>
+                        <p class="text-muted small px-3 mb-0">Stock will be released and sellers will see it as cancelled. This action cannot be undone.</p>
+                    </div>
+                    <div class="modal-footer border-0 p-3 pt-0 d-flex gap-2">
+                        <button type="button" class="btn btn-light border flex-grow-1" data-bs-dismiss="modal" style="border-radius: 12px; font-weight: 600; font-size: 0.85rem; height: 42px;">No, Keep It</button>
+                        <form asp-controller="Order" asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="flex-grow-1 m-0">
+                            <input type="hidden" name="returnUrl" value="@cancelReturnUrl" />
+                            <button type="submit" class="btn btn-danger w-100" style="border-radius: 12px; font-weight: 600; font-size: 0.85rem; height: 42px; box-shadow: none !important;">Yes, Cancel</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}

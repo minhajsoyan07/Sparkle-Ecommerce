@@ -1,0 +1,120 @@
+@model Sparkle.Api.Controllers.SettingsController.SettingsViewModel
+@{
+    ViewData["Title"] = "Settings";
+    Layout = "_ProfileLayout";
+    var isBangla = Model.Language == "bn";
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+}
+
+<!-- Page Title -->
+<div class="tw-mb-4">
+    <h5 class="tw-font-bold tw-text-slate-900 tw-text-lg tw-mb-0">Settings</h5>
+    <p class="tw-text-xs tw-text-slate-400 tw-mb-0">Manage your account preferences</p>
+</div>
+
+<!-- Language -->
+<div class="tw-bg-white tw-rounded-xl tw-border tw-border-slate-100 tw-p-5 tw-mb-3">
+    <div class="tw-flex tw-items-center tw-justify-between">
+        <div class="tw-flex tw-items-center tw-gap-2.5">
+            <i class="bi bi-translate tw-text-slate-400"></i>
+            <div>
+                <div class="tw-text-xs tw-font-semibold tw-text-slate-800">Language</div>
+                <div class="tw-text-[10px] tw-text-slate-400">Interface language</div>
+            </div>
+        </div>
+        <form asp-action="ChangeLanguage" asp-controller="Settings" method="post" class="tw-m-0 tw-flex tw-items-center tw-gap-1.5">
+            <input type="hidden" name="returnUrl" value="@returnUrl" />
+            <label class="tw-cursor-pointer">
+                <input type="radio" name="language" value="en" class="tw-sr-only tw-peer" @(Model.Language == "en" ? "checked" : "") onchange="this.form.submit()" />
+                <span class="tw-px-3 tw-py-1 tw-rounded-md tw-text-[11px] tw-font-semibold tw-border tw-border-slate-200 tw-text-slate-400 peer-checked:tw-border-orange-500 peer-checked:tw-bg-orange-50 peer-checked:tw-text-orange-600 tw-transition-all tw-inline-block">EN</span>
+            </label>
+            <label class="tw-cursor-pointer">
+                <input type="radio" name="language" value="bn" class="tw-sr-only tw-peer" @(Model.Language == "bn" ? "checked" : "") onchange="this.form.submit()" />
+                <span class="tw-px-3 tw-py-1 tw-rounded-md tw-text-[11px] tw-font-semibold tw-border tw-border-slate-200 tw-text-slate-400 peer-checked:tw-border-orange-500 peer-checked:tw-bg-orange-50 peer-checked:tw-text-orange-600 tw-transition-all tw-inline-block">বাংলা</span>
+            </label>
+        </form>
+    </div>
+</div>
+
+<!-- Security -->
+<div class="tw-bg-white tw-rounded-xl tw-border tw-border-slate-100 tw-mb-3">
+    <div class="tw-px-5 tw-py-3.5 tw-border-b tw-border-slate-50 tw-flex tw-items-center tw-gap-2.5">
+        <i class="bi bi-shield-lock tw-text-slate-400"></i>
+        <span class="tw-text-xs tw-font-semibold tw-text-slate-800">Security</span>
+    </div>
+    <a href="/auth/change-password" class="tw-flex tw-items-center tw-justify-between tw-px-5 tw-py-3 tw-border-b tw-border-slate-50 hover:tw-bg-slate-50/50 tw-transition-all tw-no-underline tw-group">
+        <div class="tw-flex tw-items-center tw-gap-2.5">
+            <i class="bi bi-key tw-text-orange-400 tw-text-sm"></i>
+            <span class="tw-text-xs tw-text-slate-600">Update Password</span>
+        </div>
+        <i class="bi bi-chevron-right tw-text-[10px] tw-text-slate-300 group-hover:tw-text-slate-500"></i>
+    </a>
+    <a href="#" class="tw-flex tw-items-center tw-justify-between tw-px-5 tw-py-3 hover:tw-bg-slate-50/50 tw-transition-all tw-no-underline tw-group">
+        <div class="tw-flex tw-items-center tw-gap-2.5">
+            <i class="bi bi-phone tw-text-blue-400 tw-text-sm"></i>
+            <span class="tw-text-xs tw-text-slate-600">Logged-in Devices</span>
+        </div>
+        <i class="bi bi-chevron-right tw-text-[10px] tw-text-slate-300 group-hover:tw-text-slate-500"></i>
+    </a>
+</div>
+
+<!-- Notifications -->
+<div class="tw-bg-white tw-rounded-xl tw-border tw-border-slate-100 tw-mb-3">
+    <div class="tw-px-5 tw-py-3.5 tw-border-b tw-border-slate-50 tw-flex tw-items-center tw-gap-2.5">
+        <i class="bi bi-bell tw-text-slate-400"></i>
+        <span class="tw-text-xs tw-font-semibold tw-text-slate-800">Notifications</span>
+    </div>
+    <div class="tw-flex tw-items-center tw-justify-between tw-px-5 tw-py-3 tw-border-b tw-border-slate-50">
+        <span class="tw-text-xs tw-text-slate-600">Order Updates</span>
+        <label class="tw-relative tw-inline-flex tw-items-center tw-cursor-pointer">
+            <input type="checkbox" checked class="tw-sr-only tw-peer">
+            <div class="tw-w-8 tw-h-[18px] tw-bg-slate-200 tw-rounded-full peer peer-checked:tw-bg-orange-500 tw-after:tw-content-[''] tw-after:tw-absolute tw-after:tw-top-[2px] tw-after:tw-left-[2px] tw-after:tw-bg-white tw-after:tw-rounded-full tw-after:tw-h-[14px] tw-after:tw-w-[14px] tw-after:tw-transition-all peer-checked:tw-after:tw-translate-x-[14px]"></div>
+        </label>
+    </div>
+    <div class="tw-flex tw-items-center tw-justify-between tw-px-5 tw-py-3 tw-border-b tw-border-slate-50">
+        <span class="tw-text-xs tw-text-slate-600">Promotions</span>
+        <label class="tw-relative tw-inline-flex tw-items-center tw-cursor-pointer">
+            <input type="checkbox" class="tw-sr-only tw-peer">
+            <div class="tw-w-8 tw-h-[18px] tw-bg-slate-200 tw-rounded-full peer peer-checked:tw-bg-orange-500 tw-after:tw-content-[''] tw-after:tw-absolute tw-after:tw-top-[2px] tw-after:tw-left-[2px] tw-after:tw-bg-white tw-after:tw-rounded-full tw-after:tw-h-[14px] tw-after:tw-w-[14px] tw-after:tw-transition-all peer-checked:tw-after:tw-translate-x-[14px]"></div>
+        </label>
+    </div>
+    <div class="tw-flex tw-items-center tw-justify-between tw-px-5 tw-py-3">
+        <span class="tw-text-xs tw-text-slate-600">Security Alerts</span>
+        <label class="tw-relative tw-inline-flex tw-items-center tw-cursor-pointer">
+            <input type="checkbox" checked class="tw-sr-only tw-peer">
+            <div class="tw-w-8 tw-h-[18px] tw-bg-slate-200 tw-rounded-full peer peer-checked:tw-bg-orange-500 tw-after:tw-content-[''] tw-after:tw-absolute tw-after:tw-top-[2px] tw-after:tw-left-[2px] tw-after:tw-bg-white tw-after:tw-rounded-full tw-after:tw-h-[14px] tw-after:tw-w-[14px] tw-after:tw-transition-all peer-checked:tw-after:tw-translate-x-[14px]"></div>
+        </label>
+    </div>
+</div>
+
+<!-- Addresses & Delivery -->
+<div class="tw-bg-white tw-rounded-xl tw-border tw-border-slate-100 tw-mb-3">
+    <div class="tw-px-5 tw-py-3.5 tw-border-b tw-border-slate-50 tw-flex tw-items-center tw-gap-2.5">
+        <i class="bi bi-geo-alt tw-text-slate-400"></i>
+        <span class="tw-text-xs tw-font-semibold tw-text-slate-800">Addresses</span>
+    </div>
+    <a href="/account-info/addresses" class="tw-flex tw-items-center tw-justify-between tw-px-5 tw-py-3 tw-border-b tw-border-slate-50 hover:tw-bg-slate-50/50 tw-transition-all tw-no-underline tw-group">
+        <span class="tw-text-xs tw-text-slate-600">Manage Addresses</span>
+        <i class="bi bi-chevron-right tw-text-[10px] tw-text-slate-300 group-hover:tw-text-slate-500"></i>
+    </a>
+    <a href="/account-info/addresses/create" class="tw-flex tw-items-center tw-justify-between tw-px-5 tw-py-3 hover:tw-bg-slate-50/50 tw-transition-all tw-no-underline tw-group">
+        <span class="tw-text-xs tw-text-slate-600">Add New Address</span>
+        <i class="bi bi-chevron-right tw-text-[10px] tw-text-slate-300 group-hover:tw-text-slate-500"></i>
+    </a>
+</div>
+
+<!-- Danger Zone -->
+<div class="tw-bg-white tw-rounded-xl tw-border tw-border-red-100 tw-p-5">
+    <div class="tw-flex tw-items-center tw-justify-between">
+        <div class="tw-flex tw-items-center tw-gap-2.5">
+            <i class="bi bi-exclamation-triangle tw-text-red-400"></i>
+            <div>
+                <div class="tw-text-xs tw-font-semibold tw-text-slate-800">Delete Account</div>
+                <div class="tw-text-[10px] tw-text-slate-400">Permanently remove your account and data</div>
+            </div>
+        </div>
+        <form action="/account-info/delete-account" method="post" class="tw-m-0">
+            <button type="submit" onclick="return confirm('Permanently delete your account? This cannot be undone.');" class="tw-px-3 tw-py-1.5 tw-text-red-500 tw-text-[11px] tw-font-semibold tw-border tw-border-red-200 tw-rounded-md tw-bg-white hover:tw-bg-red-50 tw-transition-all">Delete</button>
+        </form>
+    </div>
+</div>

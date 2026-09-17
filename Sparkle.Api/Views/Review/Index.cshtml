@@ -1,0 +1,152 @@
+@model Sparkle.Api.Controllers.ReviewController.ReviewDashboardViewModel
+@{
+    ViewData["Title"] = "My Reviews";
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<style>
+    .rev-grid { display: flex; flex-direction: column; gap: 14px; }
+    .rev-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .rev-header h5 { font-size: 16px; font-weight: 800; color: #1e293b; margin: 0; }
+    .rev-header p { font-size: 12px; color: #64748b; margin: 2px 0 0; }
+    .rev-counts { display: flex; gap: 8px; flex-wrap: wrap; }
+    .rev-count { font-size: 11px; font-weight: 800; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; padding: 5px 10px; border-radius: 999px; }
+    .rev-count.pending { color: #c2410c; background: #fff7ed; border-color: #fed7aa; }
+    .rev-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(15,23,42,0.04); }
+    .rev-card-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; }
+    .rev-card-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: #1e293b; margin: 0; }
+    .rev-card-title i { color: #f97316; }
+    .rev-list { display: flex; flex-direction: column; }
+    .rev-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #f8fafc; }
+    .rev-item:last-child { border-bottom: 0; }
+    .rev-img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #e2e8f0; background: #f8fafc; flex: 0 0 50px; }
+    .rev-info { flex: 1; min-width: 0; }
+    .rev-name { font-size: 13px; font-weight: 800; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rev-meta { display: flex; gap: 10px; flex-wrap: wrap; color: #94a3b8; font-size: 11px; margin-top: 3px; }
+    .rev-stars { color: #f59e0b; font-size: 12px; letter-spacing: 1px; margin-top: 4px; }
+    .rev-comment { color: #475569; font-size: 12px; line-height: 1.5; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .rev-status { font-size: 10px; font-weight: 800; text-transform: uppercase; border-radius: 999px; padding: 3px 8px; background: #f1f5f9; color: #475569; }
+    .rev-status.Approved { background: #ecfdf5; color: #047857; }
+    .rev-status.Pending { background: #fff7ed; color: #c2410c; }
+    .rev-status.Rejected { background: #fef2f2; color: #b91c1c; }
+    .rev-actions { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
+    .btn-rev { height: 32px; border: 1px solid #e2e8f0; background: #fff; color: #334155; border-radius: 8px; padding: 0 10px; font-size: 11px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; transition: all .2s; }
+    .btn-rev:hover { background: #f8fafc; color: #0f172a; }
+    .btn-rev.primary { background: #f97316; border-color: #f97316; color: #fff; }
+    .btn-rev.primary:hover { background: #ea580c; color: #fff; }
+    .btn-rev.danger { color: #dc2626; border-color: #fecaca; }
+    .btn-rev.danger:hover { background: #fef2f2; color: #b91c1c; }
+    .empty-state { padding: 28px 16px; text-align: center; color: #94a3b8; font-size: 12px; }
+    .empty-state i { display: block; font-size: 28px; margin-bottom: 8px; opacity: .45; }
+    @@media (max-width: 720px) {
+        .rev-header { align-items: flex-start; flex-direction: column; }
+        .rev-item { align-items: flex-start; }
+        .rev-actions { width: 100%; justify-content: flex-start; margin-left: 62px; }
+    }
+</style>
+
+<div class="rev-grid">
+    <div class="rev-header">
+        <div>
+            <h5>My Reviews</h5>
+            <p>Review delivered products and manage feedback you already posted.</p>
+        </div>
+        <div class="rev-counts">
+            <span class="rev-count pending">@Model.PendingItems.Count pending</span>
+            <span class="rev-count">@Model.SubmittedReviews.Count reviewed</span>
+        </div>
+    </div>
+
+    <div class="rev-card">
+        <div class="rev-card-head">
+            <h6 class="rev-card-title"><i class="bi bi-pencil-square"></i> Products to Review</h6>
+        </div>
+        <div class="rev-list">
+            @if (Model.PendingItems.Any())
+            {
+                foreach (var item in Model.PendingItems)
+                {
+                    <div class="rev-item">
+                        <img src="@(string.IsNullOrWhiteSpace(item.ProductImage) ? "/images/placeholder.jpg" : item.ProductImage)" class="rev-img" alt="@item.ProductName" />
+                        <div class="rev-info">
+                            <div class="rev-name">@item.ProductName</div>
+                            <div class="rev-meta">
+                                <span><i class="bi bi-calendar-check"></i> Delivered @(item.Order?.DeliveredAt?.ToString("dd MMM yyyy") ?? "recently")</span>
+                                @if (!string.IsNullOrWhiteSpace(item.Seller?.ShopName))
+                                {
+                                    <span><i class="bi bi-shop"></i> @item.Seller.ShopName</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="rev-actions">
+                            <a href="/home/product/@item.ProductId?writeReview=1#reviews" class="btn-rev primary"><i class="bi bi-star"></i> Write Review</a>
+                            <a href="/home/product/@item.ProductId" class="btn-rev"><i class="bi bi-box-arrow-up-right"></i> Product</a>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-check-circle"></i>
+                    You have no pending products to review.
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="rev-card">
+        <div class="rev-card-head">
+            <h6 class="rev-card-title"><i class="bi bi-chat-square-heart"></i> Reviewed Products</h6>
+        </div>
+        <div class="rev-list">
+            @if (Model.SubmittedReviews.Any())
+            {
+                foreach (var review in Model.SubmittedReviews)
+                {
+                    var imageUrl = review.Product?.Images?.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url ?? "/images/placeholder.jpg";
+                    <div class="rev-item">
+                        <img src="@imageUrl" class="rev-img" alt="@review.Product?.Title" />
+                        <div class="rev-info">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <div class="rev-name">@review.Product?.Title</div>
+                                <span class="rev-status @review.Status">@review.Status</span>
+                            </div>
+                            <div class="rev-stars">@(new string('★', review.Rating))@(new string('☆', Math.Max(0, 5 - review.Rating)))</div>
+                            <div class="rev-meta">
+                                <span><i class="bi bi-calendar3"></i> @review.ReviewDate.ToString("dd MMM yyyy")</span>
+                                @if (!string.IsNullOrWhiteSpace(review.Product?.Seller?.ShopName))
+                                {
+                                    <span><i class="bi bi-shop"></i> @review.Product.Seller.ShopName</span>
+                                }
+                                @if (review.LastEditedAt.HasValue)
+                                {
+                                    <span><i class="bi bi-pencil"></i> Edited @review.LastEditedAt.Value.ToString("dd MMM yyyy")</span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(review.Comment))
+                            {
+                                <div class="rev-comment">@review.Comment</div>
+                            }
+                        </div>
+                        <div class="rev-actions">
+                            <a href="/home/product/@review.ProductId#reviews" class="btn-rev"><i class="bi bi-eye"></i> View</a>
+                            <a asp-action="Edit" asp-route-id="@review.Id" class="btn-rev"><i class="bi bi-pencil-square"></i> Edit</a>
+                            <form asp-action="Delete" asp-route-id="@review.Id" method="post" class="m-0" onsubmit="return confirm('Delete this review? You can write it again later.');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-rev danger"><i class="bi bi-trash"></i> Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-chat-square-text"></i>
+                    You have not reviewed any products yet.
+                </div>
+            }
+        </div>
+    </div>
+</div>

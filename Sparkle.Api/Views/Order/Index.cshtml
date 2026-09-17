@@ -1,0 +1,434 @@
+@model Sparkle.Api.Controllers.OrderController.PagedUserOrdersViewModel
+@{
+    ViewData["Title"] = "My Orders";
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+    var langCookie = Context.Request.Cookies["sparkle-lang"] == "bn" ? "bn" : "en";
+    var isBangla = langCookie == "bn";
+
+    var statusFilter    = (string)(ViewBag.StatusFilter ?? "");
+    var statusCounts    = (Dictionary<string, int>)(ViewBag.StatusCounts ?? new Dictionary<string, int>());
+    var totalAll        = (int)(ViewBag.TotalAllOrders ?? 0);
+    var latestGroupIds  = (List<int>)(ViewBag.LatestGroupIds ?? new List<int>());
+    var latestOrderId   = (int)(ViewBag.LatestOrderId ?? 0);
+    var isLatestCombined = (bool)(ViewBag.IsLatestGroupCombined ?? false);
+
+    int BadgeCount(string s) => statusCounts.TryGetValue(s, out var c) ? c : 0;
+
+    var filters = new[]
+    {
+        new { Key = "",             Label = isBangla ? "সব" : "All",          Icon = "bi-grid-3x3-gap",      Count = totalAll },
+        new { Key = "Pending",      Label = isBangla ? "অপেক্ষমান" : "Pending",     Icon = "bi-clock",             Count = BadgeCount("Pending") },
+        new { Key = "Confirmed",    Label = isBangla ? "নিশ্চিত" : "Confirmed",   Icon = "bi-check-circle",      Count = BadgeCount("Confirmed") },
+        new { Key = "Processing",   Label = isBangla ? "প্রস্তুত" : "Processing",  Icon = "bi-gear",              Count = BadgeCount("Processing") + BadgeCount("SellerPreparing") },
+        new { Key = "Shipped",      Label = isBangla ? "শিপড" : "Shipped",      Icon = "bi-truck",             Count = BadgeCount("Shipped") + BadgeCount("OutForDelivery") + BadgeCount("PickedUp") },
+        new { Key = "Delivered",    Label = isBangla ? "ডেলিভার্ড" : "Delivered",  Icon = "bi-bag-check",         Count = BadgeCount("Delivered") },
+        new { Key = "Cancelled",    Label = isBangla ? "বাতিল" : "Cancelled",   Icon = "bi-x-circle",          Count = BadgeCount("Cancelled") },
+        new { Key = "Returned",     Label = isBangla ? "রিটার্ন" : "Returned",    Icon = "bi-arrow-return-left", Count = BadgeCount("Returned") + BadgeCount("ReturnRequested") + BadgeCount("Refunded") },
+    };
+}
+
+<style>
+    .orders-page { font-family: 'Inter', -apple-system, sans-serif; }
+
+    /* ─── Header ─── */
+    .page-header { margin-bottom: 1rem; }
+    .page-title { font-size: 1.1rem; font-weight: 800; color: #1e293b; margin: 0; }
+    .page-subtitle { font-size: 0.75rem; color: #94a3b8; margin: 2px 0 0; }
+    .btn-shop-now {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 7px 14px; border-radius: 6px;
+        background: #1e293b; color: #fff;
+        font-size: 0.72rem; font-weight: 600;
+        text-decoration: none; transition: all 0.15s;
+        border: none; box-shadow: 0 2px 6px rgba(0,0,0,.10);
+    }
+    .btn-shop-now i { font-size: 0.72rem; }
+    .btn-shop-now:hover { background: #0f172a; color: #fff; transform: translateY(-1px); }
+
+    /* ─── Filter Tabs ─── */
+    .filter-bar {
+        display: flex; gap: 4px; flex-wrap: wrap;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .filter-tab {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 5px 12px; border-radius: 20px; font-size: 0.7rem;
+        font-weight: 600; text-decoration: none; border: 1.5px solid #e2e8f0;
+        color: #64748b; background: #fff; transition: all 0.15s;
+        white-space: nowrap; cursor: pointer;
+    }
+    .filter-tab:hover { border-color: #f97316; color: #f97316; }
+    .filter-tab.active { background: #f97316; color: #fff; border-color: #f97316; }
+    .filter-tab .tab-count {
+        background: rgba(0,0,0,0.1); border-radius: 10px;
+        padding: 0 5px; font-size: 0.6rem; font-weight: 800; line-height: 1.6;
+    }
+    .filter-tab.active .tab-count { background: rgba(255,255,255,0.25); }
+
+    /* ─── Download Banner ─── */
+    .dl-banner {
+        background: #fafafa; border: 1px solid #f0f0f0;
+        border-radius: 8px; padding: 10px 14px;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 10px; margin-bottom: 0.85rem;
+    }
+    .dl-banner-left { display: flex; align-items: center; gap: 10px; }
+    .dl-banner-icon {
+        font-size: 1.25rem; color: #f97316; display: flex; align-items: center;
+        background: #fff7ed; width: 34px; height: 34px; justify-content: center; border-radius: 8px;
+    }
+    .dl-banner-text { font-size: 0.75rem; font-weight: 700; color: #1e293b; line-height: 1.3; }
+    .dl-banner-text small { display: block; font-size: 0.65rem; color: #64748b; font-weight: 500; margin-top: 1px; }
+    .btn-dl-banner {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 6px 12px; border-radius: 6px;
+        background: #f97316; color: #fff;
+        font-size: 0.68rem; font-weight: 600;
+        text-decoration: none; white-space: nowrap;
+        flex-shrink: 0; transition: all 0.15s;
+    }
+    .btn-dl-banner i { font-size: 0.7rem; }
+    .btn-dl-banner:hover { background: #ea580c; color: #fff; }
+
+    /* ─── Order Card ─── */
+    .order-card {
+        display: block; text-decoration: none !important; color: inherit !important;
+        background: #fff; border: 1px solid #f1f5f9;
+        border-radius: 10px; padding: 14px 16px; margin-bottom: 8px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        position: relative;
+    }
+    .order-card:hover { border-color: #e2e8f0; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .order-card.is-latest { border-left: 3px solid #f97316; }
+
+    .shop-icon-wrap {
+        width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+        background: #fff7ed; color: #f97316;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.8rem;
+    }
+    .shop-name { font-size: 0.85rem; font-weight: 700; color: #1e293b; }
+    .order-date-text { font-size: 0.68rem; color: #94a3b8; margin-top: 1px; }
+    .latest-tag {
+        font-size: 0.5rem; font-weight: 800; text-transform: uppercase;
+        background: #fff7ed; color: #c2410c; border-radius: 4px;
+        padding: 1px 5px; vertical-align: middle; letter-spacing: .05em; margin-left: 5px;
+    }
+
+    /* ─── Status Badge ─── */
+    .status-pill {
+        font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.06em; padding: 3px 8px; border-radius: 20px;
+        white-space: nowrap;
+    }
+    .sp-pending    { background: #fffbeb; color: #b45309; }
+    .sp-confirmed,
+    .sp-processing { background: #eff6ff; color: #1d4ed8; }
+    .sp-packed     { background: #eef2ff; color: #4338ca; }
+    .sp-shipped    { background: #f5f3ff; color: #6d28d9; }
+    .sp-delivered  { background: #f0fdf4; color: #15803d; }
+    .sp-cancelled  { background: #fef2f2; color: #b91c1c; }
+    .sp-returned,
+    .sp-refunded   { background: #fdf4ff; color: #7e22ce; }
+    .sp-other      { background: #f8fafc; color: #64748b; }
+
+    /* ─── Order Meta Row ─── */
+    .order-number {
+        font-size: 0.68rem; color: #64748b; font-family: 'JetBrains Mono', monospace;
+        background: #f8fafc; padding: 2px 7px; border-radius: 4px;
+        border: 1px solid #f1f5f9;
+    }
+    .order-total { font-size: 0.9rem; font-weight: 800; color: #f97316; }
+    .items-count { font-size: 0.68rem; color: #94a3b8; }
+    .product-names-text {
+        font-size: 0.72rem; font-weight: 600; color: #334155; line-height: 1.4;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* ─── Thumbnails ─── */
+    .thumb-img {
+        width: 48px; height: 48px; border-radius: 10px;
+        object-fit: cover; border: 1px solid #f1f5f9;
+        background: #f8fafc;
+        transition: transform 0.2s;
+    }
+    .thumb-img:hover { transform: scale(1.1); }
+    .thumb-more {
+        width: 48px; height: 48px; border-radius: 10px;
+        background: #f8fafc; color: #64748b; font-size: 0.7rem; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        border: 1px solid #f1f5f9;
+    }
+
+    /* ─── Card Footer ─── */
+    .card-footer-row {
+        display: flex; align-items: center; justify-content: flex-end;
+        margin-top: 10px; padding-top: 10px; border-top: 1px solid #f8fafc;
+    }
+    .view-details-link {
+        font-size: 0.72rem; color: #94a3b8; font-weight: 600;
+        display: inline-flex; align-items: center; gap: 3px;
+        transition: color 0.15s;
+    }
+    .order-card:hover .view-details-link { color: #f97316; }
+
+    /* ─── Empty State ─── */
+    .empty-state { text-align: center; padding: 3.5rem 0; }
+    .empty-icon {
+        width: 52px; height: 52px; border-radius: 14px;
+        background: #f8fafc; color: #cbd5e1; font-size: 1.5rem;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1rem; border: 1px solid #f1f5f9;
+    }
+    .empty-title { font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.4rem; }
+    .empty-sub { font-size: 0.77rem; color: #94a3b8; }
+
+    /* ─── Pagination ─── */
+    .pagination-row { display: flex; justify-content: center; gap: 3px; margin-top: 1.25rem; }
+    .pg-btn {
+        width: 34px; height: 34px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.8rem; font-weight: 600; color: #475569; background: #fff;
+        border: 1px solid #cbd5e1; transition: all 0.2s ease; text-decoration: none;
+    }
+    .pg-btn i { font-size: 0.75rem; }
+    .pg-btn:hover:not(.disabled) { border-color: #f97316; color: #f97316; background: #fff7ed; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(249,115,22,.15); }
+    .pg-btn.active  { background: linear-gradient(135deg, #f97316, #ea580c); color: #fff; border: none; box-shadow: 0 4px 10px rgba(249,115,22,.35); }
+    .pg-btn.disabled { opacity: 0.45; cursor: default; pointer-events: none; background: #f8fafc; border-color: #e2e8f0; }
+    .pg-info { text-align: center; margin-top: 0.5rem; font-size: 0.68rem; color: #94a3b8; }
+</style>
+
+<div class="orders-page">
+    <!-- Header -->
+    <div class="page-header d-flex align-items-start justify-content-between">
+        <div>
+            <h6 class="page-title">@(isBangla ? "আমার অর্ডার" : "My Orders")</h6>
+            <p class="page-subtitle">@(isBangla ? "আপনার অর্ডার ট্র্যাক ও ডাউনলোড করুন" : "Track, filter and download your order slips")</p>
+        </div>
+        <a href="/" class="btn-shop-now">
+            <i class="bi bi-bag"></i> @(isBangla ? "শপ করুন" : "Shop Now")
+        </a>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-bar">
+        @foreach (var f in filters)
+        {
+            var isActive = f.Key == statusFilter;
+            if (f.Count == 0 && f.Key != "" && !isActive) { continue; }
+            <a href="@Url.Action("Index", new { status = f.Key == "" ? null : f.Key, page = 1 })"
+               class="filter-tab @(isActive ? "active" : "")">
+                <i class="bi @f.Icon" style="font-size: 0.65rem;"></i>
+                @f.Label
+                @if (f.Count > 0) { <span class="tab-count">@f.Count</span> }
+            </a>
+        }
+    </div>
+
+    <!-- Smart Download Banner -->
+    @if (latestGroupIds.Any() && string.IsNullOrEmpty(statusFilter))
+    {
+        var dlUrl    = isLatestCombined ? $"/orders/download-combined?ids={string.Join(",", latestGroupIds)}" : $"/orders/{latestOrderId}/download";
+        var dlLabel  = isLatestCombined ? $"Download Combined ({latestGroupIds.Count} Orders)" : "Download Slip";
+        var dlTitle  = isLatestCombined ? $"Latest checkout — <strong>{latestGroupIds.Count} orders</strong> from different sellers." : "Your most recent order is ready.";
+        var dlSub    = isLatestCombined ? "One PDF includes all seller slips." : "Download a single-order PDF instantly.";
+        <div class="dl-banner">
+            <div class="dl-banner-left">
+                <div class="dl-banner-icon"><i class="bi bi-file-earmark-arrow-down"></i></div>
+                <div class="dl-banner-text">
+                    @Html.Raw(dlTitle)
+                    <small>@dlSub</small>
+                </div>
+            </div>
+            <a href="@dlUrl" class="btn-dl-banner" target="_blank">
+                <i class="bi bi-download"></i> @dlLabel
+            </a>
+        </div>
+    }
+
+    <!-- Order List or Empty State -->
+    @if (!Model.Items.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-bag-x"></i></div>
+            <div class="empty-title">
+                @(string.IsNullOrEmpty(statusFilter)
+                    ? (isBangla ? "কোন অর্ডার নেই" : "No orders yet")
+                    : $"No \"{statusFilter}\" orders found")
+            </div>
+            <p class="empty-sub">
+                @if (string.IsNullOrEmpty(statusFilter))
+                {
+                    @(isBangla ? "আপনি এখনো কোন অর্ডার করেননি।" : "Start shopping to see your orders here.")
+                }
+                else
+                {
+                    <a href="@Url.Action("Index")" class="text-decoration-none" style="color:#f97316;">← View all orders</a>
+                }
+            </p>
+            @if (string.IsNullOrEmpty(statusFilter))
+            {
+                <a href="/" class="btn-shop-now mt-2" style="margin: 0 auto;">
+                    <i class="bi bi-bag-plus"></i> Start Shopping
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        var groupedOrders = Model.Items
+            .GroupBy(o => string.IsNullOrEmpty(o.ParentOrderNumber) ? o.OrderNumber : o.ParentOrderNumber)
+            .ToList();
+
+        @foreach (var group in groupedOrders)
+        {
+            var mainOrder   = group.First();
+            var allItems    = group.SelectMany(o => o.OrderItems ?? new List<Sparkle.Domain.Orders.OrderItem>()).ToList();
+            var groupTotal  = group.Sum(o => o.TotalAmount);
+            var itemCount   = allItems.Sum(i => i.Quantity);
+            var isGrouped   = group.Count() > 1;
+            
+            var shopName    = isGrouped ? "Multiple Sellers" : (mainOrder.Seller?.ShopName ?? "Sparkle");
+            var orderIdStr  = group.Key;
+            
+            var distinctStatuses = group.Select(o => o.Status).Distinct().ToList();
+            var statusStr   = distinctStatuses.Count > 1 ? "Multiple Statuses" : distinctStatuses.First().ToString();
+            var pillClass   = statusStr switch
+            {
+                "Pending"           => "sp-pending",
+                "Confirmed"         => "sp-confirmed",
+                "Processing"        => "sp-processing",
+                "SellerPreparing"   => "sp-packed",
+                "ReadyForHandover"  => "sp-packed",
+                "Packed"            => "sp-packed",
+                "PickupScheduled"   => "sp-shipped",
+                "PickedUp"          => "sp-shipped",
+                "ReceivedAtHub"     => "sp-shipped",
+                "QCPassed"          => "sp-shipped",
+                "Sorting"           => "sp-shipped",
+                "Shipped"           => "sp-shipped",
+                "OutForDelivery"    => "sp-shipped",
+                "DeliveryAttempted" => "sp-shipped",
+                "Delivered"         => "sp-delivered",
+                "Cancelled"         => "sp-cancelled",
+                "ReturnRequested"   => "sp-returned",
+                "Returned"          => "sp-returned",
+                "Refunded"          => "sp-returned",
+                "DeliveryFailed"    => "sp-returned",
+                "ReturnToHub"       => "sp-returned",
+                "Multiple Statuses" => "sp-shipped",
+                _                   => "sp-pending"
+            };
+
+            var isLatest  = group.Any(o => latestGroupIds.Contains(o.Id));
+
+            <a href="/orders/@mainOrder.Id" class="order-card @(isLatest ? "is-latest" : "")">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    
+                    <!-- Left: Shop Info & Order Number -->
+                    <div class="d-flex flex-column gap-2" style="min-width: 200px; max-width: 260px;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="shop-icon-wrap"><i class="bi bi-shop"></i></div>
+                            <div>
+                                <div class="shop-name">
+                                    @shopName
+                                    @if (isLatest) { <span class="latest-tag">Latest</span> }
+                                </div>
+                                <div class="order-date-text">
+                                    <i class="bi bi-calendar3" style="font-size: 0.6rem;"></i>
+                                    @mainOrder.OrderDate.ToString("d MMM yyyy · h:mm tt")
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-column gap-1 mt-1">
+                            @{
+                                var fullNames = string.Join(", ", allItems.Select(i => i.ProductName));
+                            }
+                            <div class="product-names-text" title="@fullNames">
+                                @fullNames
+                            </div>
+                            <div>
+                                <span class="order-number">#@orderIdStr</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Middle: Thumbnails -->
+                    <div class="flex-grow-1 d-flex justify-content-start">
+                        @if (allItems.Any())
+                        {
+                            <div class="d-flex align-items-center gap-2">
+                                @foreach (var item in allItems.Take(4))
+                                {
+                                    var imgUrl = !string.IsNullOrEmpty(item.ProductImage)
+                                        ? item.ProductImage
+                                        : (item.Product?.Images?.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url ?? "https://placehold.co/80");
+                                    <img src="@imgUrl" alt="@item.ProductName" class="thumb-img" />
+                                }
+                                @if (allItems.Count > 4)
+                                {
+                                    <div class="thumb-more">+@(allItems.Count - 4)</div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Right: Status & Total -->
+                    <div class="d-flex flex-column align-items-end gap-2" style="min-width: 140px;">
+                        <span class="status-pill @pillClass">@statusStr</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="items-count">
+                                <i class="bi bi-box-seam" style="font-size: 0.62rem;"></i>
+                                @itemCount @(itemCount == 1 ? "item" : "items")
+                            </span>
+                            <span class="order-total">৳@groupTotal.ToString("N0")</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Footer Row: View Details -->
+                <div class="card-footer-row mt-3">
+                    <span class="view-details-link">
+                        @(isBangla ? "বিস্তারিত" : "View Details")
+                        <i class="bi bi-arrow-right" style="font-size: 0.6rem;"></i>
+                    </span>
+                </div>
+            </a>
+        }
+    }
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <div class="pagination-row">
+            <a href="@Url.Action("Index", new { page = Model.Page - 1, status = string.IsNullOrEmpty(statusFilter) ? null : statusFilter })"
+               class="pg-btn @(Model.Page == 1 ? "disabled" : "")">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                if (i == 1 || i == Model.TotalPages || (i >= Model.Page - 1 && i <= Model.Page + 1))
+                {
+                    <a href="@Url.Action("Index", new { page = i, status = string.IsNullOrEmpty(statusFilter) ? null : statusFilter })"
+                       class="pg-btn @(Model.Page == i ? "active" : "")">@i</a>
+                }
+                else if (i == Model.Page - 2 || i == Model.Page + 2)
+                {
+                    <span class="pg-btn disabled" style="border: none; background: transparent;">…</span>
+                }
+            }
+
+            <a href="@Url.Action("Index", new { page = Model.Page + 1, status = string.IsNullOrEmpty(statusFilter) ? null : statusFilter })"
+               class="pg-btn @(Model.Page == Model.TotalPages ? "disabled" : "")">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+        <p class="pg-info">
+            Showing @(((Model.Page - 1) * Model.PageSize) + 1)–@(Math.Min(Model.Page * Model.PageSize, Model.TotalCount)) of @Model.TotalCount orders
+        </p>
+    }
+</div>

@@ -1,0 +1,37 @@
+@{
+    ViewData["Title"] = "Registration Pending";
+    Layout = "_Layout";
+}
+
+<div class="container my-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <!-- Use an icon or image here -->
+                        <h1 class="display-4 text-warning">⏳</h1>
+                    </div>
+                    <h2 class="mb-3">Application Under Review</h2>
+                    <p class="lead text-muted">
+                        Thank you for registering as a seller!
+                    </p>
+                    <hr class="my-4">
+                    <p>
+                        Your application has been received and is currently <strong>Pending Admin Approval</strong>.
+                        We will review your business details and activate your account shortly.
+                    </p>
+                    <div class="alert alert-info mt-3" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        You will not be able to access the Seller Dashboard until your account is approved.
+                    </div>
+                    
+                    <div class="mt-5">
+                        <a href="/" class="btn btn-outline-secondary">Return to Home</a>
+                        <a href="/auth/login" class="btn btn-primary ms-3">Go to Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

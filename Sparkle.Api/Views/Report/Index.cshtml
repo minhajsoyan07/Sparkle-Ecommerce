@@ -1,0 +1,379 @@
+@model List<Sparkle.Domain.Support.Report>
+@{
+    ViewData["Title"] = "My Reports";
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<style>
+    .rep-grid { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Header ── */
+    .rep-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+    }
+    .rep-header h5 { font-size: 16px; font-weight: 700; color: #2d3748; margin: 0; }
+    .rep-header p { font-size: 12px; color: #718096; margin: 2px 0 0 0; }
+
+    .btn-new-rep {
+        background: #1a202c;
+        color: #fff;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+    .btn-new-rep:hover { background: #2d3748; transform: translateY(-1px); }
+    .btn-new-rep i { font-size: 10px; }
+
+    /* ── Report Card ── */
+    .rep-card {
+        background: #fff;
+        border: 1px solid #edf2f7;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        overflow: hidden;
+    }
+    .rep-list { display: flex; flex-direction: column; }
+    .rep-item {
+        padding: 12px 20px;
+        border-bottom: 1px solid #f7fafc;
+        transition: background 0.2s;
+    }
+    .rep-item:last-child { border-bottom: none; }
+    .rep-item:hover { background: #fafcfe; }
+
+    .rep-row-1 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .rep-target { display: flex; align-items: center; gap: 8px; }
+    .rep-target-icon {
+        width: 28px; height: 28px;
+        border-radius: 6px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 12px;
+    }
+    .rep-target-icon.product { background: #ebf5ff; color: #3182ce; }
+    .rep-target-icon.seller  { background: #f0fff4; color: #38a169; }
+
+    .rep-target-info { min-width: 0; }
+    .rep-target-name { font-size: 12px; font-weight: 700; color: #2d3748; }
+    .rep-target-id { font-size: 9px; color: #a0aec0; font-family: monospace; }
+    
+    .rep-status {
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1px 6px;
+        border-radius: 99px;
+    }
+    .rep-status.pending  { background: #fffaf0; color: #dd6b20; }
+    .rep-status.resolved { background: #f0fff4; color: #38a169; }
+    .rep-status.rejected { background: #fff5f5; color: #e53e3e; }
+
+    .rep-reason {
+        display: inline-block;
+        font-size: 9px;
+        font-weight: 700;
+        color: #4a5568;
+        background: #f7fafc;
+        padding: 1px 6px;
+        border-radius: 4px;
+        margin-bottom: 4px;
+    }
+    .rep-desc { font-size: 11px; color: #718096; line-height: 1.5; margin: 0; }
+
+    /* ── Modal Fix ── */
+    #newReportModal { z-index: 9999; }
+    .modal-content { border-radius: 16px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+    .modal-header { padding: 12px 20px; border-bottom: 1px solid #f7fafc; }
+    .modal-title { font-size: 14px; font-weight: 700; color: #2d3748; }
+    .modal-body { padding: 20px; }
+    
+    .form-group { margin-bottom: 12px; position: relative; }
+    .form-label { display: block; font-size: 10px; font-weight: 700; color: #4a5568; margin-bottom: 4px; text-transform: uppercase; }
+    .form-input, .form-select, .form-textarea {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 12px;
+        border: 1px solid #edf2f7;
+        border-radius: 8px;
+        outline: none;
+        transition: all 0.2s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49,130,206,0.05); }
+
+    /* ── Autocomplete ── */
+    .search-results {
+        position: absolute;
+        top: 100%; left: 0; right: 0;
+        background: #fff;
+        border: 1px solid #edf2f7;
+        border-radius: 8px;
+        margin-top: 4px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        z-index: 10;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+    }
+    .search-result-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .search-result-item:hover { background: #f7fafc; }
+    .search-result-img {
+        width: 32px; height: 32px;
+        border-radius: 4px;
+        object-fit: cover;
+        border: 1px solid #edf2f7;
+    }
+    .search-result-text { font-size: 11px; font-weight: 600; color: #2d3748; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .selected-target {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: #f0f7ff;
+        border: 1px solid #3182ce;
+        border-radius: 8px;
+        margin-top: 4px;
+        display: none;
+    }
+    .selected-target-text { font-size: 11px; font-weight: 700; color: #2b6cb0; flex: 1; }
+    .btn-clear-selection { color: #2b6cb0; cursor: pointer; font-size: 12px; }
+
+    .btn-submit {
+        background: #1a202c;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        width: 100%;
+        transition: background 0.2s;
+        margin-top: 8px;
+    }
+    .btn-submit:hover { background: #2d3748; }
+
+    /* ── Empty State ── */
+    .empty-state { padding: 40px 20px; text-align: center; color: #a0aec0; }
+    .empty-state i { font-size: 32px; display: block; margin-bottom: 8px; opacity: 0.2; }
+</style>
+
+<div class="rep-grid">
+    <div class="rep-header">
+        <div>
+            <h5>My Support Reports</h5>
+            <p>Track your reported issues and resolutions</p>
+        </div>
+        <button class="btn-new-rep" data-bs-toggle="modal" data-bs-target="#newReportModal">
+            <i class="bi bi-plus-lg"></i> New Report
+        </button>
+    </div>
+
+    <div class="rep-card">
+        <div class="rep-list">
+            @if (Model.Any())
+            {
+                foreach (var report in Model)
+                {
+                    var statusClass = report.Status?.ToLower() ?? "pending";
+                    <div class="rep-item">
+                        <div class="rep-row-1">
+                            <div class="rep-target">
+                                <div class="rep-target-icon @report.TargetType.ToLower()">
+                                    <i class="bi @(report.TargetType == "Product" ? "bi-box-seam" : "bi-shop")"></i>
+                                </div>
+                                <div class="rep-target-info">
+                                    <div class="rep-target-name">
+                                        @(report.TargetType == "Product" ? report.Product?.Title : report.Seller?.ShopName)
+                                    </div>
+                                    <div class="rep-target-id">
+                                        #@report.TargetType.ToUpper(): @(report.TargetType == "Product" ? report.ProductId : report.SellerId)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="rep-status @statusClass">@report.Status</div>
+                        </div>
+                        <div class="rep-reason">@report.Reason</div>
+                        <p class="rep-desc">@report.Description</p>
+                        @if (!string.IsNullOrEmpty(report.ResolutionNotes))
+                        {
+                            <div style="margin-top: 8px; padding: 8px; background: #f0fff4; border-radius: 6px; font-size: 10px; color: #2f855a;">
+                                <strong>Resolution:</strong> @report.ResolutionNotes
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-shield-check"></i>
+                    <h3 style="font-size: 14px; font-weight: 700; color: #4a5568; margin-bottom: 2px;">No reports found</h3>
+                    <p style="font-size: 11px;">Everything looks good! You haven't reported any issues yet.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- New Report Modal -->
+<div class="modal fade" id="newReportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Submit New Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size: 10px;"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-action="Create" method="post" id="reportForm">
+                    <div class="form-group">
+                        <label class="form-label">Issue Type</label>
+                        <select name="TargetType" id="targetType" class="form-select">
+                            <option value="Product">Product Issue</option>
+                            <option value="Seller">Seller Issue</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="productSearchGroup">
+                        <label class="form-label">Search Product</label>
+                        <input type="text" id="productSearchInput" class="form-input" placeholder="Type product name..." autocomplete="off" />
+                        <div id="searchResults" class="search-results"></div>
+                        <div id="selectedTarget" class="selected-target">
+                            <span id="selectedTargetText" class="selected-target-text"></span>
+                            <i class="bi bi-x-circle btn-clear-selection" id="btnClearSelection"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="targetIdGroup">
+                        <label class="form-label" id="targetIdLabel">Target ID (Required)</label>
+                        <input type="number" name="TargetId" id="targetIdInput" class="form-input" placeholder="e.g. 1024" required readonly />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Reason</label>
+                        <select name="Reason" class="form-select">
+                            <option>Fake Product</option>
+                            <option>Misleading Info</option>
+                            <option>Seller Misconduct</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea name="Description" class="form-textarea" rows="3" placeholder="Explain the issue clearly..." required minlength="10"></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit">Submit Report</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('newReportModal');
+        if (modal) {
+            document.body.appendChild(modal);
+        }
+
+        const targetType = document.getElementById('targetType');
+        const productSearchGroup = document.getElementById('productSearchGroup');
+        const targetIdLabel = document.getElementById('targetIdLabel');
+        const targetIdInput = document.getElementById('targetIdInput');
+        const searchInput = document.getElementById('productSearchInput');
+        const searchResults = document.getElementById('searchResults');
+        const selectedTarget = document.getElementById('selectedTarget');
+        const selectedTargetText = document.getElementById('selectedTargetText');
+        const btnClearSelection = document.getElementById('btnClearSelection');
+
+        targetType.addEventListener('change', function() {
+            if (this.value === 'Product') {
+                productSearchGroup.style.display = 'block';
+                targetIdLabel.textContent = 'Product ID (Selected)';
+                targetIdInput.readOnly = true;
+            } else {
+                productSearchGroup.style.display = 'none';
+                targetIdLabel.textContent = 'Seller ID (Required)';
+                targetIdInput.readOnly = false;
+                clearSelection();
+            }
+        });
+
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            if (query.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                fetch(`/Report/SearchProducts?q=${encodeURIComponent(query)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            searchResults.innerHTML = data.map(p => `
+                                <div class="search-result-item" data-id="${p.id}" data-title="${p.title}">
+                                    <img src="${p.image}" class="search-result-img" />
+                                    <span class="search-result-text">${p.title}</span>
+                                </div>
+                            `).join('');
+                            searchResults.style.display = 'block';
+                        } else {
+                            searchResults.innerHTML = '<div class="search-result-item"><span class="search-result-text">No products found</span></div>';
+                            searchResults.style.display = 'block';
+                        }
+                    });
+            }, 300);
+        });
+
+        searchResults.addEventListener('click', function(e) {
+            const item = e.target.closest('.search-result-item');
+            if (!item || !item.dataset.id) return;
+
+            const id = item.dataset.id;
+            const title = item.dataset.title;
+
+            targetIdInput.value = id;
+            selectedTargetText.textContent = `Selected: ${title} (#${id})`;
+            selectedTarget.style.display = 'flex';
+            searchInput.style.display = 'none';
+            searchResults.style.display = 'none';
+        });
+
+        btnClearSelection.addEventListener('click', clearSelection);
+
+        function clearSelection() {
+            targetIdInput.value = '';
+            searchInput.value = '';
+            searchInput.style.display = 'block';
+            selectedTarget.style.display = 'none';
+        }
+
+        // Close search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!productSearchGroup.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+    });
+</script>

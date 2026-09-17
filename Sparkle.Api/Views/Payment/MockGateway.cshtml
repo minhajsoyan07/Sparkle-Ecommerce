@@ -1,0 +1,472 @@
+@{
+    Layout = null;
+    var tranId    = (ViewBag.TranId   as string) ?? "SPK-MOCK-ERR";
+    var orderIds  = (ViewBag.OrderIds as string) ?? "0";
+    var amount    = (ViewBag.Amount   as string) ?? "0.00";
+    var preMethod = ((ViewBag.Method  as string) ?? "").Trim().ToLower();
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Secure Payment · SSLCommerz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.maateen.me/solaiman-lipi/font.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --brand:#e2136e;
+  --th:#007bff;
+  --th-rgb:0,123,255;
+  --surface:#fff;
+  --bg:#f0f4fb;
+  --border:#e5eaf2;
+  --text:#0d1117;
+  --muted:#6b7280;
+  --sub:#9ca3af;
+  --r:16px;
+}
+html,body{height:100%;font-family:'SolaimanLipi', 'Inter', system-ui, sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+body{display:flex;align-items:center;justify-content:center;padding:20px;min-height:100vh}
+
+/* ── Shell ── */
+.shell{
+  display:flex;width:100%;max-width:760px;
+  background:var(--surface);border-radius:var(--r);
+  box-shadow:0 8px 40px rgba(0,0,0,.09),0 2px 8px rgba(0,0,0,.06);
+  overflow:hidden;position:relative;
+}
+
+/* ── LEFT PANEL ── */
+.left{
+  width:300px;flex-shrink:0;
+  background:linear-gradient(160deg,#0d1117 0%,#1a2236 100%);
+  padding:32px 28px;display:flex;flex-direction:column;gap:0;
+  position:relative;overflow:hidden;
+}
+.left::before{
+  content:'';position:absolute;top:-60px;right:-60px;
+  width:220px;height:220px;border-radius:50%;
+  background:rgba(226,19,110,.15);pointer-events:none;
+}
+.left::after{
+  content:'';position:absolute;bottom:-40px;left:-40px;
+  width:160px;height:160px;border-radius:50%;
+  background:rgba(0,123,255,.12);pointer-events:none;
+}
+.lb{font-size:20px;font-weight:800;letter-spacing:-.4px;margin-bottom:28px;position:relative;z-index:1;}
+.lb .p{color:var(--brand)}.lb .b{color:#fff}
+
+.ill{
+  width:100%;border-radius:12px;overflow:hidden;
+  margin-bottom:24px;position:relative;z-index:1;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
+}
+.ill img{width:100%;display:block;object-fit:cover;}
+
+.info-block{position:relative;z-index:1;margin-bottom:18px;}
+.lbl{font-size:10px;font-weight:600;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.val{font-size:12px;font-weight:500;color:rgba(255,255,255,.85);word-break:break-all;line-height:1.4}
+
+.amt-card{
+  margin-top:auto;padding:18px 20px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;position:relative;z-index:1;
+  backdrop-filter:blur(8px);
+}
+.amt-card .al{font-size:11px;color:rgba(255,255,255,.45);margin-bottom:4px}
+.amt-card .av{font-size:24px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.amt-card .av em{font-style:normal;font-size:15px;opacity:.7;margin-right:2px}
+
+.sec-badge{
+  display:flex;align-items:center;gap:6px;margin-top:14px;
+  position:relative;z-index:1;
+}
+.sec-badge svg{color:rgba(255,255,255,.4)}
+.sec-badge span{font-size:10px;color:rgba(255,255,255,.35);font-weight:500}
+
+/* ── RIGHT PANEL ── */
+.right{flex:1;display:flex;flex-direction:column;position:relative;overflow:hidden;min-height:520px}
+
+.rtabs{display:flex;padding:0 30px;border-bottom:1px solid var(--border)}
+.rtab{
+  padding:14px 14px;font-size:12px;font-weight:600;color:var(--sub);
+  border-bottom:2px solid transparent;cursor:pointer;transition:all .18s;user-select:none;
+}
+.rtab.on{color:var(--th);border-bottom-color:var(--th)}
+
+.rbody{flex:1;padding:28px 30px;display:flex;flex-direction:column}
+.rbody h2{font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px}
+.rbody .rsub{font-size:12px;color:var(--muted);margin-bottom:22px}
+
+/* MFS Grid */
+.mfs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mfs-card{
+  border:1.5px solid var(--border);border-radius:12px;
+  padding:20px 10px 16px;text-align:center;cursor:pointer;
+  transition:border-color .18s,box-shadow .18s,transform .15s,background .18s;
+}
+.mfs-card:hover{
+  border-color:var(--card-color,var(--th));
+  box-shadow:0 0 0 3px rgba(var(--card-rgb,var(--th-rgb)),.1);
+  transform:translateY(-2px);
+  background:#fafbff;
+}
+.mfs-icon{
+  width:56px;height:56px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 10px;font-size:13px;font-weight:800;color:#fff;letter-spacing:-.2px;
+  box-shadow:0 4px 12px rgba(0,0,0,.15);
+}
+.bk-icon{background:linear-gradient(135deg,#e2136e,#b8095a)}
+.ng-icon{background:linear-gradient(135deg,#f15a22,#c94510)}
+.rk-icon{background:linear-gradient(135deg,#8c3494,#5f1e67)}
+.mfs-name{font-size:11px;font-weight:600;color:var(--muted);margin-top:2px}
+.mfs-hint{font-size:10px;color:var(--sub);margin-top:2px}
+
+.trust{margin-top:auto;padding-top:20px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tc{font-size:10px;font-weight:600;color:var(--sub);background:#f3f4f6;padding:3px 9px;border-radius:20px}
+
+.rssl{
+  padding:10px 30px;border-top:1px solid var(--border);
+  font-size:11px;color:var(--sub);
+  display:flex;align-items:center;gap:6px;
+}
+
+/* ── Auth Overlay ── */
+.auth{
+  position:absolute;inset:0;background:#fff;z-index:20;
+  display:none;flex-direction:column;
+  animation:rise .22s ease;
+}
+@@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.ath{
+  padding:16px 22px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.ath-l{display:flex;align-items:center;gap:10px}
+.bb{
+  width:30px;height:30px;border-radius:50%;background:transparent;border:none;
+  cursor:pointer;color:var(--muted);font-size:17px;
+  display:flex;align-items:center;justify-content:center;transition:background .15s;
+}
+.bb:hover{background:var(--bg)}
+.pbadge{padding:4px 13px;border-radius:6px;font-size:12px;font-weight:700;color:#fff}
+.ath-r{font-size:14px;font-weight:700;color:var(--text)}
+
+.amid{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:24px;text-align:center;
+}
+.stag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  padding:4px 14px;border-radius:20px;margin-bottom:20px;
+}
+.stag .dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.7}
+.amid h3{font-size:20px;font-weight:700;color:var(--text);margin-bottom:6px}
+.amid p{font-size:12px;color:var(--muted);margin-bottom:28px;max-width:300px;line-height:1.65}
+
+.pin-wrap{position:relative;width:100%;max-width:290px}
+.pin-wrap .pico{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  font-size:16px;color:var(--sub);pointer-events:none;
+}
+.pfield{
+  width:100%;padding:13px 16px 13px 42px;
+  border:2px solid var(--border);border-radius:12px;
+  font-size:20px;font-weight:600;text-align:center;letter-spacing:2px;
+  color:var(--text);background:#fafbfc;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+  outline:none;
+}
+.pfield:focus{
+  border-color:var(--th);background:#fff;
+  box-shadow:0 0 0 4px rgba(var(--th-rgb),.09);
+}
+.pfield::placeholder{font-size:15px;letter-spacing:1px;font-weight:400;color:#c9d0d8}
+
+.emsg{margin-top:8px;font-size:12px;font-weight:500;color:#ef4444;display:none;animation:shk .28s}
+@@keyframes shk{0%,100%{transform:translateX(0)}30%{transform:translateX(-5px)}70%{transform:translateX(5px)}}
+
+.abtns{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border)}
+.abtn{
+  padding:17px;border:none;background:#fff;cursor:pointer;
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  transition:background .15s;
+}
+.abtn.cl{color:var(--sub);border-right:1px solid var(--border)}
+.abtn.ok{color:var(--th)}
+.abtn:hover{background:var(--bg)}
+
+/* spinner for pre-selected */
+.spin-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;opacity:.5}
+.spin{width:32px;height:32px;border:3px solid #e5e7eb;border-top-color:var(--th);border-radius:50%;animation:rot .7s linear infinite}
+@@keyframes rot{to{transform:rotate(360deg)}}
+
+@@media(max-width:640px){
+  .shell{flex-direction:column}
+  .left{width:100%;padding:22px 20px}
+  .ill{display:none}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- LEFT DARK PANEL -->
+  <aside class="left">
+    <div class="lb"><span class="p">SSL</span><span class="b">Commerz</span></div>
+
+    <div class="ill">
+      <img src="/images/payment-illustration.png" alt="Secure Payment" onerror="this.parentElement.style.display='none'">
+    </div>
+
+    <div class="info-block">
+      <div class="lbl">Transaction ID</div>
+      <div class="val">@tranId</div>
+    </div>
+    <div class="info-block">
+      <div class="lbl">Order</div>
+      <div class="val">#@orderIds · Sparkle Store</div>
+    </div>
+
+    <div class="amt-card">
+      <div class="al">Payable Amount</div>
+      <div class="av" id="mainAmt"><em>৳</em>@amount</div>
+    </div>
+
+    <div class="sec-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      <span>256-bit SSL · PCI-DSS Compliant</span>
+    </div>
+  </aside>
+
+  <!-- RIGHT PANEL -->
+  <div class="right">
+    <div class="rtabs">
+      <div class="rtab on">Mobile Banking</div>
+      <div class="rtab">Cards</div>
+      <div class="rtab">Net Banking</div>
+    </div>
+
+    <div class="rbody" id="selPanel">
+      @if (!string.IsNullOrEmpty(preMethod))
+      {
+        <div class="spin-state">
+          <div class="spin"></div>
+          <span style="font-size:12px;color:var(--muted)">Opening @((ViewBag.Method as string) ?? "") …</span>
+        </div>
+      }
+      else
+      {
+        <h2>Pay via Mobile Banking</h2>
+        <p class="rsub">Select your preferred MFS provider to continue</p>
+        <div class="mfs-grid">
+          <div class="mfs-card" style="--card-color:#e2136e;--card-rgb:226,19,110" onclick="openAuth('bkash')">
+            <div class="mfs-icon bk-icon">bKash</div>
+            <div class="mfs-name">bKash</div>
+            <div class="mfs-hint">Personal &amp; Merchant</div>
+          </div>
+          <div class="mfs-card" style="--card-color:#f15a22;--card-rgb:241,90,34" onclick="openAuth('nagad')">
+            <div class="mfs-icon ng-icon">Nagad</div>
+            <div class="mfs-name">Nagad</div>
+            <div class="mfs-hint">Personal &amp; Merchant</div>
+          </div>
+          <div class="mfs-card" style="--card-color:#8c3494;--card-rgb:140,52,148" onclick="openAuth('rocket')">
+            <div class="mfs-icon rk-icon">Rocket</div>
+            <div class="mfs-name">Rocket</div>
+            <div class="mfs-hint">DBBL Mobile</div>
+          </div>
+        </div>
+        <div class="trust">
+          <span class="tc">VISA</span>
+          <span class="tc">Mastercard</span>
+          <span class="tc">AMEX</span>
+          <span class="tc">SSL Secured</span>
+          <span class="tc">PCI-DSS</span>
+        </div>
+      }
+    </div>
+
+    <!-- AUTH OVERLAY -->
+    <div class="auth" id="authLayer">
+      <div class="ath">
+        <div class="ath-l">
+          <button class="bb" id="backBtn" onclick="handleBack()">&#8592;</button>
+          <span class="pbadge" id="provBadge"></span>
+        </div>
+        <div class="ath-r">৳ <span id="authAmt">@amount</span></div>
+      </div>
+
+      <div class="amid">
+        <span class="stag" id="stag"><span class="dot"></span>Step 1 of 3</span>
+        <h3 id="atitle">Account Number</h3>
+        <p id="asub">Enter your mobile wallet number</p>
+        <div class="pin-wrap">
+          <span class="pico" id="pico">📱</span>
+          <input class="pfield" id="pfield" type="text"
+                 placeholder="01XXXXXXXXX" maxlength="11"
+                 autocomplete="off" inputmode="numeric" oninput="numOnly(this)">
+        </div>
+        <div class="emsg" id="emsg"></div>
+      </div>
+
+      <div class="abtns">
+        <button class="abtn cl" onclick="handleBack()">Close</button>
+        <button class="abtn ok" id="okBtn" onclick="handleConfirm()">Confirm</button>
+      </div>
+    </div>
+
+    <div class="rssl">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+      </svg>
+      Payments are encrypted and secured by SSLCommerz
+    </div>
+  </div>
+</div>
+
+<form id="finalForm" action="/payment/mock-process" method="post">
+  <input type="hidden" name="tran_id"    value="@tranId">
+  <input type="hidden" name="orderIds"   value="@orderIds">
+  <input type="hidden" name="success"    value="@ViewBag.SuccessUrl">
+  <input type="hidden" name="fail"       value="@ViewBag.FailUrl">
+  <input type="hidden" name="cancel"     value="@ViewBag.CancelUrl">
+  <input type="hidden" name="actionType" id="actionType" value="success">
+</form>
+
+<script>
+const PRE = '@preMethod';
+let METHOD = '', STEP = 1;
+
+const CFG = {
+  bkash : { label:'bKash',  color:'#e2136e', rgb:'226,19,110', maxLen:11, icon:'💳' },
+  bkashpersonal : { label:'bKash',  color:'#e2136e', rgb:'226,19,110', maxLen:11, icon:'💳' },
+  bkashmerchant : { label:'bKash',  color:'#e2136e', rgb:'226,19,110', maxLen:11, icon:'💳' },
+  nagad : { label:'Nagad',  color:'#f15a22', rgb:'241,90,34',  maxLen:11, icon:'💳' },
+  rocket: { label:'Rocket', color:'#8c3494', rgb:'140,52,148', maxLen:12, icon:'💳' },
+  creditcard: { label:'Card', color:'#007bff', rgb:'0,123,255', maxLen:16, icon:'💳' },
+};
+
+(function(){
+  const n = parseFloat('@amount');
+  const s = isNaN(n) ? '@amount' : n.toLocaleString('en-BD',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('mainAmt').innerHTML = '<em>৳</em>' + s;
+  document.getElementById('authAmt').textContent = s;
+})();
+
+window.addEventListener('load',()=>{ if(PRE && CFG[PRE]) openAuth(PRE); });
+
+function openAuth(m){
+  METHOD = m; STEP = 1;
+  const c = CFG[m];
+  document.documentElement.style.setProperty('--th', c.color);
+  document.documentElement.style.setProperty('--th-rgb', c.rgb);
+  const b = document.getElementById('provBadge');
+  b.textContent = c.label;
+  b.style.background = c.color;
+  document.getElementById('backBtn').style.visibility = PRE ? 'hidden' : 'visible';
+  document.getElementById('authLayer').style.display = 'flex';
+  render();
+}
+
+function render(){
+  const c = CFG[METHOD];
+  const stag = document.getElementById('stag');
+  stag.textContent = '';
+  const dot = document.createElement('span');
+  dot.className = 'dot';
+  stag.appendChild(dot);
+  stag.appendChild(document.createTextNode(' Step '+STEP+' of 3'));
+  stag.style.background = `rgba(${c.rgb},.12)`;
+  stag.style.color = c.color;
+
+  document.getElementById('okBtn').style.color = c.color;
+  document.getElementById('okBtn').disabled = false;
+  document.getElementById('okBtn').textContent = 'Confirm';
+  document.getElementById('emsg').style.display = 'none';
+
+  const inp = document.getElementById('pfield');
+  inp.value = ''; inp.type = 'text'; inp.removeAttribute('maxlength');
+
+  if(STEP===1){
+    const isR = METHOD==='rocket';
+    document.getElementById('pico').textContent = '📱';
+    document.getElementById('atitle').textContent = isR ? 'Rocket Account' : c.label+' Account Number';
+    document.getElementById('asub').textContent = isR
+      ? 'Enter your 12-digit Rocket number (01XXXXXXXXXX)'
+      : 'Enter your 11-digit '+c.label+' number (01XXXXXXXXX)';
+    inp.placeholder = isR ? '01XXXXXXXXXX' : '01XXXXXXXXX';
+    inp.setAttribute('maxlength', isR ? '12' : '11');
+  } else if(STEP===2){
+    document.getElementById('pico').textContent = '🔑';
+    document.getElementById('atitle').textContent = 'Verification OTP';
+    document.getElementById('asub').textContent = 'Enter the 6-digit OTP sent to your registered number';
+    inp.placeholder = '● ● ● ● ● ●';
+    inp.setAttribute('maxlength','6');
+  } else {
+    document.getElementById('pico').textContent = '🔒';
+    document.getElementById('atitle').textContent = 'Account PIN';
+    document.getElementById('asub').textContent = 'Enter your secret numeric PIN to authorize this payment';
+    inp.placeholder = '● ● ● ● ●';
+    inp.type = 'password';
+    inp.setAttribute('maxlength','5');
+  }
+  inp.focus();
+}
+
+function numOnly(el){ el.value = el.value.replace(/[^0-9]/g,''); }
+
+function handleConfirm(){
+  const val = document.getElementById('pfield').value.trim();
+  const err = document.getElementById('emsg');
+  err.style.display='none';
+
+  if(STEP===1){
+    const pat = METHOD==='rocket' ? /^01[3-9]\d{9}$/ : /^01[3-9]\d{8}$/;
+    if(!pat.test(val)){
+      showErr(METHOD==='rocket'
+        ? 'Enter a valid 12-digit Rocket number (013–019 prefix)'
+        : 'Enter a valid 11-digit BD number starting with 013–019');
+      return;
+    }
+  } else if(STEP===2){
+    if(!/^\d{6}$/.test(val)){ showErr('Enter the 6-digit OTP'); return; }
+  } else {
+    if(!/^\d{4,5}$/.test(val)){ showErr('PIN must be 4–5 digits'); return; }
+    finalSubmit(val==='00000'?'fail':'success');
+    return;
+  }
+
+  const btn = document.getElementById('okBtn');
+  btn.disabled=true; btn.textContent='···';
+  setTimeout(()=>{ STEP++; render(); },700);
+}
+
+function showErr(msg){
+  const e=document.getElementById('emsg');
+  e.textContent=msg; e.style.display='block';
+}
+
+function handleBack(){
+  if(PRE){ finalSubmit('cancel'); return; }
+  document.getElementById('authLayer').style.display='none';
+  document.documentElement.style.setProperty('--th','#007bff');
+  document.documentElement.style.setProperty('--th-rgb','0,123,255');
+}
+
+function finalSubmit(action){
+  const btn=document.getElementById('okBtn');
+  if(btn) btn.textContent='···';
+  document.getElementById('actionType').value=action;
+  setTimeout(()=>document.getElementById('finalForm').submit(),700);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+@using Sparkle.Domain.Orders
+@model List<Order>
+@{
+    ViewData["Title"] = "Order Management";
+    var currentStatus = ViewBag.CurrentStatus as string ?? "all";
+    var searchQuery = ViewBag.SearchQuery as string;
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    
+    var allCount = ViewBag.AllCount as int? ?? 0;
+    var pendingCount = ViewBag.PendingCount as int? ?? 0;
+    var processingCount = ViewBag.ProcessingCount as int? ?? 0;
+    var shippedCount = ViewBag.ShippedCount as int? ?? 0;
+    var deliveredCount = ViewBag.DeliveredCount as int? ?? 0;
+    var cancelledCount = ViewBag.CancelledCount as int? ?? 0;
+}
+
+<div class="container-fluid p-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div class="mb-3 mb-md-0">
+            <h2 class="h3 fw-bold mb-1">Order Management</h2>
+            <p class="text-muted mb-0">Manage and track all customer orders</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary shadow-sm">
+                <i class="bi bi-download me-2"></i>Export
+            </button>
+        </div>
+    </div>
+    
+     <!-- Status Tabs -->
+    <div class="mb-4 d-flex gap-2 flex-wrap">
+        <a href="?status=all&q=@searchQuery" class="btn @(currentStatus == "all" ? "btn-secondary text-white fw-medium" : "btn-outline-secondary border-secondary-subtle text-muted") d-flex align-items-center gap-2">
+            All Orders
+        </a>
+        <a href="?status=Pending&q=@searchQuery" class="btn @(currentStatus == "Pending" ? "btn-warning text-dark fw-bold" : "btn-outline-warning border-warning-subtle text-warning") d-flex align-items-center gap-2">
+            Pending <span class="badge @(currentStatus == "Pending" ? "bg-white text-dark" : "bg-warning-subtle text-dark border border-warning-subtle")">@pendingCount</span>
+        </a>
+        <a href="?status=Processing&q=@searchQuery" class="btn @(currentStatus == "Processing" ? "btn-info text-dark fw-bold" : "btn-outline-info border-info-subtle text-info") d-flex align-items-center gap-2">
+            Processing <span class="badge @(currentStatus == "Processing" ? "bg-white text-dark" : "bg-info-subtle text-info border border-info-subtle")">@processingCount</span>
+        </a>
+        <a href="?status=Shipped&q=@searchQuery" class="btn @(currentStatus == "Shipped" ? "btn-primary text-white fw-bold" : "btn-outline-primary border-primary-subtle text-primary") d-flex align-items-center gap-2">
+            Shipped <span class="badge @(currentStatus == "Shipped" ? "bg-white text-primary" : "bg-primary-subtle text-primary border border-primary-subtle")">@shippedCount</span>
+        </a>
+        <a href="?status=Delivered&q=@searchQuery" class="btn @(currentStatus == "Delivered" ? "btn-success text-white fw-bold" : "btn-outline-success border-success-subtle text-success") d-flex align-items-center gap-2">
+            Delivered <span class="badge @(currentStatus == "Delivered" ? "bg-white text-success" : "bg-success-subtle text-success border border-success-subtle")">@deliveredCount</span>
+        </a>
+        <a href="?status=Cancelled&q=@searchQuery" class="btn @(currentStatus == "Cancelled" ? "btn-danger text-white fw-bold" : "btn-outline-danger border-danger-subtle text-danger") d-flex align-items-center gap-2">
+            Cancelled <span class="badge @(currentStatus == "Cancelled" ? "bg-white text-danger" : "bg-danger-subtle text-danger border border-danger-subtle")">@cancelledCount</span>
+        </a>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+             <!-- Search -->
+            <!-- Toolbar -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+                <!-- Search -->
+                <form method="get" class="d-flex align-items-center flex-grow-1" style="max-width: 400px;">
+                    <input type="hidden" name="status" value="@currentStatus" />
+                    <input type="hidden" name="sort" value="@ViewBag.CurrentSort" />
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 ps-3">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" name="q" class="form-control border-start-0 ps-0" 
+                               placeholder="Search orders, customers, shops..." 
+                               value="@searchQuery" style="height: 40px; font-size: 14px;">
+                        <button type="submit" class="btn btn-primary px-3 fw-medium" style="height: 40px; font-size: 14px;">Search</button>
+                    </div>
+                </form>
+
+                <!-- Actions -->
+                <div class="d-flex align-items-center gap-3">
+                    <div class="text-muted small fw-medium">
+                        Showing @ViewBag.PageStart-@ViewBag.PageEnd of @ViewBag.TotalItems
+                    </div>
+                    
+                    <div class="dropdown">
+                        <button class="btn btn-white border dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" style="height: 40px; font-size: 14px;">
+                            <i class="bi bi-sort-down text-muted"></i>
+                            <span class="text-dark fw-medium">
+                                @(ViewBag.CurrentSort switch {
+                                    "oldest" => "Oldest First",
+                                    "amount_desc" => "Highest Amount",
+                                    "amount_asc" => "Lowest Amount",
+                                    _ => "Latest First"
+                                })
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-1">
+                            <li><a class="dropdown-item @(ViewBag.CurrentSort == "latest" ? "active" : "")" href="?sort=latest&status=@currentStatus&q=@searchQuery">Latest First</a></li>
+                            <li><a class="dropdown-item @(ViewBag.CurrentSort == "oldest" ? "active" : "")" href="?sort=oldest&status=@currentStatus&q=@searchQuery">Oldest First</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item @(ViewBag.CurrentSort == "amount_desc" ? "active" : "")" href="?sort=amount_desc&status=@currentStatus&q=@searchQuery">Highest Amount</a></li>
+                            <li><a class="dropdown-item @(ViewBag.CurrentSort == "amount_asc" ? "active" : "")" href="?sort=amount_asc&status=@currentStatus&q=@searchQuery">Lowest Amount</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="text-uppercase small text-muted border-0">
+                        <tr>
+                            <th class="ps-3 py-3 fw-bold" style="width: 50px;">No.</th>
+                            <th class="py-3 fw-bold">Order</th>
+                            <th class="py-3 fw-bold">Customer</th>
+                            <th class="py-3 fw-bold">Shop</th>
+                            <th class="py-3 fw-bold">Date</th>
+                            <th class="py-3 fw-bold">Status</th>
+                            <th class="py-3 fw-bold">Payment</th>
+                            <th class="py-3 fw-bold text-end">Total</th>
+                            <th class="py-3 fw-bold text-end pe-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        @if (Model.Any())
+                        {
+                            var index = (currentPage - 1) * 20 + 1;
+                            @foreach (var order in Model)
+                            {
+                                <tr>
+                                    <td class="ps-3 py-3 text-muted fw-bold">@(index++)</td>
+                                    <td class="py-3">
+                                        <div class="d-flex flex-column">
+                                            @{
+                                                var productName = order.OrderItems.FirstOrDefault()?.ProductName ?? "Product";
+                                                var itemCount = order.OrderItems.Sum(i => i.Quantity);
+                                            }
+                                            <span class="mb-1 text-truncate" style="font-weight: 600; color: #111827; font-size: 13px; max-width: 220px;" title="@productName">
+                                                @productName
+                                            </span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="badge bg-light text-dark font-monospace border" style="font-size: 10px;">@order.OrderNumber</span>
+                                                <span class="text-muted small" style="font-size: 11px;">
+                                                    @itemCount item@(itemCount != 1 ? "s" : "")
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-initial rounded-circle bg-light text-primary border border-primary-subtle me-2" 
+                                                 style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0;">
+                                                @(order.User?.FullName?.FirstOrDefault() ?? '?')
+                                            </div>
+                                            <div style="min-width: 0;">
+                                                <div class="fw-bold text-dark text-truncate" style="font-size: 13px;">@(order.User?.FullName ?? "Guest")</div>
+                                                <div class="text-muted small text-truncate" style="font-size: 11px;">@(order.User?.Email ?? "No Email")</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        @if(order.Seller != null)
+                                        {
+                                            <div class="d-flex align-items-center text-secondary" style="max-width: 140px;" title="@order.Seller.ShopName">
+                                                <i class="bi bi-shop me-1 small opacity-75"></i>
+                                                <span class="text-truncate fw-medium" style="font-size: 13px;">@order.Seller.ShopName</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="d-flex align-items-center text-primary" style="max-width: 140px;">
+                                                <i class="bi bi-exclude me-1 small opacity-75"></i>
+                                                <span class="fw-medium" style="font-size: 13px;">Sparkle</span>
+                                            </div>
+                                        }
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="small">
+                                            <div class="fw-medium">@order.OrderDate.ToString("MMM dd, yyyy • h:mm tt")</div>
+                                            <!-- Time merged above -->
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        @{
+                                            var badgeClass = order.Status switch
+                                            {
+                                                OrderStatus.Pending => "bg-warning-subtle text-warning border border-warning-subtle",
+                                                OrderStatus.Confirmed => "bg-info-subtle text-info border border-info-subtle",
+                                                OrderStatus.Processing => "bg-info-subtle text-info border border-info-subtle",
+                                                OrderStatus.SellerPreparing => "bg-info-subtle text-info border border-info-subtle",
+                                                OrderStatus.Shipped => "bg-primary-subtle text-primary border border-primary-subtle",
+                                                OrderStatus.OutForDelivery => "bg-primary-subtle text-primary border border-primary-subtle",
+                                                OrderStatus.Delivered => "bg-success-subtle text-success border border-success-subtle",
+                                                OrderStatus.Cancelled => "bg-danger-subtle text-danger border border-danger-subtle",
+                                                OrderStatus.Returned => "bg-danger-subtle text-danger border border-danger-subtle",
+                                                _ => "bg-secondary-subtle text-secondary"
+                                            };
+                                        }
+                                        <span class="badge @badgeClass">@order.Status.ToString()</span>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="d-flex flex-column">
+                                            <span class="badge bg-light text-dark border mb-1 align-self-start">@order.PaymentMethod</span>
+                                            <span class="small fw-bold text-@(order.PaymentStatus == PaymentStatus.Paid ? "success" : "warning")">
+                                                <i class="bi @(order.PaymentStatus == PaymentStatus.Paid ? "bi-check-circle-fill" : "bi-clock-fill") me-1"></i>
+                                                @order.PaymentStatus
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end py-3">
+                                        <div class="fw-bold fs-6">৳@order.TotalAmount.ToString("N0")</div>
+                                        @if(order.DiscountAmount > 0)
+                                        {
+                                            <div class="text-success small opacity-75">-৳@order.DiscountAmount.ToString("N0")</div>
+                                        }
+                                    </td>
+                                    <td class="text-end pe-3 py-3">
+                                        <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-light border shadow-sm">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center py-5">
+                                    <i class="bi bi-cart-x display-4 text-muted mb-3 d-block"></i>
+                                    <p class="text-muted">No orders found.</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (totalPages > 1)
+            {
+                <div class="d-flex justify-content-center mt-4">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" href="?page=@(currentPage - 1)&status=@currentStatus&q=@searchQuery">Previous</a>
+                            </li>
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                <li class="page-item @(currentPage == i ? "active" : "")">
+                                    <a class="page-link" href="?page=@i&status=@currentStatus&q=@searchQuery">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link" href="?page=@(currentPage + 1)&status=@currentStatus&q=@searchQuery">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</div>

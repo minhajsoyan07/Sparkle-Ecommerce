@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <!-- 
+      Workaround for "The process cannot access the file" (MSB3021) errors 
+      during 'dotnet watch' or concurrent builds.
+      Redirects all build artifacts to *_safe directories.
+    -->
+    <BaseOutputPath>$(MSBuildProjectDirectory)\bin_safe\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildProjectDirectory)\obj_safe\</BaseIntermediateOutputPath>
+    <!-- EF Core tools compatibility - point to actual obj location -->
+    <MSBuildProjectExtensionsPath>$(MSBuildProjectDirectory)\obj_safe\</MSBuildProjectExtensionsPath>
+    <DefaultItemExcludes>obj\**;bin\**;$(DefaultItemExcludes)</DefaultItemExcludes>
+  </PropertyGroup>
+</Project>

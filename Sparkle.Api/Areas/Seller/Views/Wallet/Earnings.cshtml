@@ -1,0 +1,136 @@
+@model Sparkle.Domain.Wallets.SellerWallet
+@{
+    ViewData["Title"] = "Seller Wallet";
+    Layout = "~/Areas/Seller/Views/Shared/_SellerLayout.cshtml";
+    var transactions = ViewBag.Transactions as List<Sparkle.Domain.Wallets.WalletTransaction>;
+}
+
+<div class="row mb-4">
+    <div class="col-md-6 mb-3 mb-md-0">
+        <h2 class="h4 mb-0">My Wallet & Earnings</h2>
+        <p class="text-muted small">Manage your payouts and view transaction history</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <a href="/seller/wallet/withdraw" class="btn btn-primary">
+            <i class="bi bi-bank me-2"></i> Request Withdrawal
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Balance Card -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                        <i class="bi bi-wallet2 fs-4 text-white"></i>
+                    </div>
+                    <h6 class="mb-0 text-white-50">Available Balance</h6>
+                </div>
+                <h2 class="mb-0 fw-bold">৳ @Model.AvailableBalance.ToString("N2")</h2>
+                <small class="text-white-50">Ready to withdraw</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Card -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-warning text-dark h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                        <i class="bi bi-clock-history fs-4 text-dark"></i>
+                    </div>
+                    <h6 class="mb-0 text-black-50">Pending Clearance</h6>
+                </div>
+                <h2 class="mb-0 fw-bold">৳ @Model.PendingBalance.ToString("N2")</h2>
+                <small class="text-black-50">Will be available soon</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Earnings -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                        <i class="bi bi-graph-up-arrow fs-4 text-white"></i>
+                    </div>
+                    <h6 class="mb-0 text-white-50">Total Earnings</h6>
+                </div>
+                <h2 class="mb-0 fw-bold">৳ @Model.TotalEarnings.ToString("N2")</h2>
+                <small class="text-white-50">Lifetime earnings</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Recent Transactions</h5>
+        <button class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-download me-1"></i> Export
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Date</th>
+                        <th>Transaction ID</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th class="text-end pe-4">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (transactions != null && transactions.Any())
+                    {
+                        foreach (var tx in transactions)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">@tx.TransactionDate.ToString("MMM dd, yyyy")</div>
+                                    <small class="text-muted">@tx.TransactionDate.ToString("t")</small>
+                                </td>
+                                <td class="font-monospace small">#@tx.ReferenceId</td>
+                                <td>
+                                    @if(tx.TransactionType == "Credit")
+                                    {
+                                        <span class="badge bg-success-subtle text-success">Credit</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger">Debit</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div>@tx.Description</div>
+                                    <small class="text-muted">Source: @tx.Source</small>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="fw-bold @(tx.TransactionType == "Credit" ? "text-success" : "text-danger")">
+                                        @(tx.TransactionType == "Credit" ? "+" : "-")৳ @tx.Amount.ToString("N2")
+                                    </div>
+                                    <small class="text-muted">Bal: ৳ @tx.BalanceAfter.ToString("N2")</small>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                                No transactions found
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

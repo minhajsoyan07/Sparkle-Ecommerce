@@ -1,0 +1,166 @@
+@using Sparkle.Domain.Reviews
+@model List<ProductQualityIssue>
+@{
+    ViewData["Title"] = "Quality Monitoring";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var currentStatus = ViewBag.CurrentStatus as QualityIssueStatus?;
+    var currentSeverity = ViewBag.CurrentSeverity as QualityIssueSeverity?;
+}
+
+<style>
+    .quality-header {
+        background: linear-gradient(135deg, #ef4444, #b91c1c);
+        color: white;
+        padding: 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+    }
+    .stat-card {
+        background: rgba(255,255,255,0.1);
+        padding: 1rem;
+        border-radius: 12px;
+        text-align: center;
+        flex: 1;
+    }
+    .stat-value { font-size: 1.75rem; font-weight: 700; }
+    .stat-label { font-size: 0.8rem; opacity: 0.9; }
+    
+    .issue-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border-left: 5px solid #cbd5e1;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: transform 0.2s;
+    }
+    .issue-card:hover { transform: translateY(-2px); }
+    .issue-card.severity-Critical { border-left-color: #ef4444; }
+    .issue-card.severity-High { border-left-color: #f97316; }
+    .issue-card.severity-Medium { border-left-color: #facc15; }
+    .issue-card.severity-Low { border-left-color: #3b82f6; }
+
+    .severity-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .severity-Critical { background: #fee2e2; color: #991b1b; }
+    .severity-High { background: #ffedd5; color: #9a3412; }
+    .severity-Medium { background: #fef9c3; color: #854d0e; }
+    .severity-Low { background: #dbeafe; color: #1e3a8a; }
+
+    .rating-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    .rating-bad { background: #fee2e2; color: #ef4444; }
+    .rating-warning { background: #ffedd5; color: #f97316; }
+
+    .product-img {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+</style>
+
+<div class="quality-header">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <h3 class="mb-1"><i class="bi bi-shield-exclamation me-2"></i>Quality Monitoring</h3>
+            <p class="mb-0 opacity-75">Automatically flagging products below 2.5★ quality threshold</p>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex gap-3">
+                <div class="stat-card">
+                    <div class="stat-value">@ViewBag.OpenCount</div>
+                    <div class="stat-label">Open Issues</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value text-warning">@ViewBag.CriticalCount</div>
+                    <div class="stat-label">Critical Alerts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">@ViewBag.AvgPlatformRating.ToString("F1")⭐</div>
+                    <div class="stat-label">Platform Avg</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between mb-4">
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("Index", new { status = QualityIssueStatus.Open })" 
+           class="btn btn-sm @(currentStatus == QualityIssueStatus.Open ? "btn-danger" : "btn-outline-secondary")">Open</a>
+        <a href="@Url.Action("Index", new { status = QualityIssueStatus.InReview })" 
+           class="btn btn-sm @(currentStatus == QualityIssueStatus.InReview ? "btn-warning" : "btn-outline-secondary")">In Review</a>
+        <a href="@Url.Action("Index", new { status = QualityIssueStatus.Resolved })" 
+           class="btn btn-sm @(currentStatus == QualityIssueStatus.Resolved ? "btn-success" : "btn-outline-secondary")">Resolved</a>
+    </div>
+    
+    <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-filter me-1"></i> Severity: @(currentSeverity?.ToString() ?? "All")
+        </button>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="@Url.Action("Index", new { status = currentStatus })">All Severities</a></li>
+            <li><a class="dropdown-item" href="@Url.Action("Index", new { status = currentStatus, severity = QualityIssueSeverity.Critical })">Critical Only</a></li>
+            <li><a class="dropdown-item" href="@Url.Action("Index", new { status = currentStatus, severity = QualityIssueSeverity.High })">High Severity</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="issues-list">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 bg-white rounded-3 border">
+            <i class="bi bi-check2-circle display-4 text-success mb-3"></i>
+            <h5>All Clear!</h5>
+            <p class="text-muted">No products currently meeting the quality risk threshold.</p>
+        </div>
+    }
+    else
+    {
+        foreach (var issue in Model)
+        {
+            <div class="issue-card severity-@issue.Severity">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rating-circle @(issue.CurrentRating < 2.0m ? "rating-bad" : "rating-warning")">
+                        @issue.CurrentRating.ToString("F1")
+                    </div>
+                    
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="mb-1">@issue.Product.Title</h5>
+                            <span class="severity-badge severity-@issue.Severity">@issue.Severity Severity</span>
+                        </div>
+                        <div class="d-flex gap-4 text-muted small">
+                            <span><i class="bi bi-star-fill me-1"></i> Threshold: &lt; 2.5★</span>
+                            <span><i class="bi bi-chat-left-text me-1"></i> @issue.TotalReviews Reviews</span>
+                            <span><i class="bi bi-flag-fill me-1"></i> @issue.ReportCount Reports</span>
+                            <span><i class="bi bi-calendar-event me-1"></i> Detected: @issue.DetectedAt.ToString("MMM dd, hh:mm tt")</span>
+                        </div>
+                    </div>
+                    
+                    <div class="ps-3 border-start d-flex flex-column gap-2">
+                        @if (issue.AutoSuspended)
+                        {
+                            <span class="badge bg-danger-subtle text-danger px-2"><i class="bi bi-pause-fill"></i> Auto-Suspended</span>
+                        }
+                        <a href="@Url.Action("Details", new { id = issue.Id })" class="btn btn-sm btn-primary px-3">Review Issue</a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sparkle.Domain", "Sparkle.Domain\Sparkle.Domain.csproj", "{765F2301-F87E-44AF-AB00-1312A905FC3C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sparkle.Infrastructure", "Sparkle.Infrastructure\Sparkle.Infrastructure.csproj", "{180C9C57-132B-438E-8CF6-E3FA8A7079EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sparkle.Api", "Sparkle.Api\Sparkle.Api.csproj", "{E71A42EB-C539-4FC2-B0F3-1733AB002EE0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{765F2301-F87E-44AF-AB00-1312A905FC3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{765F2301-F87E-44AF-AB00-1312A905FC3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{765F2301-F87E-44AF-AB00-1312A905FC3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{765F2301-F87E-44AF-AB00-1312A905FC3C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{180C9C57-132B-438E-8CF6-E3FA8A7079EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{180C9C57-132B-438E-8CF6-E3FA8A7079EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{180C9C57-132B-438E-8CF6-E3FA8A7079EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{180C9C57-132B-438E-8CF6-E3FA8A7079EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E71A42EB-C539-4FC2-B0F3-1733AB002EE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E71A42EB-C539-4FC2-B0F3-1733AB002EE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E71A42EB-C539-4FC2-B0F3-1733AB002EE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E71A42EB-C539-4FC2-B0F3-1733AB002EE0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

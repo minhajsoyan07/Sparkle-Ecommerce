@@ -1,0 +1,25 @@
+{
+  "name": "sparkle-ecommerce",
+  "version": "1.0.0",
+  "description": "Sparkle Ecommerce — Tailwind CSS toolchain for ASP.NET MVC views.",
+  "main": "tailwind.config.js",
+  "scripts": {
+    "tw:build": "npx @tailwindcss/cli -i ./Sparkle.Api/wwwroot/css/tailwind-input.css -o ./Sparkle.Api/wwwroot/css/tailwind-compiled.css",
+    "tw:watch": "npx @tailwindcss/cli -i ./Sparkle.Api/wwwroot/css/tailwind-input.css -o ./Sparkle.Api/wwwroot/css/tailwind-compiled.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minhajsoyan07/Sparkle-Ecommerce.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/minhajsoyan07/Sparkle-Ecommerce/issues"
+  },
+  "homepage": "https://github.com/minhajsoyan07/Sparkle-Ecommerce#readme",
+  "devDependencies": {
+    "tailwindcss": "^4.2.1"
+  }
+}

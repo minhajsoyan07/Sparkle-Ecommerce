@@ -1,0 +1,101 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-container p-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; color: white;">
+                <div class="mb-4">
+                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 80px; opacity: 0.9;"></i>
+                </div>
+                
+                <h1 class="display-4 fw-bold mb-3">Oops! Something Went Wrong</h1>
+                
+                @if (!string.IsNullOrEmpty(Model?.RequestId))
+                {
+                    <p class="mb-4">
+                        <strong>Request ID:</strong> <code style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 6px;">@Model.RequestId</code>
+                    </p>
+                }
+                
+                <p class="lead mb-4">
+                    We're sorry for the inconvenience. Our team has been notified and is working to fix the issue.
+                </p>
+                
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-light btn-lg px-4">
+                        <i class="bi bi-house-door me-2"></i>Go to Homepage
+                    </a>
+                    <button onclick="history.back()" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Go Back
+                    </button>
+                    <a href="javascript:location.reload()" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Refresh Page
+                    </a>
+                </div>
+                
+                <div class="mt-5 pt-4" style="border-top: 1px solid rgba(255,255,255,0.2);">
+                    <p class="mb-2"><small>Need help? Contact our support team:</small></p>
+                    <div class="d-flex gap-4 justify-content-center small">
+                        <span><i class="bi bi-envelope me-1"></i> support@sparkle.local</span>
+                        <span><i class="bi bi-telephone me-1"></i> +880 1900-000000</span>
+                    </div>
+                </div>
+            </div>
+            
+            @if (Model?.ShowRequestId ?? false)
+            {
+                <div class="mt-4 p-3 bg-light rounded">
+                    <details class="text-start">
+                        <summary class="fw-bold cursor-pointer">Technical Details (for developers)</summary>
+                        <div class="mt-3 small">
+                            <p><strong>Environment:</strong> @(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production")</p>
+                            <p><strong>Timestamp:</strong> @DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC")</p>
+                            @if (!string.IsNullOrEmpty(Model.RequestId))
+                            {
+                                <p><strong>Trace ID:</strong> @Model.RequestId</p>
+                            }
+                        </div>
+                    </details>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-report error to logging service (if configured)
+        console.error('Application error page displayed', {
+            requestId: '@Model?.RequestId',
+            timestamp: new Date().toISOString()
+        });
+    </script>
+}
+
+<style>
+    .cursor-pointer {
+        cursor: pointer;
+    }
+    
+    summary::-webkit-details-marker {
+        display: none;
+    }
+    
+    summary::before {
+        content: '▶ ';
+        display: inline-block;
+        transition: transform 0.2s;
+    }
+    
+    details[open] summary::before {
+        transform: rotate(90deg);
+    }
+    
+    details summary {
+        list-style: none;
+        user-select: none;
+    }
+</style>

@@ -1,0 +1,378 @@
+@using Sparkle.Api.Services
+@{
+    var siteTitle = await SettingsService.GetValueAsync("SiteTitle", "Sparkle");
+    var currentPath = Context.Request.Path.ToString().ToLower();
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @siteTitle Admin</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=SolaimanLipi&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Tailwind CSS (Configured to not conflict with Bootstrap) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            prefix: 'tw-',
+            corePlugins: {
+                preflight: false,
+            }
+        }
+    </script>
+    
+    <!-- Styles -->
+    <link href="~/css/admin-theme.css?v=16" rel="stylesheet" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* Minimal Light Toast Styling */
+        .colored-toast.swal2-icon-success { box-shadow: 0 0 12px rgba(16, 185, 129, 0.4) !important; }
+        .colored-toast.swal2-icon-error { box-shadow: 0 0 12px rgba(239, 68, 68, 0.4) !important; }
+        div:where(.swal2-container).swal2-top-end > .swal2-popup, 
+        div:where(.swal2-container).swal2-top-right > .swal2-popup { grid-column: 3; align-self: start; justify-self: end; }
+        .minimal-toast-popup { background: #ffffff !important; color: #1f2937 !important; border-radius: 50px !important; padding: 10px 24px !important; box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important; border: 1px solid rgba(0,0,0,0.06) !important; display: flex !important; align-items: center !important; justify-content: center !important; min-height: 48px !important; max-width: 90vw !important; width: auto !important; }
+        .minimal-toast-content { font-family: 'Inter', sans-serif !important; font-size: 13px !important; font-weight: 500 !important; letter-spacing: 0.3px !important; display: flex; align-items: center; gap: 12px; }
+    </style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
+                <a href="/Admin/Dashboard" class="sidebar-brand d-block w-100 text-decoration-none text-center">
+                    <div class="position-relative d-inline-block" style="background: transparent; border: 1px solid rgba(90, 69, 69, 0.4); padding: 4px 10px; border-radius: 6px;">
+                        <img src="~/images/logo.png" alt="Sparkle" style="max-height: 35px; width: auto; transform: scale(1.05); transform-origin: center;" />
+                        <span class="position-absolute badge rounded-pill bg-white fw-bold" 
+                              style="font-size: 0.45rem; top: -6px; right: -10px; padding: 2px 4px; text-transform: uppercase; border: 1px solid #0f172a; color: #0f172a !important; line-height: 1;">
+                            Admin
+                        </span>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="sidebar-menu">
+                <!-- Dashboard -->
+                <a href="/Admin/Dashboard" class="menu-item @(currentPath.Contains("/dashboard") ? "active" : "")">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-grid-fill me-3"></i> <span>Dashboard</span>
+                    </div>
+                </a>
+                
+                <!-- Catalog Dropdown -->
+                <a class="menu-item d-flex justify-content-between align-items-center pe-2 @(currentPath.Contains("/products") || currentPath.Contains("/categories") || currentPath.Contains("/brands") || currentPath.Contains("/reviews") ? "active" : "collapsed")" 
+                   data-bs-toggle="collapse" href="#catalogMenu" role="button" aria-expanded="false">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-box-seam-fill me-3"></i> <span>Catalog</span>
+                    </div>
+                    <i class="bi bi-chevron-down small text-opacity-75" style="transform: translateX(5px);"></i>
+                </a>
+                <div class="collapse @(currentPath.Contains("/products") || currentPath.Contains("/categories") || currentPath.Contains("/brands") || currentPath.Contains("/reviews") ? "show" : "")" id="catalogMenu">
+                     <div class="submenu-wrapper">
+                         <a href="/Admin/Products" class="sub-menu-item @(currentPath.Equals("/admin/products") ? "active" : "")">
+                            <span class="sub-line"></span> Products
+                         </a>
+
+                         <a href="/Admin/Categories" class="sub-menu-item @(currentPath.Contains("/categories") ? "active" : "")">
+                            <span class="sub-line"></span> Categories
+                         </a>
+                         <a href="/Admin/Brands" class="sub-menu-item @(currentPath.Contains("/brands") ? "active" : "")">
+                            <span class="sub-line"></span> Brands
+                            <span class="badge bg-warning text-dark ms-auto" style="font-size: 0.6rem; padding: 2px 6px;">Un. Dev</span>
+                         </a>
+                         <a href="/Admin/Reviews" class="sub-menu-item @(currentPath.Contains("/reviews") ? "active" : "")">
+                            <span class="sub-line"></span> Reviews
+                         </a>
+                     </div>
+                </div>
+
+                <!-- Sales Dropdown -->
+                <a class="menu-item d-flex justify-content-between align-items-center pe-2 @(currentPath.Contains("/orders") || currentPath.Contains("/payments") || currentPath.Contains("/commission") || currentPath.Contains("/wallets") || currentPath.Contains("/disputes") ? "active" : "collapsed")" 
+                   data-bs-toggle="collapse" href="#salesMenu" role="button" aria-expanded="false">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-cart3 me-3"></i> <span>Sales</span>
+                    </div>
+                    <i class="bi bi-chevron-down small text-opacity-75" style="transform: translateX(5px);"></i>
+                </a>
+                <div class="collapse @(currentPath.Contains("/orders") || currentPath.Contains("/payments") || currentPath.Contains("/commission") || currentPath.Contains("/wallets") || currentPath.Contains("/disputes") ? "show" : "")" id="salesMenu">
+                    <div class="submenu-wrapper">
+                        <a href="/Admin/Orders" class="sub-menu-item @(currentPath.Contains("/orders") ? "active" : "")">
+                            <span class="sub-line"></span> Orders
+                        </a>
+                        <a href="/Admin/Payments" class="sub-menu-item @(currentPath.Contains("/payments") ? "active" : "")">
+                            <span class="sub-line"></span> Payments
+                        </a>
+                        <a href="/Admin/Commission" class="sub-menu-item @(currentPath.Contains("/commission") ? "active" : "")">
+                            <span class="sub-line"></span> Commissions
+                        </a>
+                        <a href="/Admin/Wallets" class="sub-menu-item @(currentPath.Contains("/wallets") ? "active" : "")">
+                            <span class="sub-line"></span> Wallets
+                        </a>
+                        <a href="/Admin/Disputes" class="sub-menu-item @(currentPath.Contains("/disputes") ? "active" : "")">
+                            <span class="sub-line"></span> Disputes
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Marketing Dropdown -->
+                <a class="menu-item d-flex justify-content-between align-items-center pe-2 @(currentPath.Contains("/marketing") || currentPath.Contains("/coupons") || currentPath.Contains("/homepagesections") || currentPath.Contains("/banners") ? "active" : "collapsed")" 
+                   data-bs-toggle="collapse" href="#marketingMenu" role="button" aria-expanded="false">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-megaphone-fill me-3"></i> <span>Marketing</span>
+                    </div>
+                    <i class="bi bi-chevron-down small text-opacity-75" style="transform: translateX(5px);"></i>
+                </a>
+                <div class="collapse @(currentPath.Contains("/marketing") || currentPath.Contains("/coupons") || currentPath.Contains("/homepagesections") || currentPath.Contains("/banners") ? "show" : "")" id="marketingMenu">
+                    <div class="submenu-wrapper">
+                        <a href="/Admin/Marketing" class="sub-menu-item @(currentPath.Equals("/admin/marketing") ? "active" : "")">
+                            <span class="sub-line"></span> Campaigns
+                        </a>
+                        <a href="/Admin/Coupons" class="sub-menu-item @(currentPath.Contains("/coupons") ? "active" : "")">
+                            <span class="sub-line"></span> Coupons
+                        </a>
+                        <a href="/Admin/HomepageSections" class="sub-menu-item @(currentPath.Contains("/homepagesections") ? "active" : "")">
+                            <span class="sub-line"></span> Homepage Sections
+                        </a>
+                        <a href="/Admin/Banners" class="sub-menu-item @(currentPath.Contains("/banners") ? "active" : "")">
+                            <span class="sub-line"></span> Banners
+                            <span class="badge bg-warning text-dark ms-auto" style="font-size: 0.6rem; padding: 2px 6px;">Un. Dev</span>
+                         </a>
+                    </div>
+                </div>
+
+                <!-- Content & Support Dropdown -->
+                <a class="menu-item d-flex justify-content-between align-items-center pe-2 @(currentPath.Contains("/content") || currentPath.Contains("/chats") || currentPath.Contains("/notifications") || currentPath.Contains("/emailtemplates") ? "active" : "collapsed")" 
+                   data-bs-toggle="collapse" href="#contentMenu" role="button" aria-expanded="false">
+                    <div class="d-flex align-items-center text-wrap" style="line-height: 1.2;">
+                        <i class="bi bi-collection-play-fill me-3"></i> 
+                        <div class="d-flex flex-column">
+                            <span>Content & Support</span>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-down small text-opacity-75" style="transform: translateX(5px);"></i>
+                </a>
+                <div class="collapse @(currentPath.Contains("/content") || currentPath.Contains("/chats") || currentPath.Contains("/notifications") || currentPath.Contains("/emailtemplates") ? "show" : "")" id="contentMenu">
+                    <div class="submenu-wrapper">
+                        <a href="/Admin/Content" class="sub-menu-item @(currentPath.Contains("/content") ? "active" : "")">
+                            <span class="sub-line"></span> Pages & CMS
+                        </a>
+                        <a href="/Admin/Chats" class="sub-menu-item @(currentPath.Contains("/chats") ? "active" : "")">
+                            <span class="sub-line"></span> Support Chat
+                        </a>
+                        <a href="/Admin/Notifications" class="sub-menu-item @(currentPath.Contains("/notifications") ? "active" : "")">
+                            <span class="sub-line"></span> Notifications
+                        </a>
+                        <a href="/Admin/EmailTemplates" class="sub-menu-item @(currentPath.Contains("/emailtemplates") ? "active" : "")">
+                            <span class="sub-line"></span> Email Templates
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Logistics Dropdown -->
+                <a class="menu-item d-flex justify-content-between align-items-center pe-2 @(currentPath.Contains("/logistics") ? "active" : "collapsed")" 
+                   data-bs-toggle="collapse" href="#logisticsMenu" role="button" aria-expanded="false">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-truck me-3"></i> <span>Logistics</span>
+                    </div>
+                    <i class="bi bi-chevron-down small text-opacity-75" style="transform: translateX(5px);"></i>
+                </a>
+                <div class="collapse @(currentPath.Contains("/logistics") ? "show" : "")" id="logisticsMenu">
+                    <div class="submenu-wrapper">
+                        <a href="/Admin/Logistics" class="sub-menu-item @(currentPath.Equals("/admin/logistics") ? "active" : "")">
+                            <span class="sub-line"></span> Info Dashboard
+                        </a>
+                        <a href="/Admin/Logistics/Hubs" class="sub-menu-item @(currentPath.Contains("/hubs") ? "active" : "")">
+                            <span class="sub-line"></span> Hubs
+                        </a>
+                        <a href="/Admin/Logistics/Riders" class="sub-menu-item @(currentPath.Contains("/riders") ? "active" : "")">
+                            <span class="sub-line"></span> Riders
+                        </a>
+                        <a href="/Admin/Logistics/Pickups" class="sub-menu-item @(currentPath.Contains("/pickups") ? "active" : "")">
+                            <span class="sub-line"></span> Pickups
+                        </a>
+                        <a href="/Admin/Logistics/Deliveries" class="sub-menu-item @(currentPath.Contains("/deliveries") ? "active" : "")">
+                            <span class="sub-line"></span> Deliveries
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Users Dropdown -->
+                <a class="menu-item d-flex justify-content-between align-items-center pe-2 @(currentPath.Contains("/users") || currentPath.Contains("/sellers") || currentPath.Contains("/roles") ? "active" : "collapsed")" 
+                   data-bs-toggle="collapse" href="#usersMenu" role="button" aria-expanded="false">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-people-fill me-3"></i> <span>Users</span>
+                    </div>
+                    <i class="bi bi-chevron-down small text-opacity-75" style="transform: translateX(5px);"></i>
+                </a>
+                <div class="collapse @(currentPath.Contains("/users") || currentPath.Contains("/sellers") || currentPath.Contains("/roles") ? "show" : "")" id="usersMenu">
+                    <div class="submenu-wrapper">
+                        <a href="/Admin/Users" class="sub-menu-item @(currentPath.Contains("/users") ? "active" : "")">
+                            <span class="sub-line"></span> Customers
+                        </a>
+                        <a href="/Admin/Sellers" class="sub-menu-item @(currentPath.Contains("/sellers") ? "active" : "")">
+                            <span class="sub-line"></span> Sellers
+                        </a>
+                        <a href="/Admin/Roles" class="sub-menu-item @(currentPath.Contains("/roles") ? "active" : "")">
+                            <span class="sub-line"></span> Roles & Permissions
+                        </a>
+                    </div>
+                </div>
+
+                <!-- System & Reports Dropdown -->
+                <a class="menu-item d-flex justify-content-between align-items-center pe-2 @(currentPath.Contains("/reports") || currentPath.Contains("/settings") || currentPath.Contains("/activitylogs") || currentPath.Contains("/system") ? "active" : "collapsed")" 
+                   data-bs-toggle="collapse" href="#systemMenu" role="button" aria-expanded="false">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-gear-fill me-3"></i> <span>System</span>
+                    </div>
+                    <i class="bi bi-chevron-down small text-opacity-75" style="transform: translateX(5px);"></i>
+                </a>
+                <div class="collapse @(currentPath.Contains("/reports") || currentPath.Contains("/settings") || currentPath.Contains("/activitylogs") || currentPath.Contains("/system") ? "show" : "")" id="systemMenu">
+                    <div class="submenu-wrapper">
+                        <a href="/Admin/Reports" class="sub-menu-item @(currentPath.Contains("/reports") ? "active" : "")">
+                            <span class="sub-line"></span> Reports
+                        </a>
+                        <a href="/Admin/Settings" class="sub-menu-item @(currentPath.Contains("/settings") ? "active" : "")">
+                            <span class="sub-line"></span> Settings
+                        </a>
+                        <a href="/Admin/ActivityLogs" class="sub-menu-item @(currentPath.Contains("/activitylogs") ? "active" : "")">
+                            <span class="sub-line"></span> Activity Log
+                        </a>
+                        <a href="/Admin/System/Health" class="sub-menu-item @(currentPath.Contains("/system") ? "active" : "")">
+                            <span class="sub-line"></span> Health Status
+                        </a>
+                    </div>
+                </div>
+
+                
+                <div class="menu-label">Quick Access</div>
+                <a href="/" class="menu-item" target="_blank">
+                    <i class="bi bi-box-arrow-up-right"></i> <span>Store Front</span>
+                </a>
+                 <form method="post" action="/auth/logout" class="mt-3">
+                    <button type="submit" class="menu-item border-0 bg-transparent w-100 text-danger">
+                        <i class="bi bi-box-arrow-right text-danger"></i> <span>Logout</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="d-flex align-items-center">
+                    <button class="mobile-toggle me-3" onclick="toggleSidebar()">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <button class="mobile-toggle me-3" onclick="toggleSidebar()" style="display: none;"> <!-- Spacer if needed --> </button>
+                    
+                    <h4 class="mb-0 fw-bold d-none d-md-block" style="color: #0d6efd;">Welcome back!</h4>
+                </div>
+                
+                <div class="header-search d-none d-lg-block mx-auto position-relative" style="width: 400px;">
+                    <i class="bi bi-search position-absolute text-muted" style="left: 15px; top: 50%; transform: translateY(-50%); font-size: 0.9rem;"></i>
+                    <input type="text" class="form-control border-0" placeholder="Search now" 
+                           style="padding-left: 40px; height: 45px; border-radius: 30px; font-size: 0.9rem; background: #F4F5F7; border: 1px solid transparent; transition: all 0.3s ease;"
+                           onfocus="this.style.background='#fff'; this.style.borderColor='#0d6efd'; this.style.boxShadow='none';" 
+                           onblur="this.style.background='#F4F5F7'; this.style.borderColor='transparent'; this.style.boxShadow='none';" />
+                </div>
+
+                <div class="header-actions">
+                    <button class="action-btn">
+                        <i class="bi bi-bell"></i>
+                        <span class="badge-dot"></span>
+                    </button>
+                    
+                    <div class="dropdown">
+                        <div class="user-profile" data-bs-toggle="dropdown">
+                            <img src="https://ui-avatars.com/api/?name=Admin&background=0d6efd&color=fff" alt="Profile" />
+                        </div>
+                         <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
+                            <li><a class="dropdown-item" href="/Admin/Settings">Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                             <li>
+                                <form method="post" action="/auth/logout">
+                                    <button type="submit" class="dropdown-item text-danger">Logout</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="content-wrapper">
+                @RenderBody()
+            </div>
+            
+            <!-- Footer -->
+            <footer class="footer mt-auto py-3 bg-white text-center text-muted small">
+                <div class="container-fluid">
+                    <span class="text-muted">Copyright © @DateTime.Now.Year @siteTitle. All rights reserved.</span>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Mobile Sidebar Script -->
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.mobile-toggle');
+            if (window.innerWidth <= 991 && 
+                !sidebar.contains(event.target) && 
+                !toggle.contains(event.target) && 
+                sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+            }
+        });
+    </script>
+
+    <!-- SweetAlert2 & Global Toast -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Global Toast Notification Function (Modern Minimal Light)
+        window.showToast = function(message, type = 'success') {
+            const colorMap = {
+                'success': '#10b981', 'danger': '#ef4444', 'error': '#ef4444', 
+                'info': '#3b82f6', 'warning': '#f59e0b'
+            };
+            const accentColor = colorMap[type] || '#10b981';
+            
+            const contentHtml = `
+                <div class="minimal-toast-content">
+                    <span style="width: 8px; height: 8px; background-color: ${accentColor}; border-radius: 50%; box-shadow: 0 0 8px ${accentColor}; flex-shrink: 0;"></span>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            Swal.fire({
+                toast: true, position: 'top', html: contentHtml, showConfirmButton: false, 
+                timer: 3000, timerProgressBar: false, background: '#ffffff', color: '#1f2937', 
+                customClass: { popup: 'minimal-toast-popup' },
+                showClass: { popup: 'swal2-show', backdrop: 'swal2-noanimation' },
+                hideClass: { popup: 'swal2-hide', backdrop: 'swal2-noanimation' }
+            });
+        }
+    </script>
+    @if (TempData["Success"] != null) { <script> document.addEventListener('DOMContentLoaded', function() { showToast('@TempData["Success"]', 'success'); }); </script> }
+    @if (TempData["Error"] != null) { <script> document.addEventListener('DOMContentLoaded', function() { showToast('@TempData["Error"]', 'error'); }); </script> }
+    @if (TempData["Info"] != null) { <script> document.addEventListener('DOMContentLoaded', function() { showToast('@TempData["Info"]', 'info'); }); </script> }
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

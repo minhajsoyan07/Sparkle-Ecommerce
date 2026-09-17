@@ -1,0 +1,226 @@
+@model IEnumerable<Sparkle.Domain.Users.UserWishlistItem>
+@{
+    ViewData["Title"] = "My Wishlist";
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<style>
+    .wish-grid { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Header (Matching Report/Review Page Style) ── */
+    .wish-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+    }
+    .wish-header h5 { font-size: 16px; font-weight: 700; color: #2d3748; margin: 0; }
+    .wish-header p { font-size: 12px; color: #718096; margin: 2px 0 0 0; }
+
+    .btn-continue {
+        font-size: 11px;
+        font-weight: 700;
+        color: #718096;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #f7fafc;
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid #edf2f7;
+        transition: all 0.2s;
+    }
+    .btn-continue:hover { background: #edf2f7; color: #2d3748; }
+
+    /* ── Wishlist Card ── */
+    .wish-card {
+        background: #fff;
+        border: 1px solid #edf2f7;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        overflow: hidden;
+    }
+
+    /* ── Item List ── */
+    .wish-list { display: flex; flex-direction: column; }
+    .wish-item {
+        display: flex;
+        align-items: center;
+        padding: 16px 20px;
+        gap: 16px;
+        border-bottom: 1px solid #f7fafc;
+        transition: background 0.2s;
+    }
+    .wish-item:last-child { border-bottom: none; }
+    .wish-item:hover { background: #fafcfe; }
+
+    .wish-img-wrap {
+        width: 60px; height: 60px;
+        border-radius: 10px;
+        background: #f7fafc;
+        border: 1px solid #edf2f7;
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+    .wish-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+
+    .wish-info { flex: 1; min-width: 0; }
+    .wish-name {
+        font-size: 13px;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 2px;
+        display: block;
+        text-decoration: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .wish-name:hover { color: #3182ce; }
+    
+    .wish-price-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 1px;
+    }
+    .wish-price { font-size: 14px; font-weight: 800; color: #1a202c; }
+    .wish-old-price { font-size: 11px; color: #a0aec0; text-decoration: line-through; }
+    .wish-discount {
+        font-size: 9px;
+        font-weight: 700;
+        color: #38a169;
+        background: #f0fff4;
+        padding: 1px 5px;
+        border-radius: 4px;
+    }
+
+    /* ── Buttons ── */
+    .wish-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+    .btn-add-cart {
+        background: #1a202c;
+        color: #fff;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-add-cart:hover { background: #2d3748; transform: translateY(-1px); }
+    .btn-add-cart i { font-size: 12px; }
+
+    .btn-remove {
+        width: 32px; height: 32px;
+        background: #fff;
+        border: 1px solid #edf2f7;
+        color: #a0aec0;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-remove:hover { border-color: #feb2b2; color: #f56565; background: #fff5f5; }
+
+    /* ── Empty State ── */
+    .empty-state { padding: 48px 24px; text-align: center; color: #a0aec0; }
+    .empty-state i { font-size: 32px; display: block; margin-bottom: 8px; opacity: 0.2; }
+</style>
+
+<div class="wish-grid">
+    <div class="wish-header">
+        <div>
+            <h5>My Wishlist</h5>
+            <p>You have @Model.Count() items saved for later</p>
+        </div>
+        <a href="/" class="btn-continue">
+            <i class="bi bi-bag"></i> Continue Shopping
+        </a>
+    </div>
+
+    <div class="wish-card">
+        <div class="wish-list">
+            @if (Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    var imagePath = item.Product.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.ImagePath ?? "/images/placeholder.jpg";
+                    var discount = item.Product.OldPrice > item.Product.Price 
+                        ? (int)((1 - item.Product.Price / item.Product.OldPrice) * 100) 
+                        : 0;
+
+                    <div class="wish-item">
+                        <a href="/Home/Product/@item.ProductId" class="wish-img-wrap">
+                            <img src="@imagePath" alt="@item.Product.Name">
+                        </a>
+                        
+                        <div class="wish-info">
+                            <a href="/Home/Product/@item.ProductId" class="wish-name">@item.Product.Name</a>
+                            <div class="wish-price-row">
+                                <span class="wish-price">৳@item.Product.Price.ToString("N0")</span>
+                                @if (discount > 0)
+                                {
+                                    <span class="wish-old-price">৳@item.Product.OldPrice.ToString("N0")</span>
+                                    <span class="wish-discount">-@discount%</span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="wish-actions">
+                            <button onclick="addToCart(@item.ProductId)" class="btn-add-cart">
+                                <i class="bi bi-cart-plus"></i> Add to Cart
+                            </button>
+                            <form method="post" asp-action="Remove" asp-route-id="@item.Id">
+                                <button type="submit" class="btn-remove" title="Remove Item">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-heart"></i>
+                    <p style="font-size: 12px;">Your wishlist is empty.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function addToCart(productId) {
+        fetch('/Cart/Add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `productId=${productId}&quantity=1`
+        })
+        .then(response => {
+            if (response.ok) {
+                if (window.showToast) {
+                    window.showToast('success', 'Added to cart successfully!');
+                } else {
+                    alert('Added to cart!');
+                }
+            } else {
+                alert('Failed to add to cart.');
+            }
+        })
+        .catch(err => console.error('Cart Error:', err));
+    }
+</script>

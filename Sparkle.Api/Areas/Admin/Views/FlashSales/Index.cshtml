@@ -1,0 +1,155 @@
+@model IEnumerable<Sparkle.Domain.Marketing.FlashDeal>
+@{
+    ViewData["Title"] = "Flash Sales";
+    var activeCount = Model.Count(c => c.IsActive && c.StartTime <= DateTime.UtcNow && c.EndTime > DateTime.UtcNow);
+    var upcomingCount = Model.Count(c => c.IsActive && c.StartTime > DateTime.UtcNow);
+    var expiredCount = Model.Count(c => c.EndTime <= DateTime.UtcNow);
+}
+
+<div class="content-header mb-4">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-lightning-fill fs-3 me-3 text-primary"></i>
+        <div>
+            <h2 class="content-title mb-0">Flash Sales</h2>
+            <p class="text-muted mb-0">Manage time-limited promotions and deals.</p>
+        </div>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-primary px-4">
+            <i class="bi bi-plus-lg me-2"></i>Create Flash Sale
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-white bg-opacity-25 p-3 me-3">
+                        <i class="bi bi-lightning-fill fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="card-subtitle mb-1 opacity-75">Active Deals</h6>
+                        <h3 class="card-title mb-0">@activeCount</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-white bg-opacity-25 p-3 me-3">
+                        <i class="bi bi-calendar-event fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="card-subtitle mb-1 opacity-75">Upcoming</h6>
+                        <h3 class="card-title mb-0">@upcomingCount</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-secondary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-white bg-opacity-25 p-3 me-3">
+                        <i class="bi bi-archive fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="card-subtitle mb-1 opacity-75">Expired</h6>
+                        <h3 class="card-title mb-0">@expiredCount</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">Deal Name</th>
+                    <th>Status</th>
+                    <th>Schedule</th>
+                    <th>Products</th>
+                    <th>Display Order</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    var isExpired = item.EndTime <= DateTime.UtcNow;
+                    var isUpcoming = item.StartTime > DateTime.UtcNow;
+                    var isActive = item.IsActive && !isExpired && !isUpcoming;
+                    
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold">@item.Name</div>
+                            @if (!string.IsNullOrEmpty(item.BadgeText))
+                            {
+                                <span class="badge bg-warning text-dark small">@item.BadgeText</span>
+                            }
+                        </td>
+                        <td>
+                            @if (!item.IsActive)
+                            {
+                                <span class="badge bg-secondary">Disabled</span>
+                            }
+                            else if (isExpired)
+                            {
+                                <span class="badge bg-danger">Expired</span>
+                            }
+                            else if (isUpcoming)
+                            {
+                                <span class="badge bg-info text-dark">Upcoming</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="small">
+                                <div class="text-muted">Start: <span class="text-dark">@item.StartTime.ToString("MMM dd, HH:mm")</span></div>
+                                <div class="text-muted">End: <span class="text-danger">@item.EndTime.ToString("MMM dd, HH:mm")</span></div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                @item.Products.Count items
+                            </span>
+                        </td>
+                        <td>@item.DisplayOrder</td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil me-1"></i>Edit
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this deal?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div class="text-muted mb-3"><i class="bi bi-lightning fs-1"></i></div>
+            <p class="text-muted">No flash sales found.</p>
+            <a asp-action="Create" class="btn btn-primary btn-sm">Create First Deal</a>
+        </div>
+    }
+</div>

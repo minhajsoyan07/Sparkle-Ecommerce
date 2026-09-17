@@ -1,0 +1,295 @@
+@model Sparkle.Domain.Marketing.Banner
+@{
+    ViewData["Title"] = $"Edit Banner - {Model.Title}";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-pencil"></i> Edit Banner: @Model.Title</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="ViewCount" />
+        <input type="hidden" asp-for="ClickCount" />
+
+        <div class="row">
+            <!-- Left Column - Form Fields -->
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Banner Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">Title <span class="text-danger">*</span></label>
+                            <input asp-for="Title" class="form-control" required />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="SubTitle" class="form-label">Sub Title</label>
+                            <input asp-for="SubTitle" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="BannerType" class="form-label">Banner Type</label>
+                                <select asp-for="BannerType" class="form-select">
+                                    <option value="Hero">Hero Carousel</option>
+                                    <option value="Sidebar">Sidebar Banner</option>
+                                    <option value="TopStrip">Top Strip</option>
+                                    <option value="CategoryBanner">Category Banner</option>
+                                    <option value="ProductBanner">Product Banner</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Position" class="form-label">Position</label>
+                                <select asp-for="Position" class="form-select">
+                                    <option value="Homepage">Homepage</option>
+                                    <option value="Dashboard">Dashboard (Admin)</option>
+                                    <option value="CategoryPage">Category Page</option>
+                                    <option value="ProductPage">Product Page</option>
+                                    <option value="CheckoutPage">Checkout Page</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Images -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Images</h6>
+                            </div>
+                            <div class="card-body">
+                                <!-- Desktop Image -->
+                                <div class="mb-3">
+                                    <label class="form-label">Desktop Image (1920x600) <span class="text-danger">*</span></label>
+                                    @if (!string.IsNullOrEmpty(Model.ImageUrlDesktop))
+                                    {
+                                        <div class="mb-2">
+                                            <img src="@Model.ImageUrlDesktop" class="img-thumbnail" style="max-height: 150px;" />
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" name="removeDesktop" id="removeDesktop" />
+                                                <label class="form-check-label text-danger" for="removeDesktop">
+                                                    Remove current image
+                                                </label>
+                                            </div>
+                                        </div>
+                                    }
+                                    <input type="file" name="imageDesktop" class="form-control" accept="image/*" id="imageDesktopInput" />
+                                    <small class="text-muted">Upload new image to replace (recommended: 1920x600px)</small>
+                                    <div id="imageDesktopPreview" class="mt-2" style="display:none;">
+                                        <img src="#" class="img-thumbnail" style="max-height: 150px;" />
+                                    </div>
+                                </div>
+
+                                <!-- Mobile Image -->
+                                <div class="mb-3">
+                                    <label class="form-label">Mobile Image (800x800)</label>
+                                    @if (!string.IsNullOrEmpty(Model.ImageUrlMobile))
+                                    {
+                                        <div class="mb-2">
+                                            <img src="@Model.ImageUrlMobile" class="img-thumbnail" style="max-height: 150px;" />
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" name="removeMobile" id="removeMobile" />
+                                                <label class="form-check-label text-danger" for="removeMobile">
+                                                    Remove current image
+                                                </label>
+                                            </div>
+                                        </div>
+                                    }
+                                    <input type="file" name="imageMobile" class="form-control" accept="image/*" id="imageMobileInput" />
+                                    <small class="text-muted">Upload new mobile image (optional)</small>
+                                    <div id="imageMobilePreview" class="mt-2" style="display:none;">
+                                        <img src="#" class="img-thumbnail" style="max-height: 150px;" />
+                                    </div>
+                                </div>
+
+                                <!-- Tablet Image -->
+                                <div class="mb-3">
+                                    <label class="form-label">Tablet Image (1200x500)</label>
+                                    @if (!string.IsNullOrEmpty(Model.ImageUrlTablet))
+                                    {
+                                        <div class="mb-2">
+                                            <img src="@Model.ImageUrlTablet" class="img-thumbnail" style="max-height: 150px;" />
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" name="removeTablet" id="removeTablet" />
+                                                <label class="form-check-label text-danger" for="removeTablet">
+                                                    Remove current image
+                                                </label>
+                                            </div>
+                                        </div>
+                                    }
+                                    <input type="file" name="imageTablet" class="form-control" accept="image/*" id="imageTabletInput" />
+                                    <small class="text-muted">Upload new tablet image (optional)</small>
+                                    <div id="imageTabletPreview" class="mt-2" style="display:none;">
+                                        <img src="#" class="img-thumbnail" style="max-height: 150px;" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Link Configuration -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Link Configuration</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label asp-for="LinkUrl" class="form-label">Link URL</label>
+                                    <input asp-for="LinkUrl" class="form-control" />
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="LinkTarget" class="form-label">Link Target</label>
+                                        <select asp-for="LinkTarget" class="form-select">
+                                            <option value="_self">Same Window</option>
+                                            <option value="_blank">New Window</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="ButtonText" class="form-label">Button Text</label>
+                                        <input asp-for="ButtonText" class="form-control" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-lg-4">
+                <!-- Analytics (Read-only) -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Analytics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="bi bi-eye"></i> Views:</span>
+                            <strong>@Model.ViewCount</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="bi bi-cursor"></i> Clicks:</span>
+                            <strong>@Model.ClickCount</strong>
+                        </div>
+                        @if (Model.ViewCount > 0)
+                        {
+                            var ctr = (double)Model.ClickCount / Model.ViewCount * 100;
+                            <div class="d-flex justify-content-between">
+                                <span>CTR:</span>
+                                <strong>@ctr.ToString("F2")%</strong>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Status & Order -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Status & Order</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">Active</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DisplayOrder" class="form-label">Display Order</label>
+                            <input asp-for="DisplayOrder" class="form-control" type="number" min="0" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Schedule</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="StartDate" class="form-label">Start Date</label>
+                            <input asp-for="StartDate" class="form-control" type="datetime-local" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="EndDate" class="form-label">End Date</label>
+                            <input asp-for="EndDate" class="form-control" type="datetime-local" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Styling -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Styling</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="BackgroundColor" class="form-label">Background Color</label>
+                            <input asp-for="BackgroundColor" class="form-control" type="color" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="TextColor" class="form-label">Text Color</label>
+                            <input asp-for="TextColor" class="form-control" type="color" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card">
+                    <div class="card-body">
+                        <button type="submit" class="btn btn-primary w-100 mb-2">
+                            <i class="bi bi-check-circle"></i> Update Banner
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary w-100">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function setupImagePreview(inputId, previewId) {
+            document.getElementById(inputId).addEventListener('change', function(e) {
+                const preview = document.getElementById(previewId);
+                const file = e.target.files[0];
+                
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview.querySelector('img').src = e.target.result;
+                        preview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    preview.style.display = 'none';
+                }
+            });
+        }
+
+        setupImagePreview('imageDesktopInput', 'imageDesktopPreview');
+        setupImagePreview('imageMobileInput', 'imageMobilePreview');
+        setupImagePreview('imageTabletInput', 'imageTabletPreview');
+    </script>
+}

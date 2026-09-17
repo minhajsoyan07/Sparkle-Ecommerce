@@ -1,0 +1,542 @@
+@using Sparkle.Domain.Catalog
+@model List<Product>
+@{
+    ViewData["Title"] = "Product Management";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var currentStatus = ViewBag.CurrentStatus as string ?? "all";
+    var searchQuery = ViewBag.SearchQuery as string;
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+}
+
+<div class="container-fluid p-4">
+    <!-- Header & Status Tabs -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div class="mb-3 mb-md-0">
+            <h2 class="h3 fw-bold mb-1">Products</h2>
+            <p class="text-muted mb-0">Review, approve, and manage product listings</p>
+        </div>
+        
+        <!-- Status Filters -->
+        <div class="d-flex gap-2">
+            <a href="?status=pending&q=@searchQuery&sort=@ViewBag.CurrentSort" class="btn @(currentStatus == "pending" ? "btn-warning text-dark fw-bold" : "btn-outline-secondary border-secondary-subtle text-muted") d-flex align-items-center gap-2">
+                Pending <span class="badge bg-white text-dark shadow-sm">@ViewBag.PendingCount</span>
+            </a>
+            <a href="?status=approved&q=@searchQuery&sort=@ViewBag.CurrentSort" class="btn @(currentStatus == "approved" ? "btn-success text-white" : "btn-outline-success border-success-subtle text-success") d-flex align-items-center gap-2">
+                Approved <span class="badge @(currentStatus == "approved" ? "bg-white text-success" : "bg-success-subtle text-success border border-success-subtle")">@ViewBag.ApprovedCount</span>
+            </a>
+            <a href="?status=rejected&q=@searchQuery&sort=@ViewBag.CurrentSort" class="btn @(currentStatus == "rejected" ? "btn-danger text-white" : "btn-outline-danger border-danger-subtle text-danger") d-flex align-items-center gap-2">
+                Rejected <span class="badge bg-danger-subtle text-danger border border-danger-subtle">@ViewBag.RejectedCount</span>
+            </a>
+            <a href="?status=suspended&q=@searchQuery&sort=@ViewBag.CurrentSort" class="btn @(currentStatus == "suspended" ? "btn-dark" : "btn-outline-secondary border-secondary-subtle text-muted") d-flex align-items-center gap-2">
+                Suspended <span class="badge @(currentStatus == "suspended" ? "bg-white text-dark" : "bg-light text-secondary border")">@ViewBag.SuspendedCount</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <!-- Search Bar & Filter -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <form method="get" class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="status" value="@currentStatus" />
+                        
+                        <!-- Search Input -->
+                        <div class="input-group" style="max-width: 400px;">
+                            <span class="input-group-text bg-white border-end-0 ps-3">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" name="q" class="form-control border-start-0 ps-0" 
+                                   placeholder="Search products, seller, SKU..." 
+                                   value="@searchQuery" style="height: 45px;">
+                            <button type="submit" class="btn btn-primary px-4 fw-medium" style="background-color: #0d6efd; border-color: #0d6efd;">Search</button>
+                        </div>
+
+                        <!-- Sort Dropdown -->
+                        <div class="ms-2">
+                            <select name="sort" class="form-select bg-white border-secondary-subtle text-dark" style="height: 45px; min-width: 200px; cursor: pointer;" onchange="this.form.submit()">
+                                <option value="date_desc" selected="@(ViewBag.CurrentSort == "date_desc")">Newest First</option>
+                                <option value="date_asc" selected="@(ViewBag.CurrentSort == "date_asc")">Oldest First</option>
+                                <option value="name_asc" selected="@(ViewBag.CurrentSort == "name_asc")">Name (A-Z)</option>
+                                <option value="name_desc" selected="@(ViewBag.CurrentSort == "name_desc")">Name (Z-A)</option>
+                                <option value="id_desc" selected="@(ViewBag.CurrentSort == "id_desc")">ID (High-Low)</option>
+                                <option value="id_asc" selected="@(ViewBag.CurrentSort == "id_asc")">ID (Low-High)</option>
+                                <option value="category_asc" selected="@(ViewBag.CurrentSort == "category_asc")">Category (A-Z)</option>
+                                <option value="shop_asc" selected="@(ViewBag.CurrentSort == "shop_asc")">Shop Name (A-Z)</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Bulk Action Toolbar -->
+            <div id="bulkActionToolbar" class="alert alert-primary d-none align-items-center justify-content-between mb-3" style="display: flex !important;">
+                <div>
+                    <i class="bi bi-check-circle me-2"></i>
+                    <span id="selectedCount">0</span> product(s) selected
+                </div>
+                <div class="d-flex gap-2">
+                    <form id="bulkApproveForm" method="post" action="/Admin/Products/BulkApprove" style="display: inline;">
+                        @Html.AntiForgeryToken()
+                        <div id="approveProductIdsContainer"></div>
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <i class="bi bi-check-circle"></i> Approve Selected
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="showBulkRejectModal()">
+                        <i class="bi bi-x-circle"></i> Reject Selected
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearSelection()">
+                        Clear Selection
+                    </button>
+                </div>
+            </div>
+
+            <!-- Products Table -->
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-3 py-3" style="width: 40px;">
+                                <input type="checkbox" id="selectAll" class="form-check-input" onchange="toggleSelectAll(this)">
+                            </th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 py-3">Product</th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 py-3">Seller</th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 py-3">Category</th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 py-3 text-end">Price</th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 py-3 text-center">Status</th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 py-3 text-end pe-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Any())
+                        {
+                            foreach (var product in Model)
+                            {
+                                <tr class="border-bottom">
+                                    <td class="ps-3">
+                                        <input type="checkbox" class="form-check-input product-checkbox" value="@product.Id" onchange="updateSelection()">
+                                    </td>
+                                    <td class="py-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="position-relative me-3">
+                                                @if (product.Images != null && product.Images.Any())
+                                                {
+                                                    <img src="@product.Images.First().Url" class="rounded border" width="48" height="48" style="object-fit: cover;">
+                                                }
+                                                else
+                                                {
+                                                    <div class="bg-light rounded border d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                                        <i class="bi bi-image text-muted"></i>
+                                                    </div>
+                                                }
+                                            </div>
+                                            <div class="d-flex flex-column justify-content-center">
+                                                <h6 class="mb-0 text-sm fw-bold text-dark">@product.Title</h6>
+                                                <div class="text-xs text-secondary mt-1">
+                                                    <span class="font-weight-bold">ID: #@product.Id</span>
+                                                    <span class="mx-1 text-muted">|</span>
+                                                    <span>@product.CreatedAt.ToString("MMM dd, yyyy • h:mm tt")</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-2">
+                                        @if(product.Seller != null)
+                                        {
+                                            <div class="d-flex flex-column">
+                                                <span class="text-sm fw-bold text-dark">@product.Seller.ShopName</span>
+                                                <span class="text-xs text-muted">@product.Seller.MobileNumber</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-dark border">Official</span>
+                                        }
+                                    </td>
+                                    <td class="py-2">
+                                        <span class="text-sm text-secondary font-weight-bold">
+                                            @(product.Category?.Name ?? "Uncategorized")
+                                        </span>
+                                    </td>
+                                    <td class="py-2 text-end">
+                                        <span class="text-sm fw-bold text-dark">৳@product.BasePrice.ToString("N0")</span>
+                                    </td>
+                                    <td class="py-2 text-center">
+                                        @if (product.IsAdminProduct)
+                                        {
+                                            @if (product.IsActive)
+                                            {
+                                                <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 text-xxs border border-success-subtle">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2 text-xxs border border-secondary-subtle">Draft</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            @switch (product.ModerationStatus)
+                                            {
+                                                case ProductModerationStatus.Approved:
+                                                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 text-xxs border border-success-subtle">Approved</span>
+                                                    break;
+                                                case ProductModerationStatus.Pending:
+                                                    <span class="badge bg-warning-subtle text-warning rounded-pill px-3 py-2 text-xxs border border-warning-subtle">Pending</span>
+                                                    break;
+                                                case ProductModerationStatus.Rejected:
+                                                    <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-2 text-xxs border border-danger-subtle">Rejected</span>
+                                                    break;
+                                                case ProductModerationStatus.Suspended:
+                                                    <span class="badge bg-dark text-white rounded-pill px-3 py-2 text-xxs">Suspended</span>
+                                                    break;
+                                                default:
+                                                    <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2 text-xxs border border-secondary-subtle">Draft</span>
+                                                    break;
+                                            }
+                                        }
+                                    </td>
+                                    <td class="py-2 text-end pe-3">
+                                        <div class="d-flex justify-content-end gap-1">
+                                            @if (!product.IsAdminProduct)
+                                            {
+                                                @if (product.ModerationStatus == ProductModerationStatus.Pending)
+                                                {
+                                                    <!-- Pending: Standard actions (reload needed to move lists primarily) -->
+                                                    <form asp-action="Approve" method="post" class="d-inline">
+                                                        <input type="hidden" name="id" value="@product.Id" />
+                                                        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                                        <button type="submit" class="btn btn-icon btn-sm btn-light text-success border shadow-sm" data-bs-toggle="tooltip" title="Approve">
+                                                            <i class="bi bi-check-lg"></i>
+                                                        </button>
+                                                    </form>
+                                                    <form asp-action="Reject" method="post" class="d-inline" onsubmit="return confirm('Reject this product?');">
+                                                        <input type="hidden" name="id" value="@product.Id" />
+                                                        <input type="hidden" name="reason" value="Rejected by admin" />
+                                                        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                                        <button type="submit" class="btn btn-icon btn-sm btn-light text-danger border shadow-sm" data-bs-toggle="tooltip" title="Reject">
+                                                            <i class="bi bi-x-lg"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                                else if (product.IsActive)
+                                                {
+                                                    <!-- Active: AJAX Hide -->
+                                                    <form asp-action="Reject" method="post" class="d-inline ajax-action-form" data-confirm="Reject and hide this product?">
+                                                        <input type="hidden" name="id" value="@product.Id" />
+                                                        <input type="hidden" name="reason" value="Hidden by admin" />
+                                                        <!-- Return URL not needed for AJAX but kept for fallback -->
+                                                        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                                        <button type="submit" class="btn btn-icon btn-sm btn-light text-danger border shadow-sm" data-bs-toggle="tooltip" title="Hide/Reject">
+                                                            <i class="bi bi-eye-slash-fill"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <!-- Inactive: AJAX Restore -->
+                                                    <form asp-action="Approve" method="post" class="d-inline ajax-action-form">
+                                                        <input type="hidden" name="id" value="@product.Id" />
+                                                        <input type="hidden" name="notes" value="Restored by admin" />
+                                                        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                                        <button type="submit" class="btn btn-icon btn-sm btn-light text-success border shadow-sm" data-bs-toggle="tooltip" title="Restore/Approve">
+                                                            <i class="bi bi-eye-fill"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                            }
+                                            
+                                            @if (product.IsAdminProduct)
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-icon btn-sm btn-light text-secondary border shadow-sm" title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                 <button type="button" class="btn btn-icon btn-sm btn-light text-danger border shadow-sm" 
+                                                        onclick="if(confirm('Delete product?')) document.getElementById('delete-@product.Id').submit()" title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-icon btn-sm btn-light text-primary border shadow-sm" title="View Details">
+                                                    <i class="bi bi-box-arrow-up-right"></i>
+                                                </a>
+                                            }
+                                        </div>
+                                         <form id="delete-@product.Id" asp-action="Delete" asp-route-id="@product.Id" method="post" class="d-none"></form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5">
+                                    <div class="d-flex flex-column align-items-center justify-content-center">
+                                        <div class="bg-light rounded-circle p-4 mb-3">
+                                            <i class="bi bi-search text-muted display-6"></i>
+                                        </div>
+                                        <h6 class="text-dark fw-bold mb-1">No products found</h6>
+                                        <p class="text-muted small mb-0">Try adjusting your search or filters.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (totalPages > 1)
+            {
+                <div class="border-top pt-3 mt-3">
+                    <nav>
+                        <ul class="pagination justify-content-end mb-0">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link border-0 text-muted" href="?page=@(currentPage - 1)&q=@searchQuery&status=@currentStatus&sort=@ViewBag.CurrentSort">Previous</a>
+                            </li>
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                <li class="page-item @(currentPage == i ? "active" : "")">
+                                    <a class="page-link border-0 rounded-circle mx-1 d-flex align-items-center justify-content-center" 
+                                       style="width: 32px; height: 32px; @(currentPage == i ? "background-color: #0d6efd;" : "color: #6c757d;")"
+                                       href="?page=@i&q=@searchQuery&status=@currentStatus&sort=@ViewBag.CurrentSort">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link border-0 text-muted" href="?page=@(currentPage + 1)&q=@searchQuery&status=@currentStatus&sort=@ViewBag.CurrentSort">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+function approveProduct(productId) {
+    if (confirm('Approve this product?')) {
+        document.getElementById('approve-' + productId).submit();
+    }
+}
+
+function rejectProduct(productId) {
+    const reason = prompt('Enter rejection reason:', 'Rejected by admin');
+    if (reason !== null) {
+        const form = document.getElementById('reject-' + productId);
+        form.querySelector('input[name="reason"]').value = reason;
+        form.submit();
+    }
+}
+
+function suspendProduct(productId) {
+    if (confirm('Suspend this product? This will hide it from the marketplace.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/Admin/Products/Suspend';
+        
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = '__RequestVerificationToken';
+        tokenInput.value = token;
+        form.appendChild(tokenInput);
+        
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'id';
+        idInput.value = productId;
+        form.appendChild(idInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+
+// Bulk selection functions
+function toggleSelectAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.product-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+    updateSelection();
+}
+
+function updateSelection() {
+    const checkboxes = document.querySelectorAll('.product-checkbox:checked');
+    const count = checkboxes.length;
+    const toolbar = document.getElementById('bulkActionToolbar');
+    const selectAllCheckbox = document.getElementById('selectAll');
+    
+    document.getElementById('selectedCount').textContent = count;
+    
+    if (count > 0) {
+        toolbar.classList.remove('d-none');
+    } else {
+        toolbar.classList.add('d-none');
+    }
+    
+    // Update select all checkbox state
+    const allCheckboxes = document.querySelectorAll('.product-checkbox');
+    selectAllCheckbox.checked = allCheckboxes.length > 0 && count === allCheckboxes.length;
+    selectAllCheckbox.indeterminate = count > 0 && count < allCheckboxes.length;
+}
+
+function clearSelection() {
+    document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('selectAll').checked = false;
+    updateSelection();
+}
+
+function showBulkRejectModal() {
+    const reason = prompt('Enter rejection reason for selected products:', 'Rejected by admin');
+    if (reason !== null && reason.trim() !== '') {
+        const checkboxes = document.querySelectorAll('.product-checkbox:checked');
+        const productIds = Array.from(checkboxes).map(cb => cb.value);
+        
+        if (productIds.length === 0) {
+            alert('No products selected');
+            return;
+        }
+        
+        // Create and submit form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/Admin/Products/BulkReject';
+        
+        // Add anti-forgery token
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = '__RequestVerificationToken';
+        tokenInput.value = token;
+        form.appendChild(tokenInput);
+        
+        // Add product IDs
+        productIds.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'productIds';
+            input.value = id;
+            form.appendChild(input);
+        });
+        
+        // Add reason
+        const reasonInput = document.createElement('input');
+        reasonInput.type = 'hidden';
+        reasonInput.name = 'reason';
+        reasonInput.value = reason;
+        form.appendChild(reasonInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Update approve form before submission
+document.getElementById('bulkApproveForm')?.addEventListener('submit', function(e) {
+    const checkboxes = document.querySelectorAll('.product-checkbox:checked');
+    const productIds = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (productIds.length === 0) {
+        e.preventDefault();
+        alert('No products selected');
+        return false;
+    }
+    
+    // Clear and populate container with hidden inputs for each product ID
+    const container = document.getElementById('approveProductIdsContainer');
+    container.innerHTML = '';
+    
+    productIds.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'productIds';
+        input.value = id;
+        container.appendChild(input);
+    });
+});
+</script>
+
+<script>
+// AJAX Action Handler for optimized performance
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('.ajax-action-form');
+    
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const confirmMsg = this.getAttribute('data-confirm');
+            
+            const proceedWithAction = () => {
+                const row = this.closest('tr');
+                
+                // Optimistic UI update: Hide the row immediately
+                if (row) {
+                    row.style.transition = 'opacity 0.3s ease';
+                    row.style.opacity = '0';
+                    setTimeout(() => row.style.display = 'none', 300);
+                }
+                
+                // Send request in background
+                const formData = new FormData(this);
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                }).then(response => {
+                    if (!response.ok) {
+                        // Revert UI if failed
+                        if (row) {
+                             row.style.display = '';
+                             row.style.opacity = '1';
+                             showToast('Action failed. Please try again.', 'error');
+                        }
+                    } else {
+                        showToast('Action completed successfully.', 'success');
+                    }
+                }).catch(error => {
+                    console.error('Error:', error);
+                    if (row) {
+                         row.style.display = '';
+                         row.style.opacity = '1';
+                    }
+                    showToast('An error occurred.', 'error');
+                });
+            };
+
+            if (confirmMsg) {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: confirmMsg,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#e5e7eb', // gray-200
+                    confirmButtonText: 'Yes, proceed',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'btn btn-danger btn-sm px-4 rounded-pill',
+                        cancelButton: 'btn btn-light btn-sm px-4 rounded-pill text-dark border ms-2',
+                        popup: 'rounded-4 shadow-lg border-0',
+                        title: 'fs-5 fw-bold text-dark',
+                        htmlContainer: 'text-muted small'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        proceedWithAction();
+                    }
+                });
+            } else {
+                proceedWithAction();
+            }
+        });
+    });
+});
+</script>

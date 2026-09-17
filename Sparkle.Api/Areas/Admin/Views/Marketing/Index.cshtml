@@ -1,0 +1,107 @@
+@model IEnumerable<Sparkle.Domain.Marketing.Campaign>
+@{
+    ViewData["Title"] = "Marketing Campaigns";
+}
+
+<div class="content-header mb-4">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-megaphone-fill fs-3 me-3 text-primary"></i>
+        <div>
+            <h2 class="content-title mb-0">Marketing Campaigns</h2>
+            <p class="text-muted mb-0">Manage seasonal sales, brand days, and promotional events.</p>
+        </div>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-primary px-4">
+            <i class="bi bi-plus-lg me-2"></i>Create Campaign
+        </a>
+    </div>
+</div>
+
+<div class="content-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">Campaign Name</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Schedule</th>
+                    <th>Visibility</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    var isExpired = item.EndDate <= DateTime.UtcNow;
+                    var isUpcoming = item.StartDate > DateTime.UtcNow;
+                    
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold">@item.Name</div>
+                            <div class="small text-muted">@item.Slug</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">@item.CampaignType</span>
+                        </td>
+                        <td>
+                            @if (!item.IsActive)
+                            {
+                                <span class="badge bg-secondary">Disabled</span>
+                            }
+                            else if (isExpired)
+                            {
+                                <span class="badge bg-danger">Expired</span>
+                            }
+                            else if (isUpcoming)
+                            {
+                                <span class="badge bg-info text-dark">Upcoming</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="small">
+                                <div><i class="bi bi-calendar-event me-1"></i>@item.StartDate.ToString("MMM dd") - @item.EndDate.ToString("MMM dd, yyyy")</div>
+                            </div>
+                        </td>
+                        <td>
+                            @if (item.IsFeatured)
+                            {
+                                <span class="badge bg-warning text-dark"><i class="bi bi-star-fill me-1"></i>Featured</span>
+                            }
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil me-1"></i>Edit
+                                </a>
+                                <form asp-action="ToggleStatus" asp-route-id="@item.Id" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Toggle Status">
+                                        <i class="bi @(item.IsActive ? "bi-eye" : "bi-eye-slash")"></i>
+                                    </button>
+                                </form>
+                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this campaign?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div class="text-muted mb-3"><i class="bi bi-megaphone fs-1"></i></div>
+            <p class="text-muted">No marketing campaigns found.</p>
+            <a asp-action="Create" class="btn btn-primary btn-sm">Create First Campaign</a>
+        </div>
+    }
+</div>

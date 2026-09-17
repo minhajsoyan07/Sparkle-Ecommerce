@@ -1,0 +1,205 @@
+@model Sparkle.Domain.Marketing.FlashDeal
+@{
+    ViewData["Title"] = "Edit Flash Sale";
+    var products = Model.Products.OrderBy(p => p.DisplayOrder).ToList();
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title">Edit Flash Sale</h2>
+        <p class="text-muted">Update deal details and manage products.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back to List
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-4 order-lg-last">
+        <!-- Quick Actions -->
+        <div class="content-card mb-4">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Status</h5>
+            <div class="d-grid gap-2">
+                <form asp-action="ToggleStatus" asp-route-id="@Model.Id" method="post">
+                    <button type="submit" class="btn @(Model.IsActive ? "btn-warning" : "btn-success") w-100">
+                        <i class="bi @(Model.IsActive ? "bi-pause-circle" : "bi-play-circle") me-2"></i>
+                        @(Model.IsActive ? "Deactivate Deal" : "Activate Deal")
+                    </button>
+                </form>
+                
+                @if (!Model.Products.Any())
+                {
+                    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Delete this deal?');">
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="bi bi-trash me-2"></i>Delete Deal
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <div class="alert alert-info small mb-0">
+                        <i class="bi bi-info-circle me-1"></i>Cannot delete deal with products.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Add Product -->
+        <div class="content-card mb-4 bg-light">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Add Product</h5>
+            <form asp-action="AddProduct" method="post">
+                <input type="hidden" name="flashDealId" value="@Model.Id" />
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Product ID</label>
+                    <input type="number" name="productId" class="form-control" placeholder="e.g. 101" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Deal Price (৳)</label>
+                    <input type="number" name="dealPrice" class="form-control" step="0.01" min="0" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Stock Limit</label>
+                    <input type="number" name="stockLimit" class="form-control" value="10" min="1" required />
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-lg me-1"></i>Add to Deal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+         <!-- Details Form -->
+        <div class="content-card mb-4">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Deal Settings</h5>
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+                
+                <div class="row g-3 mb-3">
+                    <div class="col-md-8">
+                        <label asp-for="Name" class="form-label fw-bold">Deal Name</label>
+                        <input asp-for="Name" class="form-control" required />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="BadgeText" class="form-label fw-bold">Badge Text</label>
+                        <input asp-for="BadgeText" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label fw-bold">Description</label>
+                    <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="StartTime" class="form-label fw-bold">Start Time</label>
+                        <input asp-for="StartTime" type="datetime-local" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="EndTime" class="form-label fw-bold">End Time</label>
+                        <input asp-for="EndTime" type="datetime-local" class="form-control" required />
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                         <label asp-for="DisplayOrder" class="form-label fw-bold">Display Order</label>
+                         <input asp-for="DisplayOrder" type="number" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                         <label class="form-label fw-bold">&nbsp;</label>
+                         <div class="form-check form-switch mt-2">
+                             <input asp-for="ShowOnHomepage" class="form-check-input" type="checkbox" />
+                             <label asp-for="ShowOnHomepage" class="form-check-label">Show on Home</label>
+                         </div>
+                    </div>
+                    <div class="col-md-4">
+                         <label class="form-label fw-bold">&nbsp;</label>
+                         <div class="form-check form-switch mt-2">
+                             <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                             <label asp-for="IsActive" class="form-check-label">Active</label>
+                         </div>
+                    </div>
+                </div>
+                
+                <div class="text-end border-top pt-3">
+                    <button type="submit" class="btn btn-outline-primary px-4">
+                        Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Products List -->
+        <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                <h5 class="fw-bold mb-0">Deal Products (@products.Count)</h5>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-3">Product</th>
+                            <th>Original</th>
+                            <th>Deal Price</th>
+                            <th>Stock</th>
+                            <th>Sold</th>
+                            <th class="text-end pe-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var fp in products)
+                        {
+                            <tr>
+                                <td class="ps-3">
+                                    <div class="fw-bold text-truncate" style="max-width: 200px;" title="@fp.Product?.Name">
+                                        @(fp.Product?.Name ?? $"Product #{fp.ProductId}")
+                                    </div>
+                                    <span class="badge bg-danger small">-@fp.DiscountPercentage.ToString("0")%</span>
+                                </td>
+                                <td class="text-decoration-line-through text-muted small">৳@fp.OriginalPrice.ToString("N0")</td>
+                                <td class="fw-bold text-danger">৳@fp.DealPrice.ToString("N0")</td>
+                                <td>
+                                    <div class="small">Limit: @fp.StockLimit</div>
+                                </td>
+                                <td>@fp.SoldCount</td>
+                                <td class="text-end pe-3">
+                                    <form asp-action="RemoveProduct" asp-route-id="@fp.Id" method="post" onsubmit="return confirm('Remove this product from the deal?');">
+                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0">
+                                            <i class="bi bi-x-circle fs-5"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (!products.Any())
+            {
+                <div class="text-center py-4 text-muted small">
+                    No products added to this deal yet.
+                </div>
+            }
+        </div>
+    </div>
+</div>

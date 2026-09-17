@@ -1,0 +1,161 @@
+@using Sparkle.Api.Models.ViewModels
+@model SystemHealthMetrics
+@{
+    ViewData["Title"] = "System Health";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .health-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+    }
+    
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .metric-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border-left: 4px solid #10b981;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0.5rem 0;
+    }
+    
+    .metric-label {
+        color: #64748b;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .status-badge.healthy {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .progress-bar-custom {
+        height: 24px;
+        border-radius: 12px;
+        background: #f1f5f9;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #10b981, #059669);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: width 1s ease-in-out;
+    }
+</style>
+
+<div class="mb-4">
+    <h3><i class="bi bi-activity me-2 text-success"></i>System Health & Monitoring</h3>
+    <p class="text-muted">Real-time system status and performance metrics</p>
+</div>
+
+<div class="metric-grid">
+    <div class="metric-card">
+        <div class="metric-label">Database Status</div>
+        <div class="metric-value">
+            <span class="status-badge healthy">
+                <i class="bi bi-check-circle me-1"></i>@Model.DatabaseStatus
+            </span>
+        </div>
+    </div>
+    
+    <div class="metric-card" style="border-left-color: #3b82f6;">
+        <div class="metric-label">Total Users</div>
+        <div class="metric-value">@Model.TotalUsers.ToString("N0")</div>
+    </div>
+    
+    <div class="metric-card" style="border-left-color: #fbbf24;">
+        <div class="metric-label">Total Orders</div>
+        <div class="metric-value">@Model.TotalOrders.ToString("N0")</div>
+    </div>
+    
+    <div class="metric-card" style="border-left-color: #a855f7;">
+        <div class="metric-label">Total Products</div>
+        <div class="metric-value">@Model.TotalProducts.ToString("N0")</div>
+    </div>
+</div>
+
+<div class="health-card">
+    <h5 class="mb-4">Server Performance</h5>
+    
+    <div class="mb-4">
+        <div class="d-flex justify-content-between mb-2">
+            <span>CPU Usage</span>
+            <span class="fw-bold">@Model.CpuUsage.ToString("F1")%</span>
+        </div>
+        <div class="progress-bar-custom">
+            <div class="progress-fill" style="width: @Model.CpuUsage%">
+                @Model.CpuUsage.ToString("F1")%
+            </div>
+        </div>
+    </div>
+    
+    <div class="mb-4">
+        <div class="d-flex justify-content-between mb-2">
+            <span>Memory Usage</span>
+            <span class="fw-bold">@Model.MemoryUsage.ToString("F1")%</span>
+        </div>
+        <div class="progress-bar-custom">
+            <div class="progress-fill" style="width: @Model.MemoryUsage%">
+                @Model.MemoryUsage.ToString("F1")%
+            </div>
+        </div>
+    </div>
+    
+    <div>
+        <div class="d-flex justify-content-between">
+            <span>Server Uptime</span>
+            <span class="fw-bold">@Model.ServerUptime.Days days, @Model.ServerUptime.Hours hours</span>
+        </div>
+    </div>
+</div>
+
+<div class="health-card">
+    <h5 class="mb-3">System Actions</h5>
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-outline-primary">
+            <i class="bi bi-arrow-clockwise me-1"></i>Refresh Metrics
+        </button>
+        <button class="btn btn-outline-warning">
+            <i class="bi bi-file-text me-1"></i>View Logs
+        </button>
+        <button class="btn btn-outline-danger">
+            <i class="bi bi-exclamation-triangle me-1"></i>View Errors
+        </button>
+        <button class="btn btn-outline-success">
+            <i class="bi bi-download me-1"></i>Export Report
+        </button>
+    </div>
+</div>

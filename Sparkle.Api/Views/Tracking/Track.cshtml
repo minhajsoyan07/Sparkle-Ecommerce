@@ -1,0 +1,271 @@
+@model Sparkle.Domain.Orders.Shipment
+@{
+    ViewData["Title"] = "Track Shipment - " + Model.ShipmentNumber;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var timeline = ViewBag.Timeline as List<Sparkle.Domain.Orders.ShipmentTrackingEvent>;
+}
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Back Button -->
+        <div class="col-12 mb-3">
+            <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Track Another Shipment
+            </a>
+        </div>
+
+        <!-- Shipment Overview Card -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4 class="mb-3">
+                                <i class="bi bi-box-seam me-2"></i>@Model.ShipmentNumber
+                            </h4>
+                            <p class="mb-1">
+                                <strong>Order Number:</strong> 
+                                <a href="@Url.Action("Track", new { number = Model.Order.OrderNumber })">
+                                    @Model.Order.OrderNumber
+                                </a>
+                            </p>
+                            <p class="mb-1">
+                                <strong>Courier:</strong> @Model.CourierName
+                            </p>
+                            @if (!string.IsNullOrEmpty(Model.TrackingNumber))
+                            {
+                                <p class="mb-1">
+                                    <strong>Tracking Number:</strong> 
+                                    <code class="bg-light p-1 rounded">@Model.TrackingNumber</code>
+                                </p>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.TrackingUrl))
+                            {
+                                <p class="mb-1">
+                                    <a href="@Model.TrackingUrl" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                        <i class="bi bi-box-arrow-up-right me-1"></i>Track on Courier Website
+                                    </a>
+                                </p>
+                            }
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            @switch (Model.Status)
+                            {
+                                case Sparkle.Domain.Orders.ShipmentStatus.Pending:
+                                    <span class="badge bg-secondary fs-6 px-3 py-2">Pending</span>
+                                    break;
+                                case Sparkle.Domain.Orders.ShipmentStatus.Packed:
+                                    <span class="badge bg-info fs-6 px-3 py-2">Packed</span>
+                                    break;
+                                case Sparkle.Domain.Orders.ShipmentStatus.PickedUp:
+                                    <span class="badge bg-warning fs-6 px-3 py-2">Picked Up</span>
+                                    break;
+                                case Sparkle.Domain.Orders.ShipmentStatus.InTransit:
+                                    <span class="badge bg-primary fs-6 px-3 py-2">In Transit</span>
+                                    break;
+                                case Sparkle.Domain.Orders.ShipmentStatus.OutForDelivery:
+                                    <span class="badge bg-primary fs-6 px-3 py-2">Out for Delivery</span>
+                                    break;
+                                case Sparkle.Domain.Orders.ShipmentStatus.Delivered:
+                                    <span class="badge bg-success fs-6 px-3 py-2">Delivered</span>
+                                    break;
+                                case Sparkle.Domain.Orders.ShipmentStatus.Failed:
+                                    <span class="badge bg-danger fs-6 px-3 py-2">Failed</span>
+                                    break;
+                                case Sparkle.Domain.Orders.ShipmentStatus.Returned:
+                                    <span class="badge bg-dark fs-6 px-3 py-2">Returned</span>
+                                    break;
+                                case Sparkle.Domain.Orders.ShipmentStatus.Cancelled:
+                                    <span class="badge bg-danger fs-6 px-3 py-2">Cancelled</span>
+                                    break;
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(Model.StatusMessage))
+                            {
+                                <p class="text-muted small mt-2 mb-0">@Model.StatusMessage</p>
+                            }
+                        </div>
+                    </div>
+
+                    @if (Model.EstimatedDeliveryDate.HasValue && Model.Status != Sparkle.Domain.Orders.ShipmentStatus.Delivered)
+                    {
+                        <div class="alert alert-info mt-3 mb-0">
+                            <i class="bi bi-calendar-check me-2"></i>
+                            <strong>Estimated Delivery:</strong> @Model.EstimatedDeliveryDate.Value.ToString("MMMM dd, yyyy")
+                        </div>
+                    }
+
+                    @if (Model.DeliveredAt.HasValue)
+                    {
+                        <div class="alert alert-success mt-3 mb-0">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <strong>Delivered on:</strong> @Model.DeliveredAt.Value.ToString("MMMM dd, yyyy 'at' hh:mm tt")
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Tracking Timeline -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Tracking Timeline</h5>
+                </div>
+                <div class="card-body">
+                    @if (timeline != null && timeline.Any())
+                    {
+                        <div class="timeline">
+                            @foreach (var evt in timeline.OrderBy(e => e.EventTime))
+                            {
+                                var isLatest = evt.Id == timeline.First().Id;
+                                <div class="timeline-item @(isLatest ? "latest" : "")">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <strong class="@(isLatest ? "text-primary" : "")">@evt.Message</strong>
+                                                @if (!string.IsNullOrEmpty(evt.Location))
+                                                {
+                                                    <p class="text-muted small mb-0">
+                                                        <i class="bi bi-geo-alt me-1"></i>@evt.Location
+                                                    </p>
+                                                }
+                                            </div>
+                                            <span class="badge bg-light text-dark">@evt.Status</span>
+                                        </div>
+                                        <p class="text-muted small mb-0 mt-1">
+                                            <i class="bi bi-clock me-1"></i>
+                                            @evt.EventTime.ToString("MMM dd, yyyy 'at' hh:mm tt")
+                                        </p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-4">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No tracking events yet. Check back later for updates.
+                        </p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipping Details Sidebar -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-truck me-2"></i>Shipping Details</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Recipient:</strong></p>
+                    <p class="mb-1">@Model.RecipientName</p>
+                    <p class="mb-3"><i class="bi bi-telephone me-1"></i>@Model.RecipientPhone</p>
+
+                    <p class="mb-2"><strong>Delivery Address:</strong></p>
+                    <p class="mb-0">@Model.ShippingAddress</p>
+                    <p class="mb-0">@Model.ShippingCity, @Model.ShippingDistrict</p>
+                    <p class="mb-0">@Model.ShippingPostalCode</p>
+                </div>
+            </div>
+
+            <!-- Items in Shipment -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-box me-2"></i>Items (@Model.Items.Count)</h5>
+                </div>
+                <div class="card-body">
+                    @foreach (var item in Model.Items)
+                    {
+                        <div class="d-flex align-items-center mb-3 pb-3 @(item != Model.Items.Last() ? "border-bottom" : "")">
+                            @if (!string.IsNullOrEmpty(item.OrderItem.ProductImage))
+                            {
+                                <img src="@item.OrderItem.ProductImage" 
+                                     alt="@item.ProductName" 
+                                     class="rounded me-3"
+                                     style="width: 60px; height: 60px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center"
+                                     style="width: 60px; height: 60px;">
+                                    <i class="bi bi-box text-muted"></i>
+                                </div>
+                            }
+                            <div class="flex-grow-1">
+                                <p class="mb-0 fw-bold">@item.ProductName</p>
+                                @if (!string.IsNullOrEmpty(item.VariantName))
+                                {
+                                    <p class="text-muted small mb-0">@item.VariantName</p>
+                                }
+                                <p class="text-muted small mb-0">Qty: @item.Quantity</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e0e0e0;
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 30px;
+    }
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+    .timeline-marker {
+        position: absolute;
+        left: -25px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid #0d6efd;
+    }
+    .timeline-item.latest .timeline-marker {
+        width: 16px;
+        height: 16px;
+        left: -27px;
+        background: #0d6efd;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2);
+    }
+    .timeline-content {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+    }
+    .timeline-item.latest .timeline-content {
+        background: #e7f1ff;
+        border: 1px solid #0d6efd;
+    }
+    .card {
+        border-radius: 10px;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // Auto-refresh every 2 minutes
+        setTimeout(function() {
+            location.reload();
+        }, 120000);
+    </script>
+}

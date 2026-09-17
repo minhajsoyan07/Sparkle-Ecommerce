@@ -1,0 +1,208 @@
+@model List<Sparkle.Domain.Support.Chat>
+@{
+    ViewData["Title"] = "Messages";
+    Layout = "_ProfileLayout";
+}
+
+<style>
+/* Scoped resets */
+.msg-box, .msg-box * { font-size: inherit; min-height: unset; }
+.msg-box .bi { font-size: inherit !important; }
+.msg-box h5, .msg-box h6 { font-size: inherit !important; margin: 0; }
+.msg-box input { min-height: unset; }
+
+:root {
+    --c-brand: #10b981; --c-brand-d: #059669;
+    --c-bg: #fff; --c-bg2: #f8fafc;
+    --c-bdr: #e2e8f0; --c-tx: #0f172a; --c-tx2: #334155;
+    --c-tx3: #64748b; --c-mt: #94a3b8;
+}
+
+.msg-box {
+    display: flex; height: calc(100vh - 120px); min-height: 500px;
+    border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--c-bdr);
+    box-shadow: 0 1px 3px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06);
+    background: var(--c-bg);
+}
+
+/* ── Conversation List ── */
+.msg-sb {
+    width: 320px; flex-shrink: 0; display: flex; flex-direction: column;
+    border-right: 1px solid var(--c-bdr); background: var(--c-bg);
+}
+.msg-hd {
+    padding: 16px 16px 12px; border-bottom: 1px solid var(--c-bdr); flex-shrink: 0;
+}
+.msg-hd h6 {
+    font-weight: 700; font-size: 18px !important; color: var(--c-tx);
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.msg-hd h6 i { color: var(--c-brand); font-size: 16px; }
+.msg-sr { position: relative; }
+.msg-sr i.si {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    font-size: 14px; color: var(--c-mt); pointer-events: none;
+}
+.msg-sr input {
+    width: 100%; padding: 9px 13px 9px 36px;
+    border: 1.5px solid var(--c-bdr); border-radius: 9999px;
+    font-size: 14px; color: var(--c-tx2); background: var(--c-bg2);
+    outline: none; transition: border-color .15s;
+}
+.msg-sr input:focus { border-color: var(--c-brand); background: var(--c-bg); }
+.msg-sr input::placeholder { color: var(--c-mt); }
+
+.msg-ls { flex: 1; overflow-y: auto; padding: 4px 0; }
+.msg-ls::-webkit-scrollbar { width: 3px; }
+.msg-ls::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+
+.msg-r {
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    text-decoration: none; cursor: pointer; transition: background .12s;
+    border-left: 3px solid transparent;
+}
+.msg-r:hover { background: var(--c-bg2); }
+.msg-av {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--c-brand), var(--c-brand-d));
+    color: #fff; font-weight: 700; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; position: relative;
+}
+.msg-av .ud {
+    position: absolute; top: -2px; right: -2px; width: 10px; height: 10px;
+    background: #ef4444; border: 2px solid var(--c-bg); border-radius: 50%;
+}
+.msg-mt { flex: 1; min-width: 0; }
+.msg-tp { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.msg-nm {
+    font-weight: 600; font-size: 15px; color: var(--c-tx);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.msg-tm { font-size: 12px; color: var(--c-mt); white-space: nowrap; flex-shrink: 0; }
+.msg-pv {
+    font-size: 13.5px; color: var(--c-tx3);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px;
+}
+.msg-pv.ur { font-weight: 600; color: var(--c-tx); }
+.msg-bg {
+    flex-shrink: 0; background: var(--c-brand); color: #fff;
+    font-size: 11px; font-weight: 700; min-width: 20px; height: 20px;
+    padding: 0 6px; border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Empty Right Panel ── */
+.msg-empty {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 10px; color: var(--c-mt); background: var(--c-bg2);
+}
+.msg-empty .ec {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: #ecfdf5; display: flex; align-items: center; justify-content: center;
+    font-size: 30px; color: var(--c-brand);
+}
+.msg-empty h6 { color: var(--c-tx2); font-weight: 600; font-size: 16px !important; }
+.msg-empty p { font-size: 14px; color: var(--c-mt); margin: 0; }
+.msg-empty .browse {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 8px 18px; background: var(--c-brand); color: #fff;
+    border-radius: 9999px; font-size: 13px; font-weight: 600;
+    text-decoration: none; margin-top: 4px; transition: background .12s;
+}
+.msg-empty .browse:hover { background: var(--c-brand-d); }
+
+.msg-none {
+    text-align: center; padding: 50px 16px; font-size: 14px; color: var(--c-mt);
+}
+.msg-none i { font-size: 30px; opacity: .35; display: block; margin-bottom: 8px; }
+
+@@media (max-width: 768px) {
+    .msg-sb { width: 100%; border-right: none; }
+    .msg-empty { display: none; }
+    .msg-box { height: auto; min-height: 350px; }
+}
+</style>
+
+<div class="msg-box">
+
+    <!-- CONVERSATION LIST -->
+    <div class="msg-sb">
+        <div class="msg-hd">
+            <h6><i class="bi bi-chat-text-fill"></i> Messages</h6>
+            <div class="msg-sr">
+                <i class="bi bi-search si"></i>
+                <input type="text" id="sS" placeholder="Search conversations…" autocomplete="off"/>
+            </div>
+        </div>
+        <div class="msg-ls" id="sL">
+            @if (!Model.Any())
+            {
+                <div class="msg-none">
+                    <i class="bi bi-chat-heart"></i>
+                    No conversations yet
+                </div>
+            }
+            @foreach (var c in Model)
+            {
+                var lm = c.Messages.FirstOrDefault();
+                var unr = c.UserUnreadCount > 0;
+                <a href="@Url.Action("Conversation","Chat",new{id=c.Id})" class="msg-r" data-name="@(c.Seller?.ShopName?.ToLower()??"")">
+                    <div class="msg-av">
+                        @(c.Seller?.ShopName?.Substring(0,1).ToUpper()??"S")
+                        @if(unr){<span class="ud"></span>}
+                    </div>
+                    <div class="msg-mt">
+                        <div class="msg-tp">
+                            <span class="msg-nm">@(c.Seller?.ShopName??"Seller")</span>
+                            <span class="msg-tm">@FmtTime(c.LastMessageAt)</span>
+                        </div>
+                        <div class="msg-pv @(unr?"ur":"")">
+                            @if(lm!=null){
+                                if(lm.IsDeleted){ <em style="color:var(--c-mt);"><i class="bi bi-slash-circle"></i> This message was unsent</em> }
+                                else { @(lm.IsSeller?"Seller: ":"You: ")@(lm.Content.Length>35?lm.Content[..35]+"…":lm.Content) }
+                            }
+                            else{<em style="color:var(--c-mt);">No messages</em>}
+                        </div>
+                    </div>
+                    @if(unr){<span class="msg-bg">@c.UserUnreadCount</span>}
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div class="msg-empty">
+        <div class="ec"><i class="bi bi-chat-dots-fill"></i></div>
+        <h6>Select a conversation</h6>
+        <p>Choose from your conversations to start chatting</p>
+        @if (!Model.Any())
+        {
+            <a href="/" class="browse"><i class="bi bi-shop"></i> Browse Products</a>
+        }
+    </div>
+
+</div>
+
+@functions {
+    string FmtTime(DateTime dt){
+        var diff=DateTime.UtcNow-dt;
+        if(diff.TotalMinutes<1)return "Now";
+        if(diff.TotalMinutes<60)return $"{(int)diff.TotalMinutes}m";
+        if(diff.TotalHours<24)return $"{(int)diff.TotalHours}h";
+        if(diff.TotalDays<7)return $"{(int)diff.TotalDays}d";
+        return dt.ToString("MMM d");
+    }
+}
+
+@section Scripts{
+<script>
+document.getElementById('sS').addEventListener('input', function(){
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('.msg-r').forEach(r => {
+        r.style.display = (r.dataset.name||'').includes(q) ? '' : 'none';
+    });
+});
+</script>
+}

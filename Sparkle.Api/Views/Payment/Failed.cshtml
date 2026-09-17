@@ -1,0 +1,37 @@
+@{
+    Layout = null; // Standalone page
+    var orderIds = Model as string;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Failed - Sparkle Ecommerce</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #fdf2f2; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; }
+        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); width: 450px; text-align: center; border: 1px solid #f8d7da; }
+        .icon { font-size: 60px; color: #dc3545; margin-bottom: 20px; }
+        h3 { color: #dc3545; margin-bottom: 10px; }
+        p { color: #666; margin-bottom: 30px; }
+        .btn-retry { background: #dc3545; border: none; padding: 10px 30px; }
+        .btn-retry:hover { background: #c82333; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">❌</div>
+        <h3>Payment Failed</h3>
+        <p>We couldn't process your payment. Please try again or choose a different payment method.</p>
+        
+        <div class="d-flex justify-content-center gap-2">
+            <!-- Ideally this would go back to payment selection, but we don't have that flow easily from here without order manipulation -->
+            <a href="/checkout/payment" class="btn btn-primary btn-retry">Try Again</a> 
+            <a href="/" class="btn btn-outline-secondary">Go Home</a>
+        </div>
+        <div class="mt-3">
+             <small class="text-muted">Order IDs: @orderIds</small>
+        </div>
+    </div>
+</body>
+</html>

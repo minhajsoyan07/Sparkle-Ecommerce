@@ -1,0 +1,66 @@
+@model Sparkle.Api.Areas.Admin.Controllers.GeneralSettingsViewModel
+@{
+    ViewData["Title"] = "General Settings";
+    Layout = "_SettingsLayout";
+}
+
+<h4 class="card-title fw-bold mb-4 border-bottom pb-2">General Information</h4>
+
+<form method="post" asp-action="SaveGeneral">
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <label asp-for="SiteName" class="form-label">Store Name</label>
+            <input asp-for="SiteName" class="form-control" />
+            <span asp-validation-for="SiteName" class="text-danger"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="SupportEmail" class="form-label">Support Email</label>
+            <input asp-for="SupportEmail" class="form-control" />
+            <span asp-validation-for="SupportEmail" class="text-danger"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="SupportPhone" class="form-label">Support Phone</label>
+            <input asp-for="SupportPhone" class="form-control" />
+            <span asp-validation-for="SupportPhone" class="text-danger"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="OfficeAddress" class="form-label">Office Address</label>
+            <input asp-for="OfficeAddress" class="form-control" />
+            <span asp-validation-for="OfficeAddress" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mb-5">
+        <label asp-for="SiteDescription" class="form-label">Store Description</label>
+        <textarea asp-for="SiteDescription" class="form-control" rows="3"></textarea>
+         <div class="form-text">Used for SEO and footer description.</div>
+        <span asp-validation-for="SiteDescription" class="text-danger"></span>
+    </div>
+
+    <h4 class="card-title fw-bold mb-4 border-bottom pb-2">Social Media</h4>
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <label asp-for="FacebookUrl" class="form-label">Facebook Page URL</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-facebook"></i></span>
+                <input asp-for="FacebookUrl" class="form-control" placeholder="https://facebook.com/yourpage" />
+            </div>
+            <span asp-validation-for="FacebookUrl" class="text-danger"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="InstagramUrl" class="form-label">Instagram Profile URL</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-instagram"></i></span>
+                <input asp-for="InstagramUrl" class="form-control" placeholder="https://instagram.com/yourprofile" />
+            </div>
+            <span asp-validation-for="InstagramUrl" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end pt-3 border-top">
+        <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check-lg me-2"></i> Save Changes
+        </button>
+    </div>
+</form>
+

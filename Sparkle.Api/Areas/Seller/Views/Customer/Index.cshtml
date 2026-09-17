@@ -1,0 +1,101 @@
+@model IEnumerable<Sparkle.Api.Areas.Seller.Models.CustomerViewModel>
+
+@{
+    ViewData["Title"] = "Customer Management";
+}
+
+<div class="tw-mb-6">
+    <h1 class="tw-text-2xl tw-font-bold tw-text-slate-800">Customer Management</h1>
+    <p class="tw-text-slate-500 tw-text-sm">View and manage your customers</p>
+</div>
+
+<div class="tw-bg-white tw-border tw-border-slate-100 tw-rounded-2xl tw-shadow-sm tw-overflow-hidden">
+    <div class="tw-p-6 tw-border-b tw-border-slate-100">
+        <!-- Search and Filter -->
+        <div class="tw-flex tw-items-center tw-gap-4">
+            <div class="tw-flex-1">
+                <div class="tw-relative">
+                    <i class="bi bi-search tw-absolute tw-left-3 tw-top-1/2 tw-transform -tw-translate-y-1/2 tw-text-slate-400"></i>
+                    <input type="text" placeholder="Search customers..." class="tw-w-full tw-pl-10 tw-pr-4 tw-py-2 tw-border tw-border-slate-200 tw-rounded-lg tw-outline-none focus:tw-border-blue-500" />
+                </div>
+            </div>
+            <select class="tw-px-4 tw-py-2 tw-border tw-border-slate-200 tw-rounded-lg tw-outline-none focus:tw-border-blue-500">
+                <option>All Time</option>
+                <option>Last 30 days</option>
+                <option>Last 90 days</option>
+                <option>This year</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Customers Table -->
+    <div class="tw-overflow-x-auto">
+        <table class="tw-w-full">
+            <thead class="tw-bg-slate-50 tw-border-b tw-border-slate-200">
+                <tr>
+                    <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-slate-700 tw-uppercase tw-tracking-wider">Customer</th>
+                    <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-slate-700 tw-uppercase tw-tracking-wider">Contact</th>
+                    <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-slate-700 tw-uppercase tw-tracking-wider">Orders</th>
+                    <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-slate-700 tw-uppercase tw-tracking-wider">Total Spent</th>
+                    <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-slate-700 tw-uppercase tw-tracking-wider">Last Order</th>
+                    <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-slate-700 tw-uppercase tw-tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="tw-divide-y tw-divide-slate-100">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var customer in Model)
+                    {
+                        <tr class="hover:tw-bg-slate-50 tw-transition-colors">
+                            <td class="tw-px-6 tw-py-4">
+                                <div class="tw-flex tw-items-center tw-gap-3">
+                                    <div class="tw-w-10 tw-h-10 tw-bg-blue-100 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-flex-shrink-0">
+                                        <span class="tw-text-blue-600 tw-font-bold tw-text-sm">@customer.Name.Substring(0, Math.Min(2, customer.Name.Length)).ToUpper()</span>
+                                    </div>
+                                    <div>
+                                        <div class="tw-font-medium tw-text-slate-900">@customer.Name</div>
+                                        <div class="tw-text-sm tw-text-slate-500">Customer ID: @customer.UserId?.Substring(0, 8)</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="tw-px-6 tw-py-4">
+                                <div class="tw-text-sm">
+                                    <div class="tw-text-slate-900">@customer.Email</div>
+                                    @if (!string.IsNullOrEmpty(customer.Phone))
+                                    {
+                                        <div class="tw-text-slate-500">@customer.Phone</div>
+                                    }
+                                </div>
+                            </td>
+                            <td class="tw-px-6 tw-py-4">
+                                <span class="tw-px-2 tw-py-1 tw-bg-blue-100 tw-text-blue-800 tw-text-sm tw-rounded-full">@customer.TotalOrders orders</span>
+                            </td>
+                            <td class="tw-px-6 tw-py-4">
+                                <div class="tw-font-bold tw-text-slate-900">৳@customer.TotalSpent.ToString("N2")</div>
+                            </td>
+                            <td class="tw-px-6 tw-py-4">
+                                <div class="tw-text-sm tw-text-slate-600">@customer.LastOrderDate.ToString("MMM dd, yyyy")</div>
+                            </td>
+                            <td class="tw-px-6 tw-py-4">
+                                <a asp-action="Details" asp-route-id="@customer.UserId" class="tw-text-blue-600 hover:tw-text-blue-800 tw-font-medium tw-text-sm">
+                                    View Details →
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="tw-px-6 tw-py-12 tw-text-center">
+                            <div class="tw-text-slate-400">
+                                <i class="bi bi-people tw-text-4xl tw-mb-2 tw-block"></i>
+                                <p>No customers yet. Start selling to build your customer base!</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

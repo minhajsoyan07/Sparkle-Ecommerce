@@ -1,0 +1,198 @@
+@model Sparkle.Domain.Orders.Shipment
+
+@{
+    ViewData["Title"] = "Shipment Details";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h3 fw-bold mb-1">Shipment #@Model.ShipmentNumber</h2>
+                <div class="text-muted">
+                    Order <a asp-controller="Orders" asp-action="Details" asp-route-id="@Model.OrderId">#@Model.Order.OrderNumber</a>
+                    • Created on @Model.CreatedAt.ToString("MMM dd, yyyy")
+                </div>
+            </div>
+            <div class="btn-group">
+                <a asp-action="PrintLabel" asp-route-id="@Model.Id" class="btn btn-outline-secondary" target="_blank">
+                    <i class="bi bi-printer me-2"></i> Print Label
+                </a>
+                @if (Model.Status != Sparkle.Domain.Orders.ShipmentStatus.Delivered && Model.Status != Sparkle.Domain.Orders.ShipmentStatus.Cancelled)
+                {
+                    <a asp-action="UpdateStatus" asp-route-id="@Model.Id" class="btn btn-primary">
+                        <i class="bi bi-truck me-2"></i> Update Status
+                    </a>
+                }
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-8">
+                <!-- Shipment Status Card -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-4">Tracking Status</h5>
+                        
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="flex-grow-1">
+                                <div class="progress" style="height: 10px;">
+                                    @{
+                                        int progress = 0;
+                                        switch (Model.Status)
+                                        {
+                                            case Sparkle.Domain.Orders.ShipmentStatus.Pending: progress = 10; break;
+                                            case Sparkle.Domain.Orders.ShipmentStatus.Packed: progress = 30; break;
+                                            case Sparkle.Domain.Orders.ShipmentStatus.PickedUp: progress = 50; break;
+                                            case Sparkle.Domain.Orders.ShipmentStatus.InTransit: progress = 70; break;
+                                            case Sparkle.Domain.Orders.ShipmentStatus.OutForDelivery: progress = 90; break;
+                                            case Sparkle.Domain.Orders.ShipmentStatus.Delivered: progress = 100; break;
+                                            case Sparkle.Domain.Orders.ShipmentStatus.Failed: progress = 100; break;
+                                            case Sparkle.Domain.Orders.ShipmentStatus.Returned: progress = 100; break;
+                                            case Sparkle.Domain.Orders.ShipmentStatus.Cancelled: progress = 0; break;
+                                        }
+                                        string color = Model.Status == Sparkle.Domain.Orders.ShipmentStatus.Cancelled || Model.Status == Sparkle.Domain.Orders.ShipmentStatus.Failed ? "bg-danger" : "bg-success";
+                                    }
+                                    <div class="progress-bar @color" role="progressbar" style="width: @progress%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2 small fw-bold text-muted text-uppercase">
+                                    <span>Processed</span>
+                                    <span>Shipped</span>
+                                    <span>Delivered</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="timeline">
+                            @if (Model.TrackingEvents != null && Model.TrackingEvents.Any())
+                            {
+                                foreach (var evt in Model.TrackingEvents.OrderByDescending(e => e.EventTime))
+                                {
+                                    <div class="d-flex mb-3">
+                                        <div class="me-3 text-center" style="width: 50px;">
+                                            <small class="text-muted d-block">@evt.EventTime.ToString("MMM dd")</small>
+                                            <small class="fw-bold">@evt.EventTime.ToString("HH:mm")</small>
+                                        </div>
+                                        <div class="border-start ps-3 pb-3 position-relative">
+                                            <div class="position-absolute bg-primary rounded-circle" style="width: 10px; height: 10px; left: -5px; top: 5px;"></div>
+                                            <div class="fw-bold">@evt.Status</div>
+                                            <div class="text-muted small">@evt.Message</div>
+                                            @if (!string.IsNullOrEmpty(evt.Location))
+                                            {
+                                                <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i>@evt.Location</div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-muted text-center py-3">No tracking events recorded yet.</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items Card -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3 border-bottom-0">
+                        <h5 class="card-title fw-bold mb-0">Items in Shipment</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Product</th>
+                                    <th>SKU</th>
+                                    <th class="text-center">Qty</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center">
+                                                @* Assuming Product has images, but we need to access via navigation properties carefully *@
+                                                @if (item.OrderItem?.Product?.Images != null && item.OrderItem.Product.Images.Any())
+                                                {
+                                                     <img src="@item.OrderItem.Product.Images.First().Url" class="rounded me-3 border" width="48" height="48" style="object-fit: cover;">
+                                                }
+                                                else
+                                                {
+                                                    <div class="bg-light rounded d-flex align-items-center justify-content-center me-3 border" style="width: 48px; height: 48px;">
+                                                        <i class="bi bi-box text-muted"></i>
+                                                    </div>
+                                                }
+                                                <div>
+                                                    <div class="fw-bold">@item.OrderItem?.ProductName</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><small class="text-muted">@item.OrderItem?.Product?.Slug</small></td>
+                                        <td class="text-center fw-bold">@item.Quantity</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Info Card -->
+                <div class="card border-0 shadow-sm mb-4">
+                   <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-4">Courier Info</h5>
+                        <div class="mb-3">
+                            <label class="text-muted small text-uppercase fw-bold">Courier</label>
+                            <div class="fw-bold fs-5">@Model.CourierName</div>
+                        </div>
+                         <div class="mb-3">
+                            <label class="text-muted small text-uppercase fw-bold">Tracking Number</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-light text-dark fs-6 font-monospace border">@Model.TrackingNumber</span>
+                                <button class="btn btn-sm btn-link p-0 text-muted" onclick="navigator.clipboard.writeText('@Model.TrackingNumber')"><i class="bi bi-clipboard"></i></button>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.TrackingUrl))
+                        {
+                             <a href="@Model.TrackingUrl" target="_blank" class="btn btn-outline-primary w-100 btn-sm">
+                                <i class="bi bi-box-arrow-up-right me-2"></i> Track on Site
+                            </a>
+                        }
+                   </div>
+                </div>
+
+                <!-- Customer Card -->
+                <div class="card border-0 shadow-sm">
+                   <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-4">Customer</h5>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-light rounded-circle p-3 me-3">
+                                <i class="bi bi-person fs-4 text-secondary"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">@Model.Order.ShippingAddress?.FullName</div>
+                                <div class="small text-muted">@Model.Order.User?.Email</div>
+                            </div>
+                        </div>
+                        <hr class="text-muted my-3" />
+                         <div class="mb-3">
+                            <label class="text-muted small text-uppercase fw-bold mb-1">Shipping Address</label>
+                            <address class="small mb-0 text-secondary">
+                                @Model.Order.ShippingAddress?.Line1<br>
+                                @if(!string.IsNullOrEmpty(Model.Order.ShippingAddress?.Line2)) {
+                                    @Model.Order.ShippingAddress?.Line2<br>
+                                }
+                                @Model.Order.ShippingAddress?.City, @Model.Order.ShippingAddress?.State @Model.Order.ShippingAddress?.PostalCode<br>
+                                @Model.Order.ShippingAddress?.Country<br>
+                                <span class="d-block mt-1"><i class="bi bi-telephone me-1"></i> @Model.Order.ShippingAddress?.Phone</span>
+                            </address>
+                        </div>
+                   </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

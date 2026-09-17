@@ -1,0 +1,892 @@
+@model Sparkle.Api.Controllers.AuthController.LoginViewModel
+@using System.Linq
+@inject Sparkle.Api.Services.IGoogleAuthConfigurationService GoogleAuthConfig
+@{
+    ViewData["Title"] = "Login";
+    Layout = null;
+    var langCookie = Context.Request.Cookies["sparkle-lang"] == "bn" ? "bn" : "en";
+    var isBangla = langCookie == "bn";
+    var siteTitle = await SettingsService.GetValueAsync("SiteTitle", "Sparkle");
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(isBangla ? $"লগইন - {siteTitle}" : $"Login - {siteTitle}")</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --primary-dark: #5a67d8;
+            --primary-light: #764ba2;
+            --accent-color: #a3bffa;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --input-bg: #f1f5f9;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        /* Seller Theme */
+        body.seller-theme {
+            --primary-color: #0f766e;
+            --primary-dark: #115e59;
+            --primary-light: #14b8a6;
+            --accent-color: #0d9488;
+        }
+
+        body.seller-theme::before {
+            background: rgba(15, 118, 110, 0.4);
+        }
+
+        body.seller-theme .login-left {
+            background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+        }
+
+        * { font-family: 'Inter', system-ui, -apple-system, sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background-color: var(--bg-color);
+            background-image: url('/images/auth-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 1.5rem; 
+            position: relative;
+        }
+
+        /* Overlay for better text readability on background */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(102, 126, 234, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 0;
+        }
+
+        .auth-wrapper { 
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: min(850px, 95vw); /* Reduced max-width for more appropriate size */
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @@keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-container { 
+            width: 100%; 
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px; 
+            box-shadow: var(--shadow-xl);
+            overflow: hidden; 
+            display: grid; 
+            grid-template-columns: 0.85fr 1fr;
+            min-height: 450px; /* Reduced min-height */
+        }
+
+        /* Left Side - Visual */
+        .login-left { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            padding: 2rem; /* Reduced padding */
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-left::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .login-left-content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .brand-logo {
+            position: absolute;
+            top: 2.5rem;
+            left: 1.5rem;
+            z-index: 5;
+            font-size: 2rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            
+            /* Glassmorphism Card Style */
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 4px 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .brand-logo:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+        
+        .brand-logo img {
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .user-icon-circle {
+            width: 80px; /* Reduced size */
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem auto; /* Reduced margin */
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .user-icon-circle img {
+            width: 50px; /* Reduced size */
+            height: 50px;
+            max-width: 100%;
+            object-fit: contain;
+            transition: all 0.3s ease;
+        }
+
+        .login-left h1 { 
+            font-size: 2.2rem; /* Reduced font size */
+            font-weight: 800; 
+            line-height: 1.1;
+            margin-bottom: 1rem; /* Reduced margin */
+            letter-spacing: -0.02em;
+            text-align: center;
+        }
+
+        .login-left p { 
+            font-size: 1rem; 
+            opacity: 0.9; 
+            margin: 0 auto 2rem auto; /* Reduced margin */
+            line-height: 1.5;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.28rem;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 0.85rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 0.64rem;
+            font-size: 0.81rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.2s;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .feature-item i { font-size: 1.06rem; }
+
+        /* Right Side - Form */
+        .login-right { 
+            padding: 2rem; /* Reduced padding */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: #fff;
+        }
+
+        .login-header {
+            margin-bottom: 1.5rem; /* Reduced margin */
+            text-align: center;
+        }
+
+        .login-header h2 {
+            font-size: 1.75rem; /* Reduced font size */
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        /* Toggle Switch */
+        .login-type-toggle { 
+            display: flex; 
+            background: var(--input-bg);
+            padding: 0.25rem; /* Reduced padding */
+            border-radius: 12px;
+            margin-bottom: 1.5rem; /* Reduced margin */
+            position: relative;
+        }
+
+        .login-type-btn { 
+            flex: 1; 
+            padding: 0.5rem; /* Reduced padding */ 
+            border: none; 
+            border-radius: 10px; 
+            background: transparent; 
+            color: var(--text-light); 
+            font-size: 0.95rem; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            font-weight: 600; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .login-type-btn.active { 
+            background: white; 
+            color: var(--primary-color); 
+            box-shadow: var(--shadow-sm);
+        }
+
+        .login-type-btn:hover:not(.active) {
+            color: var(--text-dark);
+        }
+
+        /* Form Elements */
+        .form-group { margin-bottom: 1.25rem; } /* Reduced margin */
+        
+        .form-label { 
+            font-size: 0.9rem; 
+            font-weight: 600; 
+            color: var(--text-dark); 
+            margin-bottom: 0.5rem; 
+            display: block; 
+        }
+
+        .input-group-custom {
+            position: relative;
+        }
+
+        .form-control { 
+            height: 45px; /* Standardized height */
+            border: 2px solid var(--border-color); 
+            border-radius: 12px; 
+            padding: 0 2.75rem 0 2.75rem; /* Added right padding for toggle */
+            font-size: 0.95rem; 
+            width: 100%; 
+            transition: all 0.2s; 
+            background: var(--input-bg);
+            color: var(--text-dark);
+        }
+
+        .form-control:focus { 
+            border-color: var(--primary-color); 
+            background: white;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); 
+            outline: none; 
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 1.1rem;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+
+        .form-control:focus + .input-icon {
+            color: var(--primary-color);
+        }
+
+        /* Hide browser's native password reveal icon */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear,
+        input[type="password"]::-webkit-credentials-auto-fill-button {
+            display: none !important;
+        }
+
+        .password-toggle { 
+            position: absolute; 
+            right: 1rem; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            cursor: pointer; 
+            color: var(--text-light);
+            padding: 0.5rem;
+        }
+
+        .password-toggle:hover { color: var(--text-dark); }
+
+        .remember-forgot { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 1.5rem; 
+            font-size: 0.9rem; 
+        }
+
+        .form-check-input {
+            width: 1.1em;
+            height: 1.1em;
+            margin-top: 0;
+            cursor: pointer;
+            border-color: var(--border-color);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .forgot-link { 
+            color: var(--primary-color); 
+            text-decoration: none; 
+            font-weight: 600; 
+            transition: color 0.2s;
+        }
+
+        .forgot-link:hover { color: var(--primary-dark); text-decoration: underline; }
+
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); 
+            border: none; 
+            border-radius: 12px; 
+            height: 45px; /* Standardized height */
+            font-size: 0.95rem; 
+            font-weight: 600; 
+            color: white; 
+            width: 100%; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4); 
+        }
+
+        .btn-primary:active { transform: translateY(0); }
+
+        /* Divider */
+        .divider { 
+            display: flex; 
+            align-items: center; 
+            text-align: center; 
+            margin: 1.5rem 0; 
+            color: var(--text-light); 
+            font-size: 0.9rem;
+        }
+
+        .divider::before, .divider::after { 
+            content: ''; 
+            flex: 1; 
+            border-bottom: 1px solid var(--border-color); 
+        }
+
+        .divider span { padding: 0 1rem; }
+
+        /* Google Button */
+        .google-btn { 
+            background: white; 
+            border: 2px solid var(--border-color); 
+            border-radius: 12px; 
+            height: 45px; /* Standardized height */
+            font-size: 0.95rem; 
+            color: var(--text-dark); 
+            width: 100%; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 0.75rem; 
+            transition: all 0.2s; 
+            font-weight: 600; 
+        }
+
+        .google-btn:hover { 
+            background: #f8fafc; 
+            border-color: #cbd5e1; 
+            transform: translateY(-1px);
+        }
+
+        /* Footer */
+        .signup-link { 
+            text-align: center; 
+            margin-top: 2rem; 
+            font-size: 0.95rem; 
+            color: var(--text-light); 
+        }
+
+        .signup-link a { 
+            color: var(--primary-color); 
+            font-weight: 700; 
+            text-decoration: none; 
+            margin-left: 0.25rem;
+        }
+
+        .signup-link a:hover { text-decoration: underline; }
+
+        /* Alerts */
+        .alert { 
+            border-radius: 12px; 
+            padding: 0.75rem; /* Reduced padding */
+            margin-bottom: 1.25rem; 
+            font-size: 0.9rem; 
+            border: none;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .alert-danger { 
+            background: #fef2f2; 
+            color: #991b1b; 
+            border-left: 4px solid #ef4444;
+        }
+
+        .seller-notice { 
+            display: none; 
+            margin-top: 1.5rem; 
+            font-size: 0.9rem; 
+            color: #9a3412; 
+            background: #fff7ed; 
+            border: 1px solid #ffedd5;
+            border-radius: 12px; 
+            padding: 1rem; 
+            align-items: center; 
+            gap: 0.75rem; 
+        }
+
+        .nav-back { 
+            position: absolute; 
+            top: 2rem; 
+            left: 2rem; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+            color: white; 
+            text-decoration: none; 
+            font-size: 0.95rem; 
+            font-weight: 600; 
+            transition: all 0.2s; 
+            padding: 0.75rem 1.25rem; 
+            border-radius: 50px; 
+            background: rgba(255,255,255,0.15); 
+            backdrop-filter: blur(10px); 
+            z-index: 10; 
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .nav-back:hover { 
+            background: white; 
+            color: var(--text-dark); 
+            transform: translateX(-3px); 
+        }
+
+        /* Responsive Design - Progressive Enhancement */
+        
+        /* Laptop (1200px - 1439px) - Slightly scale down */
+        /* Modified media queries for new sizes */
+        @@media (max-width: 1439px) and (min-width: 1200px) {
+            .auth-wrapper { max-width: 850px; }
+            .login-left { padding: 2.5rem; }
+            .login-right { padding: 2.5rem; }
+        }
+        
+        /* Small Laptop (992px - 1199px) - More condensed */
+        @@media (max-width: 1199px) and (min-width: 992px) {
+            .auth-wrapper { max-width: 800px; }
+            .login-container { grid-template-columns: 40% 60%; }
+            .login-left { padding: 2rem; }
+            .login-right { padding: 2rem; }
+            .login-left h1 { font-size: 2rem; }
+        }
+        
+        /* Tablet (768px - 991px) - Hide left panel */
+        @@media (max-width: 991px) and (min-width: 768px) {
+            .login-container { 
+                grid-template-columns: 1fr; 
+                max-width: 600px; 
+                min-height: auto; 
+            }
+            .login-left { display: none; }
+            .login-right { padding: 3rem 2.5rem; }
+            .nav-back { 
+                color: var(--text-dark); 
+                background: white; 
+                box-shadow: var(--shadow-md); 
+            }
+        }
+        
+        /* Mobile (max-width: 767px) - Full mobile optimization */
+        @@media (max-width: 767px) {
+            body { padding: 1rem; }
+            .login-container { 
+                grid-template-columns: 1fr; 
+                max-width: 100%; 
+                min-height: auto;
+                border-radius: 20px;
+            }
+            .login-left { display: none; }
+            .login-right { padding: 2rem 1.5rem; }
+            .login-header h2 { font-size: 1.75rem; }
+            .form-group { margin-bottom: 1.25rem; }
+            .nav-back { 
+                color: var(--text-dark); 
+                background: white; 
+                box-shadow: var(--shadow-md);
+                top: 1.5rem;
+                left: 1.5rem;
+            }
+        }
+        /* Modern Validation Styles */
+        .field-validation-error,
+        .text-danger:not(:empty) {
+            display: flex !important;
+            align-items: center;
+            margin-top: 8px;
+            padding: 10px 14px;
+            background-color: #fff1f2;
+            border: 1px solid #fb7185;
+            border-left: 4px solid #e11d48;
+            border-radius: 8px;
+            color: #be123c !important;
+            font-size: 0.85rem !important;
+            font-weight: 500;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            animation: errorSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .field-validation-error::before,
+        .text-danger:not(:empty)::before {
+            content: '';
+            display: inline-block;
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e11d48' viewBox='0 0 16 16'%3E%3Cpath d='M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z'/%3E%3Cpath d='M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .field-validation-valid {
+            display: none !important;
+        }
+        
+        .input-validation-error {
+            border-color: #e11d48 !important;
+            background-color: #fff1f2 !important;
+        }
+        
+        .input-validation-error:focus {
+            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.15) !important;
+        }
+
+        @@keyframes errorSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    
+    </style>
+</head>
+<body>
+    <a href="/" class="nav-back"><i class="bi bi-arrow-left"></i> @(isBangla ? "হোম" : "Home")</a>
+    
+    <div class="auth-wrapper">
+        <div class="login-container">
+            <!-- Left Side -->
+            <div class="login-left">
+                <div class="brand-logo">
+                    <img src="~/images/logo.png" alt="@siteTitle" style="height: 50px; width: auto;" asp-append-version="true" />
+                </div>
+                <div class="login-left-content">
+                    <div class="user-icon-circle">
+                        <img src="/images/user-icon.png" alt="User" id="loginIcon" />
+                    </div>
+                    <h1>@(isBangla ? "স্বাগতম!" : "Welcome Back!")</h1>
+                    <p>@(isBangla ? "বাংলাদেশের সবচেয়ে বিশ্বস্ত ই-কমার্স প্ল্যাটফর্মে আপনাকে স্বাগতম।" : "Join thousands of happy shoppers on Bangladesh's most trusted e-commerce platform.")</p>
+                    
+                    <div class="features-grid">
+                        <div class="feature-item">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                            <span>@(isBangla ? "দ্রুত ডেলিভারি" : "Fast Delivery")</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-shield-check-fill"></i>
+                            <span>@(isBangla ? "নিরাপদ পেমেন্ট" : "Secure Payment")</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-tag-fill"></i>
+                            <span>@(isBangla ? "সেরা অফার" : "Best Offers")</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-headset"></i>
+                            <span>@(isBangla ? "২৪/৭ সাপোর্ট" : "24/7 Support")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side -->
+            <div class="login-right">
+                <div class="login-header">
+                    <h2>@(isBangla ? "সাইন ইন" : "Sign In")</h2>
+                    <p>@(isBangla ? "আপনার অ্যাকাউন্টে প্রবেশ করতে তথ্য দিন" : "Please enter your details to access your account")</p>
+                </div>
+
+
+
+                <div class="login-type-toggle">
+                    <button type="button" class="login-type-btn active" data-type="user">
+                        <i class="bi bi-person-fill"></i> @(isBangla ? "ব্যবহারকারী" : "Customer")
+                    </button>
+                    <button type="button" class="login-type-btn" data-type="seller">
+                        <i class="bi bi-shop-window"></i> @(isBangla ? "বিক্রেতা" : "Seller")
+                    </button>
+                </div>
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <form method="post" asp-action="Login" asp-controller="Auth">
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    <input type="hidden" name="loginType" id="loginTypeField" value="user" />
+                    
+                    <div class="form-group">
+                        <label asp-for="Email" class="form-label">@(isBangla ? "ইমেইল" : "Email Address")</label>
+                        <div class="input-group-custom">
+                            <input asp-for="Email" type="email" class="form-control" placeholder="name@example.com" autofocus />
+                            <i class="bi bi-envelope input-icon"></i>
+                        </div>
+                        <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Password" class="form-label">@(isBangla ? "পাসওয়ার্ড" : "Password")</label>
+                        <div class="input-group-custom">
+                            <input asp-for="Password" type="password" class="form-control" id="password" placeholder="@(isBangla ? "পাসওয়ার্ড" : "Password")" style="padding-left: 1rem;" />
+                            <i class="bi bi-eye password-toggle" id="togglePassword"></i>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
+                    </div>
+
+                    <div class="remember-forgot">
+                        <div class="form-check d-flex align-items-center">
+                            <input asp-for="RememberMe" class="form-check-input me-2" type="checkbox" id="rememberMeCheckbox" />
+                            <label class="form-check-label text-muted mb-0" for="rememberMeCheckbox" style="cursor: pointer;">
+                                @(isBangla ? "মনে রাখুন" : "Remember me")
+                            </label>
+                        </div>
+                        <a href="#" class="forgot-link">@(isBangla ? "পাসওয়ার্ড ভুলে গেছেন?" : "Forgot Password?")</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        @(isBangla ? "সাইন ইন করুন" : "Sign In") <i class="bi bi-arrow-right"></i>
+                    </button>
+
+                    <div id="googleLoginSection">
+                        <div class="divider"><span>@(isBangla ? "অথবা" : "Or continue with")</span></div>
+                        <form method="post" asp-action="ExternalLogin" asp-controller="Auth" asp-route-returnUrl="@Model.ReturnUrl">
+                            <input type="hidden" name="provider" value="Google" />
+                            <button type="submit" class="google-btn">
+                                <svg width="20" height="20" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                                    <g fill="none" fill-rule="evenodd">
+                                        <path d="M17.6 9.2l-.1-1.8H9v3.4h4.8C13.6 12 13 13 12 13.6v2.2h3a8.8 8.8 0 0 0 2.6-6.6z" fill="#4285F4"/>
+                                        <path d="M9 18c2.4 0 4.5-.8 6-2.2l-3-2.2a5.4 5.4 0 0 1-8-2.9H1V13a9 9 0 0 0 8 5z" fill="#34A853"/>
+                                        <path d="M4 10.7a5.4 5.4 0 0 1 0-3.4V5H1a9 9 0 0 0 0 8l3-2.3z" fill="#FBBC05"/>
+                                        <path d="M9 3.6c1.3 0 2.5.4 3.4 1.3L15 2.3A9 9 0 0 0 1 5l3 2.4a5.4 5.4 0 0 1 5-3.7z" fill="#EA4335"/>
+                                    </g>
+                                </svg>
+                                @(isBangla ? "গুগল" : "Google")
+                            </button>
+                        </form>
+                    </div>
+
+                    <div id="sellerNotice" class="seller-notice">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <div>
+                            <strong>@(isBangla ? "বিক্রেতা অ্যাকাউন্ট" : "Seller Account")</strong><br/>
+                            @(isBangla ? "বিক্রেতাদের অবশ্যই সেলার রেজিস্ট্রেশন ফর্ম ব্যবহার করতে হবে" : "Please use the seller registration form to create a new seller account.")
+                        </div>
+                    </div>
+
+                    <div class="signup-link">
+                        @(isBangla ? "অ্যাকাউন্ট নেই?" : "Don't have an account?") 
+                        <a href="/auth/register" id="signupLink">@(isBangla ? "রেজিস্টার করুন" : "Sign up")</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const buttons = document.querySelectorAll('.login-type-btn');
+            const loginTypeField = document.getElementById('loginTypeField');
+            const sellerNotice = document.getElementById('sellerNotice');
+            const googleSection = document.getElementById('googleLoginSection');
+            const loginIcon = document.getElementById('loginIcon');
+            const signupLink = document.getElementById('signupLink');
+
+            if (!buttons || !loginTypeField) return;
+
+            // Store input values for each mode separated
+            const loginData = {
+                user: { email: '', password: '' },
+                seller: { email: '', password: '' }
+            };
+
+            // AUTO-SWITCH: Check URL for ?type=seller
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('type') === 'seller') {
+                const sellerBtn = document.querySelector('.login-type-btn[data-type="seller"]');
+                if (sellerBtn) {
+                    // Slight delay to ensure UI is ready
+                    setTimeout(() => sellerBtn.click(), 50); 
+                }
+            }
+
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const newType = btn.getAttribute('data-type') || 'user';
+                    
+                    // 1. Get current active type
+                    const currentActiveBtn = document.querySelector('.login-type-btn.active');
+                    const currentType = currentActiveBtn ? (currentActiveBtn.getAttribute('data-type') || 'user') : 'user';
+
+                    // 2. Save current input values to state
+                    const emailInput = document.getElementById('Email');
+                    const passInput = document.getElementById('password');
+                    
+                    if (emailInput && passInput) {
+                        loginData[currentType].email = emailInput.value;
+                        loginData[currentType].password = passInput.value;
+                    }
+
+                    // 3. Update UI classes
+                    buttons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    loginTypeField.value = newType;
+
+                    // 4. Restore values for new type
+                    if (emailInput && passInput) {
+                        emailInput.value = loginData[newType].email || '';
+                        passInput.value = loginData[newType].password || '';
+                    }
+
+                    // 5. Theme and UI changes
+                    if (newType === 'seller') {
+                        document.body.classList.add('seller-theme');
+                        if (googleSection) googleSection.style.display = 'none';
+                        if (sellerNotice) sellerNotice.style.display = 'flex';
+                        if (loginIcon) {
+                            loginIcon.src = '/images/seller-icon.png';
+                            loginIcon.alt = 'Seller';
+                        }
+                        if (signupLink) signupLink.href = '/auth/register-seller';
+                    } else {
+                        document.body.classList.remove('seller-theme');
+                        if (googleSection) googleSection.style.display = '';
+                        if (sellerNotice) sellerNotice.style.display = 'none';
+                        if (loginIcon) {
+                            loginIcon.src = '/images/user-icon.png';
+                            loginIcon.alt = 'User';
+                        }
+                        if (signupLink) signupLink.href = '/auth/register';
+                    }
+                });
+            });
+
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('password');
+            if (togglePassword && passwordInput) {
+                togglePassword.addEventListener('click', function () {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    this.classList.toggle('bi-eye');
+                    this.classList.toggle('bi-eye-slash');
+                });
+            }
+
+            // Email Logic for Login
+            const emailField = document.getElementById('Email');
+            if(emailField) {
+                emailField.addEventListener('blur', function(e) {
+                    const val = e.target.value.trim();
+                    const span = document.querySelector('span[data-valmsg-for="Email"]');
+                    const emailRegex = /^[a-zA-Z0-9._%+-]+@@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    
+                    if (val.length > 0) {
+                         if (!emailRegex.test(val) || val.toLowerCase().endsWith('.co')) {
+                              if (span) {
+                                  span.textContent = "Invalid email format";
+                                  span.className = "text-danger field-validation-error small";
+                              }
+                         } else {
+                              if (span && span.textContent === "Invalid email format") {
+                                  span.textContent = "";
+                                  span.className = "text-danger field-validation-valid small";
+                              }
+                         }
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

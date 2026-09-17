@@ -1,0 +1,65 @@
+@model IEnumerable<Sparkle.Api.Areas.Admin.Controllers.PaymentsController.PayoutViewModel>
+@{
+    ViewData["Title"] = "Seller Payouts";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Seller Payouts</h4>
+        <p class="text-muted mb-0">Manage pending seller payouts</p>
+    </div>
+    <a href="/Admin/Payments" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Payments
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Seller</th>
+                        <th>Email</th>
+                        <th>Bank Details</th>
+                        <th>Pending Amount</th>
+                        <th>Last Payout</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var payout in Model)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <span class="fw-medium">@payout.SellerName</span>
+                            </td>
+                            <td class="text-muted">@payout.Email</td>
+                            <td>
+                                <small class="text-muted">@payout.BankDetails</small>
+                            </td>
+                            <td class="fw-bold text-success">৳@payout.PendingAmount.ToString("N0")</td>
+                            <td class="text-muted">
+                                @(payout.LastPayout?.ToString("MMM dd, yyyy") ?? "Never")
+                            </td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-success" onclick="alert('Payout functionality coming soon!')">
+                                    <i class="bi bi-send"></i> Process Payout
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-check-circle fs-1 d-block mb-2 text-success"></i>
+                                No pending payouts
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

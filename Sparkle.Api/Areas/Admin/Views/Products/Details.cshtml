@@ -1,0 +1,451 @@
+@model Sparkle.Domain.Catalog.Product
+@using Sparkle.Domain.Catalog
+@{
+    ViewData["Title"] = $"{Model.Title} - Details";
+    var sellerUser = ViewBag.SellerUser as Sparkle.Domain.Identity.ApplicationUser;
+}
+
+<div class="container-fluid p-0">
+    <!-- Modern Header Section -->
+    <div class="bg-white border-bottom py-4 px-4 sticky-top" style="z-index: 900; top: 60px;"> <!-- Adjust top based on layout header height -->
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+            
+            <!-- Title & Context -->
+            <div class="d-flex flex-column gap-2">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 small text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                        <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none text-muted hover-primary">Products</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Details</li>
+                        <li class="breadcrumb-item active text-dark" aria-current="page">#@Model.Id</li>
+                    </ol>
+                </nav>
+                
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <h1 class="h3 fw-bold text-dark mb-0">@Model.Title</h1>
+                    
+                    @if (Model.IsActive)
+                    {
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">
+                            <i class="bi bi-check-circle-fill me-1"></i> Active
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1">
+                            <i class="bi bi-eye-slash-fill me-1"></i> Inactive
+                        </span>
+                    }
+                    
+                    <span class="badge bg-light text-dark border px-2 py-1 fw-normal">
+                         @(Model.Category?.Name ?? "Uncategorized")
+                    </span>
+                </div>
+            </div>
+
+            <!-- Action Toolbar -->
+            <div class="d-flex align-items-center gap-2">
+                @if (Model.IsAdminProduct)
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary rounded-pill px-4 shadow-sm d-flex align-items-center gap-2">
+                        <i class="bi bi-pencil-square"></i> Edit
+                    </a>
+                    <button type="button" class="btn btn-light text-danger border rounded-pill px-3 shadow-sm" onclick="confirmDelete(@Model.Id)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                    <form id="delete-@Model.Id" asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-none">
+                        @Html.AntiForgeryToken()
+                    </form>
+                }
+                else 
+                {
+                    @if (Model.ModerationStatus == ProductModerationStatus.Pending)
+                    {
+                        <div class="btn-group shadow-sm" role="group">
+                             <button type="button" class="btn btn-success text-white px-4 fw-bold" onclick="approveProduct(@Model.Id)">
+                                <i class="bi bi-check-lg me-1"></i> Approve
+                            </button>
+                            <button type="button" class="btn btn-danger text-white px-4 fw-bold" onclick="rejectProduct(@Model.Id)">
+                                <i class="bi bi-x-lg me-1"></i> Reject
+                            </button>
+                        </div>
+                    }
+                    else if (Model.IsActive)
+                    {
+                         <button type="button" class="btn btn-outline-danger rounded-pill px-4 fw-bold border-2" onclick="rejectProduct(@Model.Id)">
+                             <i class="bi bi-eye-slash me-2"></i> Hide Product
+                         </button>
+                    }
+                    else
+                    {
+                         <button type="button" class="btn btn-outline-success rounded-pill px-4 fw-bold border-2" onclick="approveProduct(@Model.Id)">
+                             <i class="bi bi-eye me-2"></i> Make Visible
+                         </button>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="p-4">
+        <div class="row g-4">
+            
+            <!-- Left Column: Product Data -->
+            <div class="col-lg-8">
+                
+                <!-- Quick Stats -->
+                <div class="row g-3 mb-4">
+                     <div class="col-sm-4">
+                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-body p-3 d-flex align-items-center gap-3">
+                                <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
+                                    <i class="bi bi-cart-check fs-4"></i>
+                                </div>
+                                <div>
+                                    <div class="h4 fw-bold mb-0">@Model.PurchaseCount</div>
+                                    <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.7rem;">Total Sales</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="col-sm-4">
+                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-body p-3 d-flex align-items-center gap-3">
+                                <div class="bg-info bg-opacity-10 text-info p-3 rounded-circle">
+                                    <i class="bi bi-eye fs-4"></i>
+                                </div>
+                                <div>
+                                    <div class="h4 fw-bold mb-0">@Model.ViewCount</div>
+                                    <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.7rem;">Total Views</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-body p-3 d-flex align-items-center gap-3">
+                                <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-circle">
+                                    <i class="bi bi-box-seam fs-4"></i>
+                                </div>
+                                <div>
+                                    <div class="h4 fw-bold mb-0">@Model.Variants.Sum(v => v.Stock)</div>
+                                    <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.7rem;">Total Stock</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Info Card -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white py-3 px-4 border-bottom d-flex align-items-center justify-content-between">
+                         <div class="d-flex align-items-center gap-2">
+                             <i class="bi bi-info-circle text-primary"></i>
+                             <h6 class="fw-bold mb-0 text-dark">General Information</h6>
+                         </div>
+                    </div>
+                    <div class="card-body p-4">
+                         <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small text-uppercase fw-bold mb-1">Brand</label>
+                                <div class="fs-6 fw-medium text-dark bg-light p-2 rounded px-3 border border-light">@(Model.Brand?.Name ?? "No Brand")</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small text-uppercase fw-bold mb-1">Category</label>
+                                <div class="fs-6 fw-medium text-dark bg-light p-2 rounded px-3 border border-light">@(Model.Category?.Name ?? "Uncategorized")</div>
+                            </div>
+                        </div>
+                        
+                        @if(!string.IsNullOrEmpty(Model.ShortDescription)) {
+                             <div class="mb-4">
+                                <label class="form-label text-muted small text-uppercase fw-bold mb-1">Short Description</label>
+                                <div class="bg-light p-3 rounded border fs-6 text-secondary">
+                                    @Model.ShortDescription
+                                </div>
+                            </div>
+                        }
+
+                        <div>
+                            <label class="form-label text-muted small text-uppercase fw-bold mb-2">Detailed Description</label>
+                            <div class="text-secondary" style="line-height: 1.8; font-size: 0.95rem;">
+                                @Html.Raw(Model.Description ?? "<span class='text-muted fst-italic'>No description provided.</span>")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                 <!-- Inventory Table -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                    <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                             <i class="bi bi-list-check text-primary"></i>
+                             <h6 class="fw-bold mb-0 text-dark">Variants & Inventory</h6>
+                        </div>
+                        <span class="badge bg-light text-secondary border rounded-pill px-3">@Model.Variants.Count Items</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0 table-hover">
+                            <thead class="bg-light text-secondary text-uppercase small">
+                                <tr>
+                                    <th class="ps-4 py-3 fw-bold">SKU / Item</th>
+                                    <th class="py-3 fw-bold">Specs</th>
+                                    <th class="py-3 fw-bold text-end">Price</th>
+                                    <th class="pe-4 py-3 fw-bold text-end">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var variant in Model.Variants)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="fw-bold text-dark">@(variant.Sku ?? "N/A")</div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                @if(!string.IsNullOrEmpty(variant.Color)) {
+                                                     <span class="badge bg-white text-dark border shadow-sm fw-normal">@variant.Color</span>
+                                                }
+                                                @if(!string.IsNullOrEmpty(variant.Size)) {
+                                                     <span class="badge bg-white text-dark border shadow-sm fw-normal">@variant.Size</span>
+                                                }
+                                                @if(string.IsNullOrEmpty(variant.Color) && string.IsNullOrEmpty(variant.Size)) {
+                                                    <span class="text-muted small">-</span>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td class="text-end fw-bold text-dark">৳@variant.Price.ToString("N0")</td>
+                                        <td class="pe-4 text-end">
+                                            @if(variant.Stock > 10) {
+                                                <span class="badge bg-success-subtle text-success rounded-pill border border-success-subtle px-3">@variant.Stock In Stock</span>
+                                            } else if (variant.Stock > 0) {
+                                                 <span class="badge bg-warning-subtle text-warning rounded-pill border border-warning-subtle px-3">Low: @variant.Stock</span>
+                                            } else {
+                                                <span class="badge bg-danger-subtle text-danger rounded-pill border border-danger-subtle px-3">Out of Stock</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+             <!-- Right Column: Meta Data -->
+            <div class="col-lg-4">
+                
+                <!-- Seller Card -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white py-3 px-4 border-bottom">
+                         <h6 class="fw-bold mb-0 text-dark">Seller Information</h6>
+                    </div>
+                     <div class="card-body p-4">
+                        @if (Model.Seller != null)
+                        {
+                            <div class="text-center mb-4">
+                                <div class="position-relative d-inline-block">
+                                     @if (!string.IsNullOrEmpty(Model.Seller.StoreLogo))
+                                    {
+                                        <img src="@Model.Seller.StoreLogo" class="rounded-circle border shadow-sm" width="80" height="80" style="object-fit: cover;">
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center text-primary fw-bold mx-auto border" style="width: 80px; height: 80px; font-size: 2rem;">
+                                            @Model.Seller.ShopName.FirstOrDefault()
+                                        </div>
+                                    }
+                                    <span class="position-absolute bottom-0 end-0 bg-success p-2 border border-white rounded-circle"></span>
+                                </div>
+                                <h5 class="fw-bold mt-3 mb-1">@Model.Seller.ShopName</h5>
+                                <div class="text-muted small mb-3">Seller ID: #@Model.Seller.Id</div>
+                                
+                                <a asp-area="Admin" asp-controller="Sellers" asp-action="Details" asp-route-id="@Model.SellerId" class="btn btn-outline-primary btn-sm rounded-pill px-4">
+                                    View Profile
+                                </a>
+                            </div>
+                            
+                            <hr class="border-light my-3">
+                            
+                            <div class="d-flex flex-column gap-3">
+                                <div class="d-flex justify-content-between align-items-center text-secondary small">
+                                    <span>Contact Person</span>
+                                    <span class="fw-bold text-dark">@(sellerUser?.FullName ?? "N/A")</span>
+                                </div>
+                                 <div class="d-flex justify-content-between align-items-center text-secondary small">
+                                    <span>Phone</span>
+                                    <span class="fw-bold text-dark">@(!string.IsNullOrEmpty(Model.Seller.MobileNumber) ? Model.Seller.MobileNumber : (sellerUser?.PhoneNumber ?? "N/A"))</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center text-secondary small">
+                                    <span>Location</span>
+                                    <span class="fw-bold text-dark text-end" style="max-width: 150px;">@(Model.Seller.BusinessAddress ?? "N/A")</span>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                             <div class="text-center py-4">
+                                <div class="bg-success bg-opacity-10 text-success rounded-circle d-inline-flex p-3 mb-3">
+                                    <i class="bi bi-shield-check fs-2"></i>
+                                </div>
+                                <h6 class="fw-bold text-dark">Official Product</h6>
+                                <p class="text-muted small mb-0">Sold directly by Sparkle Platform.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Moderation Card -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                     <div class="card-header bg-white py-3 px-4 border-bottom">
+                         <h6 class="fw-bold mb-0 text-dark">Moderation Status</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                             @if(Model.ModerationStatus == ProductModerationStatus.Approved) {
+                                <div class="text-center py-2 bg-success-subtle text-success rounded-3 border border-success-subtle">
+                                    <i class="bi bi-shield-check fs-2 d-block mb-1"></i>
+                                    <span class="fw-bold">Approved</span>
+                                </div>
+                            } else if (Model.ModerationStatus == ProductModerationStatus.Pending) {
+                                 <div class="text-center py-2 bg-warning-subtle text-warning rounded-3 border border-warning-subtle">
+                                    <i class="bi bi-hourglass-split fs-2 d-block mb-1"></i>
+                                    <span class="fw-bold">Pending Review</span>
+                                </div>
+                            } else if (Model.ModerationStatus == ProductModerationStatus.Rejected) {
+                                 <div class="text-center py-2 bg-danger-subtle text-danger rounded-3 border border-danger-subtle">
+                                    <i class="bi bi-x-circle fs-2 d-block mb-1"></i>
+                                    <span class="fw-bold">Rejected</span>
+                                </div>
+                            }
+                        </div>
+
+                         @if(Model.ModeratedAt.HasValue) 
+                        {
+                            <ul class="list-unstyled d-flex flex-column gap-2 mb-0 border rounded p-3 bg-light">
+                                <li class="d-flex justify-content-between small">
+                                    <span class="text-muted">Moderated By</span>
+                                    <span class="fw-bold text-dark">@(Model.ModeratedBy ?? "System")</span>
+                                </li>
+                                <li class="d-flex justify-content-between small">
+                                    <span class="text-muted">Date</span>
+                                    <span class="fw-bold text-dark">@Model.ModeratedAt.Value.ToString("dd MMM yyyy")</span>
+                                </li>
+                                @if(!string.IsNullOrEmpty(Model.ModerationNotes)) {
+                                     <li class="mt-2 pt-2 border-top">
+                                        <span class="d-block text-muted mb-1 text-uppercase" style="font-size: 0.65rem;">Moderator Note</span>
+                                        <span class="d-block text-danger small fst-italic">"@Model.ModerationNotes"</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else 
+                        {
+                            <div class="text-center text-muted small fst-italic">
+                                Not moderated yet
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Gallery Preview (Condensed) -->
+                @if (Model.Images != null && Model.Images.Any())
+                {
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-white py-3 px-4 border-bottom">
+                             <h6 class="fw-bold mb-0 text-dark">Gallery</h6>
+                        </div>
+                        <div class="card-body p-3">
+                             <div class="row g-2">
+                                @foreach (var img in Model.Images.Take(6))
+                                {
+                                    <div class="col-4">
+                                        <a href="@img.Url" target="_blank">
+                                            <img src="@img.Url" class="img-fluid rounded border hover-shadow" style="aspect-ratio: 1; object-fit: cover;">
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                            @if(Model.Images.Count > 6) {
+                                <div class="text-center mt-3">
+                                    <a href="#" class="text-muted small text-decoration-none">View all @Model.Images.Count images</a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forms -->
+<form id="approve-@Model.Id" asp-action="Approve" asp-route-id="@Model.Id" method="post" class="d-none">
+    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+</form>
+<form id="reject-@Model.Id" asp-action="Reject" asp-route-id="@Model.Id" method="post" class="d-none">
+    <input type="hidden" name="reason" value="Rejected by admin" />
+    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+</form>
+
+@section Scripts {
+    <script>
+        function approveProduct(productId) {
+            Swal.fire({
+                title: 'Approve Product?',
+                text: "This product will become visible in the marketplace.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#d1d5db',
+                confirmButtonText: 'Yes, Approve'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('approve-' + productId).submit();
+                }
+            });
+        }
+
+        function rejectProduct(productId) { // Maps to Hide as well logic-wise
+            Swal.fire({
+                title: 'Reject / Hide Product',
+                text: "Please provide a reason for this action:",
+                input: 'text',
+                inputPlaceholder: 'Reason for rejection...',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#d1d5db',
+                confirmButtonText: 'Reject Product',
+                preConfirm: (reason) => {
+                    if (!reason) {
+                        Swal.showValidationMessage('Please enter a reason');
+                    }
+                    return reason;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('reject-' + productId);
+                    form.querySelector('input[name="reason"]').value = result.value;
+                    form.submit();
+                }
+            });
+        }
+        
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'Delete Product?',
+                text: "This action cannot be undone!",
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#d1d5db',
+                confirmButtonText: 'Yes, Delete'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('delete-' + id).submit();
+                }
+            });
+        }
+    </script>
+}

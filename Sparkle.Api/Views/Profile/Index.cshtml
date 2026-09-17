@@ -1,0 +1,241 @@
+@model Sparkle.Api.Controllers.ProfileController.ProfileViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<style>
+    .dash-grid { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Stats ── */
+    .dash-stats { 
+        display: grid; 
+        grid-template-columns: repeat(3, 1fr); 
+        gap: 12px; 
+    }
+    .dash-stat {
+        background: #fff;
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.01);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .dash-stat:hover { 
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .dash-stat-icon {
+        width: 36px; height: 36px;
+        border-radius: 9px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    .dash-stat-icon.orders { background: #ebf5ff; color: #3182ce; }
+    .dash-stat-icon.spent  { background: #f0fff4; color: #38a169; }
+    .dash-stat-icon.points { background: #fffaf0; color: #dd6b20; }
+    
+    .dash-stat-num { font-size: 16px; font-weight: 800; color: #1a202c; line-height: 1.2; }
+    .dash-stat-lbl { font-size: 10px; font-weight: 600; color: #718096; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── Dashboard Card ── */
+    .dash-card {
+        background: #fff;
+        border: 1px solid #edf2f7;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        overflow: hidden;
+    }
+    .dash-card-head {
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #f7fafc;
+    }
+    .dash-card-head .title {
+        font-size: 15px; /* Increased from 13px */
+        font-weight: 700;
+        color: #2d3748;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .dash-card-head .view-all {
+        font-size: 10px;
+        font-weight: 700;
+        color: #4a5568;
+        text-decoration: none;
+        padding: 4px 10px;
+        border-radius: 99px;
+        background: #f7fafc;
+        transition: all 0.2s;
+        border: 1px solid #edf2f7;
+    }
+    .dash-card-head .view-all:hover {
+        background: #edf2f7;
+        color: #2d3748;
+    }
+
+    /* ── Order Item ── */
+    .order-list { display: flex; flex-direction: column; }
+    .order-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        gap: 12px;
+        border-bottom: 1px solid #f7fafc;
+        transition: all 0.2s;
+        text-decoration: none;
+        color: inherit;
+    }
+    .order-item:last-child { border-bottom: none; }
+    .order-item:hover { background: #fcfdfe; }
+
+    .order-img-wrap {
+        width: 40px; height: 40px;
+        border-radius: 8px;
+        background: #f7fafc;
+        border: 1px solid #edf2f7;
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+    .order-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .order-img-placeholder { font-size: 16px; color: #cbd5e0; }
+
+    .order-info { flex: 1; min-width: 0; }
+    .order-products {
+        font-size: 12px;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .order-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 9px;
+        color: #a0aec0;
+        font-weight: 500;
+    }
+    .order-meta i { font-size: 10px; color: #cbd5e0; }
+
+    .order-right { text-align: right; flex-shrink: 0; }
+    .order-amt { font-size: 12px; font-weight: 800; color: #1a202c; }
+    
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 1px 6px;
+        border-radius: 99px;
+        font-size: 8px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 2px;
+    }
+    .status-pill.pending    { background: #fffaf0; color: #c05621; }
+    .status-pill.paid       { background: #f0fff4; color: #2f855a; }
+    .status-pill.failed     { background: #fff5f5; color: #c53030; }
+
+    @@media (max-width: 768px) {
+        .dash-stats { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="dash-grid">
+    <!-- ── Welcome ── -->
+    <div style="margin-bottom: 4px;">
+        <h5 style="font-size: 17px; font-weight: 700; color: #1a202c; margin: 0;">Welcome back, @(Model.FullName?.Split(' ')[0] ?? "User")! 👋</h5>
+        <p style="font-size: 11px; color: #718096; margin: 1px 0 0 0;">@DateTime.Now.ToString("dddd, MMMM dd")</p>
+    </div>
+
+    <!-- ── Stats ── -->
+    <div class="dash-stats">
+        <div class="dash-stat">
+            <div class="dash-stat-icon orders"><i class="bi bi-box-seam-fill"></i></div>
+            <div>
+                <div class="dash-stat-num">@Model.TotalOrders</div>
+                <div class="dash-stat-lbl">Orders</div>
+            </div>
+        </div>
+        <div class="dash-stat">
+            <div class="dash-stat-icon spent"><i class="bi bi-wallet2"></i></div>
+            <div>
+                <div class="dash-stat-num">৳@Model.TotalSpent.ToString("N0")</div>
+                <div class="dash-stat-lbl">Spent</div>
+            </div>
+        </div>
+        <div class="dash-stat">
+            <div class="dash-stat-icon points"><i class="bi bi-stars"></i></div>
+            <div>
+                <div class="dash-stat-num">0</div>
+                <div class="dash-stat-lbl">Points</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Recent Orders ── -->
+    <div class="dash-card">
+        <div class="dash-card-head">
+            <div class="title"><i class="bi bi-clock-history"></i> Recent Orders</div>
+            <a href="/orders" class="view-all">View All</a>
+        </div>
+        <div class="order-list">
+            @if (Model.RecentOrders.Any())
+            {
+                foreach (var order in Model.RecentOrders.Take(5))
+                {
+                    var statusClass = order.Status.ToString().ToLower();
+                    var items = order.OrderItems?.ToList() ?? new List<Sparkle.Domain.Orders.OrderItem>();
+                    var firstItem = items.FirstOrDefault();
+                    var itemCount = items.Sum(i => i.Quantity);
+                    var productSummary = itemCount > 0
+                        ? (items.Count == 1
+                            ? firstItem?.ProductName
+                            : firstItem?.ProductName + $" + {items.Count - 1} more")
+                        : "Order #" + order.Id;
+
+                    <a href="/orders/@order.Id" class="order-item">
+                        <div class="order-img-wrap">
+                            @if (!string.IsNullOrEmpty(firstItem?.ProductImage))
+                            {
+                                <img src="@firstItem.ProductImage" alt="@firstItem.ProductName" />
+                            }
+                            else
+                            {
+                                <div class="order-img-placeholder"><i class="bi bi-image"></i></div>
+                            }
+                        </div>
+                        <div class="order-info">
+                            <div class="order-products">@productSummary</div>
+                            <div class="order-meta">
+                                <span><i class="bi bi-calendar3"></i> @order.OrderDate.ToString("dd MMM yyyy")</span>
+                                <span><i class="bi bi-hash"></i> @order.OrderNumber</span>
+                            </div>
+                        </div>
+                        <div class="order-right">
+                            <div class="order-amt">৳@order.TotalAmount.ToString("N0")</div>
+                            <div class="status-pill @statusClass">@order.Status</div>
+                        </div>
+                    </a>
+                }
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-bag-x"></i>
+                    <p style="font-size: 11px;">No orders placed yet.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

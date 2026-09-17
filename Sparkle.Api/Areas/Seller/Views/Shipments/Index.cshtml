@@ -1,0 +1,304 @@
+@model List<Sparkle.Domain.Orders.Shipment>
+@{
+    ViewData["Title"] = "Manage Orders";
+    Layout = "_SellerLayout";
+    var statusFilter = ViewBag.StatusFilter as string ?? "Unshipped";
+}
+
+<div class="tw-w-full tw-px-2 tw-py-2 tw-overflow-x-hidden">
+    <!-- Header -->
+    <div class="tw-flex tw-justify-between tw-items-center tw-mb-6">
+        <div>
+            <h1 class="tw-text-2xl tw-font-bold tw-text-gray-800">Manage Orders</h1>
+            <nav class="tw-flex tw-text-sm tw-text-gray-500 tw-mt-1" aria-label="Breadcrumb">
+                <ol class="tw-inline-flex tw-items-center tw-space-x-1 md:tw-space-x-3">
+                    <li class="tw-inline-flex tw-items-center">Dashboard</li>
+                    <li>/</li>
+                    <li class="tw-inline-flex tw-items-center">Orders</li>
+                    <li>/</li>
+                    <li class="tw-inline-flex tw-items-center tw-text-orange-500" aria-current="page">Shipping</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="tw-flex tw-gap-3">
+            <button class="tw-px-4 tw-py-2 tw-bg-white tw-border tw-border-gray-300 tw-rounded-md tw-text-sm tw-font-medium tw-text-gray-700 hover:tw-bg-gray-50">
+                <i class="bi bi-download tw-mr-2"></i> Export Orders
+            </button>
+            <button class="tw-px-4 tw-py-2 tw-bg-white tw-border tw-border-gray-300 tw-rounded-md tw-text-sm tw-font-medium tw-text-gray-700 hover:tw-bg-gray-50">
+                <i class="bi bi-printer tw-mr-2"></i> Print Labels
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters & Tabs -->
+    <div class="tw-bg-white tw-rounded-lg tw-shadow-sm tw-mb-6">
+        <div class="tw-border-b tw-border-gray-200">
+            <nav class="tw-flex tw-space-x-8 tw-px-6 tw-overflow-x-auto" aria-label="Tabs">
+                <a href="@Url.Action("Index", new { status = "Pending" })" 
+                   class="@(statusFilter == "Pending" ? "tw-border-orange-500 tw-text-orange-600" : "tw-border-transparent tw-text-gray-500 hover:tw-text-gray-700 hover:tw-border-gray-300") tw-whitespace-nowrap tw-py-4 tw-px-1 tw-border-b-2 tw-font-medium tw-text-sm">
+                    Unshipped <span class="tw-bg-gray-100 tw-text-gray-600 tw-py-0.5 tw-px-2 tw-rounded-full tw-text-xs tw-ml-2">@ViewBag.UnshippedCount</span>
+                </a>
+                <a href="@Url.Action("Index", new { status = "Packed" })" 
+                   class="@(statusFilter == "Packed" ? "tw-border-orange-500 tw-text-orange-600" : "tw-border-transparent tw-text-gray-500 hover:tw-text-gray-700 hover:tw-border-gray-300") tw-whitespace-nowrap tw-py-4 tw-px-1 tw-border-b-2 tw-font-medium tw-text-sm">
+                    Packed <span class="tw-bg-gray-100 tw-text-gray-600 tw-py-0.5 tw-px-2 tw-rounded-full tw-text-xs tw-ml-2">@ViewBag.PackedCount</span>
+                </a>
+                <a href="@Url.Action("Index", new { status = "Shipped" })" 
+                   class="@(statusFilter == "Shipped" ? "tw-border-orange-500 tw-text-orange-600" : "tw-border-transparent tw-text-gray-500 hover:tw-text-gray-700 hover:tw-border-gray-300") tw-whitespace-nowrap tw-py-4 tw-px-1 tw-border-b-2 tw-font-medium tw-text-sm">
+                    Shipped <span class="tw-bg-gray-100 tw-text-gray-600 tw-py-0.5 tw-px-2 tw-rounded-full tw-text-xs tw-ml-2">@ViewBag.ShippedCount</span>
+                </a>
+                <a href="@Url.Action("Index", new { status = "Delivered" })" 
+                   class="@(statusFilter == "Delivered" ? "tw-border-orange-500 tw-text-orange-600" : "tw-border-transparent tw-text-gray-500 hover:tw-text-gray-700 hover:tw-border-gray-300") tw-whitespace-nowrap tw-py-4 tw-px-1 tw-border-b-2 tw-font-medium tw-text-sm">
+                    Delivered <span class="tw-bg-gray-100 tw-text-gray-600 tw-py-0.5 tw-px-2 tw-rounded-full tw-text-xs tw-ml-2">@ViewBag.DeliveredCount</span>
+                </a>
+                <a href="@Url.Action("Index", new { status = "Cancelled" })" 
+                   class="@(statusFilter == "Cancelled" ? "tw-border-orange-500 tw-text-orange-600" : "tw-border-transparent tw-text-gray-500 hover:tw-text-gray-700 hover:tw-border-gray-300") tw-whitespace-nowrap tw-py-4 tw-px-1 tw-border-b-2 tw-font-medium tw-text-sm">
+                    Cancelled <span class="tw-bg-gray-100 tw-text-gray-600 tw-py-0.5 tw-px-2 tw-rounded-full tw-text-xs tw-ml-2">@ViewBag.CancelledCount</span>
+                </a>
+            </nav>
+        </div>
+        
+        <!-- Search Bar -->
+        <form method="get" action="@Url.Action("Index")" class="tw-p-4 tw-bg-gray-50 tw-border-b tw-border-gray-200 tw-flex tw-gap-4 tw-flex-wrap md:tw-flex-nowrap">
+            <input type="hidden" name="status" value="@statusFilter" />
+            
+            <div class="tw-relative tw-flex-grow tw-max-w-md">
+                <input type="text" name="searchQuery" value="@ViewBag.SearchQuery" placeholder="Search by Order ID, Buyer Name, SKU..." class="tw-w-full tw-pl-10 tw-pr-4 tw-py-2 tw-rounded-md tw-border tw-border-gray-300 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-orange-500 focus:tw-border-transparent">
+                <div class="tw-absolute tw-left-3 tw-top-2.5 tw-text-gray-400">
+                    <i class="bi bi-search"></i>
+                </div>
+            </div>
+            
+            <div class="tw-flex tw-items-center tw-gap-2">
+                <input type="date" name="startDate" value="@ViewBag.StartDate" class="tw-rounded-md tw-border tw-border-gray-300 tw-px-3 tw-py-2 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-orange-500">
+                <span class="tw-text-gray-500">-</span>
+                <input type="date" name="endDate" value="@ViewBag.EndDate" class="tw-rounded-md tw-border tw-border-gray-300 tw-px-3 tw-py-2 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-orange-500">
+            </div>
+            
+            <button type="submit" class="tw-px-4 tw-py-2 tw-bg-orange-500 tw-text-white tw-rounded-md tw-font-medium hover:tw-bg-orange-600">Search</button>
+            <a href="@Url.Action("Index", new { status = statusFilter })" class="tw-px-4 tw-py-2 tw-bg-white tw-border tw-border-gray-300 tw-text-gray-700 tw-rounded-md tw-font-medium hover:tw-bg-gray-50">Reset</a>
+        </form>
+    </div>
+
+    <!-- Data Table -->
+    <div class="tw-bg-white tw-rounded-lg tw-shadow-sm tw-overflow-hidden">
+        <table class="tw-w-full tw-text-sm tw-text-left">
+            <thead class="tw-bg-gray-100 tw-text-gray-700 tw-uppercase tw-text-xs">
+                <tr>
+                    <th scope="col" class="tw-px-6 tw-py-3">Order Date</th>
+                    <th scope="col" class="tw-px-6 tw-py-3">Order Details</th>
+                    <th scope="col" class="tw-px-6 tw-py-3">Product Info</th>
+                    <th scope="col" class="tw-px-6 tw-py-3">Customer</th>
+                    <th scope="col" class="tw-px-6 tw-py-3">Status</th>
+                    <th scope="col" class="tw-px-6 tw-py-3 tw-text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody class="tw-divide-y tw-divide-gray-200">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var shipment in Model)
+                    {
+                        <tr class="hover:tw-bg-gray-50 tw-transition-colors">
+                            <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-align-top">
+                                <div class="tw-font-medium tw-text-gray-900">@shipment.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                <div class="tw-text-xs tw-text-gray-500">@shipment.CreatedAt.ToString("hh:mm tt")</div>
+                            </td>
+                            <td class="tw-px-6 tw-py-4 tw-align-top">
+                                <div class="tw-font-bold tw-text-blue-600 hover:tw-underline tw-cursor-pointer">@shipment.ShipmentNumber</div>
+                                <div class="tw-text-xs tw-text-gray-500 tw-mt-1">Order ID: @shipment.OrderId</div>
+                                <div class="tw-flex tw-gap-1 tw-mt-2">
+                                    <span class="tw-px-2 tw-py-0.5 tw-bg-gray-100 tw-text-gray-600 tw-rounded tw-text-xs">Std. Shipping</span>
+                                    <span class="tw-px-2 tw-py-0.5 tw-bg-green-100 tw-text-green-700 tw-rounded tw-text-xs">COD</span>
+                                </div>
+                            </td>
+                            <td class="tw-px-6 tw-py-4 tw-align-top">
+                                <div class="tw-space-y-2">
+                                    @foreach (var item in shipment.Items.Take(2))
+                                    {
+                                        <div class="tw-flex tw-gap-3">
+                                            <div class="tw-w-10 tw-h-10 tw-bg-gray-100 tw-rounded tw-overflow-hidden tw-flex-shrink-0">
+                                                <img src="@(item.OrderItem.ProductImage ?? "https://via.placeholder.com/40")" class="tw-w-full tw-h-full tw-object-cover" alt="Product">
+                                            </div>
+                                            <div>
+                                                <div class="tw-text-gray-900 tw-line-clamp-1" title="@item.ProductName">@item.ProductName</div>
+                                                <div class="tw-text-xs tw-text-gray-500">SKU: @item.ProductSKU | Qty: @item.Quantity</div>
+                                            </div>
+                                        </div>
+                                    }
+                                    @if(shipment.Items.Count > 2)
+                                    {
+                                        <div class="tw-text-xs tw-text-gray-500 tw-pl-14">+ @(shipment.Items.Count - 2) more items</div>
+                                    }
+                                </div>
+                            </td>
+                            <td class="tw-px-6 tw-py-4 tw-align-top">
+                                <div class="tw-font-medium tw-text-gray-900">@shipment.RecipientName</div>
+                                <div class="tw-text-gray-500 tw-mt-1">@shipment.ShippingAddress</div>
+                                <div class="tw-text-gray-500">@shipment.ShippingCity - @shipment.ShippingPostalCode</div>
+                                <div class="tw-text-blue-600 tw-text-xs tw-mt-1">Contact Buyer</div>
+                            </td>
+                            <td class="tw-px-6 tw-py-4 tw-align-top">
+                                <span class="tw-px-2.5 tw-py-0.5 tw-rounded-full tw-text-xs tw-font-medium 
+                                    @(shipment.Status == Sparkle.Domain.Orders.ShipmentStatus.Pending ? "tw-bg-yellow-100 tw-text-yellow-800" : 
+                                      shipment.Status == Sparkle.Domain.Orders.ShipmentStatus.Packed ? "tw-bg-orange-100 tw-text-orange-800" : 
+                                      shipment.Status == Sparkle.Domain.Orders.ShipmentStatus.Shipped ? "tw-bg-blue-100 tw-text-blue-800" : 
+                                      shipment.Status == Sparkle.Domain.Orders.ShipmentStatus.Delivered ? "tw-bg-green-100 tw-text-green-800" : "tw-bg-gray-100 tw-text-gray-800")">
+                                    @shipment.Status
+                                </span>
+                                @if (shipment.Status == Sparkle.Domain.Orders.ShipmentStatus.Pending)
+                                {
+                                    <div class="tw-text-xs tw-text-red-600 tw-mt-1 tw-font-medium">
+                                        Ship by: @shipment.CreatedAt.AddDays(2).ToString("MMM dd")
+                                    </div>
+                                }
+                            </td>
+                            <td class="tw-px-6 tw-py-4 tw-text-right tw-align-top">
+                                @if (shipment.Status == Sparkle.Domain.Orders.ShipmentStatus.Pending)
+                                {
+                                    <button onclick="toggleExpandRow('row-@shipment.Id')" class="tw-px-3 tw-py-1.5 tw-bg-orange-500 tw-text-white tw-text-xs tw-font-bold tw-rounded hover:tw-bg-orange-600 tw-transition-colors">
+                                        Confirm Shipment
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="tw-px-3 tw-py-1.5 tw-bg-white tw-border tw-border-gray-300 tw-text-gray-700 tw-text-xs tw-font-bold tw-rounded hover:tw-bg-gray-50">
+                                        Print Label
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+
+                        <!-- Expanded Row for Actions -->
+                        <tr id="row-@shipment.Id" class="tw-hidden tw-bg-orange-50">
+                            <td colspan="6" class="tw-p-6">
+                                <form asp-action="ConfirmShipment" method="post" class="tw-space-y-4">
+                                    <input type="hidden" name="shipmentId" value="@shipment.Id" />
+                                    <input type="hidden" name="orderId" value="@shipment.OrderId" />
+                                    <!-- Add item IDs hidden inputs -->
+                                    @foreach(var item in shipment.Items){
+                                        <input type="hidden" name="itemIds" value="@item.OrderItemId" />
+                                    }
+
+                                    <div class="tw-grid tw-grid-cols-3 tw-gap-6">
+                                        <!-- Package Details -->
+                                        <div class="tw-bg-white tw-p-4 tw-rounded tw-border tw-border-gray-200">
+                                            <h3 class="tw-text-sm tw-font-bold tw-text-gray-800 tw-mb-3">1. Package Details</h3>
+                                            <div class="tw-space-y-3">
+                                                <div>
+                                                    <label class="tw-block tw-text-xs tw-font-medium tw-text-gray-700 tw-mb-1">Package Type</label>
+                                                    <select name="packageType" class="tw-w-full tw-text-sm tw-border-gray-300 tw-rounded-md focus:tw-border-orange-500 focus:tw-ring-orange-500">
+                                                        <option value="Box">Box</option>
+                                                        <option value="Envelope">Envelope</option>
+                                                        <option value="Poly Bag">Poly Bag</option>
+                                                    </select>
+                                                </div>
+                                                <div class="tw-grid tw-grid-cols-2 tw-gap-2">
+                                                    <div>
+                                                        <label class="tw-block tw-text-xs tw-font-medium tw-text-gray-700 tw-mb-1">Weight</label>
+                                                        <div class="tw-relative">
+                                                            <input type="number" step="0.1" name="weight" required class="tw-w-full tw-text-sm tw-border-gray-300 tw-rounded-md tw-pr-8 focus:tw-border-orange-500 focus:tw-ring-orange-500" placeholder="0.0">
+                                                            <span class="tw-absolute tw-right-2 tw-top-2 tw-text-xs tw-text-gray-500">kg</span>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label class="tw-block tw-text-xs tw-font-medium tw-text-gray-700 tw-mb-1">No. of Boxes</label>
+                                                        <input type="number" name="numberOfBoxes" value="1" min="1" class="tw-w-full tw-text-sm tw-border-gray-300 tw-rounded-md focus:tw-border-orange-500 focus:tw-ring-orange-500">
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label class="tw-block tw-text-xs tw-font-medium tw-text-gray-700 tw-mb-1">Dimensions (L x W x H)</label>
+                                                    <div class="tw-flex tw-gap-2">
+                                                        <input type="number" name="length" placeholder="L" class="tw-w-full tw-text-sm tw-border-gray-300 tw-rounded-md">
+                                                        <input type="number" name="width" placeholder="W" class="tw-w-full tw-text-sm tw-border-gray-300 tw-rounded-md">
+                                                        <input type="number" name="height" placeholder="H" class="tw-w-full tw-text-sm tw-border-gray-300 tw-rounded-md">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Shipping Service -->
+                                        <div class="tw-bg-white tw-p-4 tw-rounded tw-border tw-border-gray-200">
+                                            <h3 class="tw-text-sm tw-font-bold tw-text-gray-800 tw-mb-3">2. Shipping Service</h3>
+                                            <div class="tw-space-y-3">
+                                                <div>
+                                                    <label class="tw-block tw-text-xs tw-font-medium tw-text-gray-700 tw-mb-1">Carrier</label>
+                                                    <select name="courierName" class="tw-w-full tw-text-sm tw-border-gray-300 tw-rounded-md focus:tw-border-orange-500 focus:tw-ring-orange-500">
+                                                        <option value="Pathao">Pathao Courier</option>
+                                                        <option value="Steadfast">Steadfast Courier</option>
+                                                        <option value="Redx">Redx Delivery</option>
+                                                        <option value="Sundarban">Sundarban Courier</option>
+                                                        <option value="SA Paribahan">SA Paribahan</option>
+                                                        <option value="Other">Other</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="tw-block tw-text-xs tw-font-medium tw-text-gray-700 tw-mb-1">Shipping Service</label>
+                                                    <select class="tw-w-full tw-text-sm tw-border-gray-300 tw-rounded-md focus:tw-border-orange-500 focus:tw-ring-orange-500">
+                                                        <option>Standard Delivery (2-3 Days)</option>
+                                                        <option>Next Day Delivery</option>
+                                                    </select>
+                                                    <div class="tw-mt-2 tw-text-xs tw-text-gray-500">
+                                                        Est. Cost: <span class="tw-font-bold tw-text-gray-800">৳ 120.00</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Confirmation -->
+                                        <div class="tw-bg-white tw-p-4 tw-rounded tw-border tw-border-gray-200">
+                                            <h3 class="tw-text-sm tw-font-bold tw-text-gray-800 tw-mb-3">3. Tracking & Confirm</h3>
+                                            <div class="tw-space-y-3">
+                                                <div>
+                                                    <label class="tw-block tw-text-xs tw-font-medium tw-text-gray-700 tw-mb-1">Tracking ID</label>
+                                                    <input type="text" name="trackingNumber" required placeholder="Enter Tracking Number" class="tw-w-full tw-text-sm tw-border-gray-300 tw-rounded-md focus:tw-border-orange-500 focus:tw-ring-orange-500">
+                                                </div>
+                                                <div class="tw-pt-4">
+                                                    <button type="submit" class="tw-w-full tw-py-2.5 tw-bg-orange-500 tw-text-white tw-font-bold tw-rounded hover:tw-bg-orange-600 tw-transition-colors tw-shadow-sm">
+                                                        Confirm Shipment
+                                                    </button>
+                                                    <button type="button" onclick="toggleExpandRow('row-@shipment.Id')" class="tw-w-full tw-mt-2 tw-py-2 tw-bg-transparent tw-text-gray-600 tw-font-medium hover:tw-text-gray-800 tw-text-sm">
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="tw-px-6 tw-py-8 tw-text-center tw-text-gray-500">
+                            <i class="bi bi-box-seam tw-text-4xl tw-mb-2 tw-block"></i>
+                            No shipments found in this category.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="tw-flex tw-justify-between tw-items-center tw-mt-4 tw-px-2">
+        <div class="tw-text-sm tw-text-gray-600">
+            Showing <span class="tw-font-medium">1</span> to <span class="tw-font-medium">20</span> of <span class="tw-font-medium">@ViewBag.TotalPages</span> results
+        </div>
+        <div class="tw-flex tw-gap-2">
+            <button class="tw-px-3 tw-py-1 tw-border tw-border-gray-300 tw-rounded hover:tw-bg-gray-50 disabled:tw-opacity-50" disabled>Previous</button>
+            <button class="tw-px-3 tw-py-1 tw-border tw-border-gray-300 tw-rounded hover:tw-bg-gray-50">Next</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleExpandRow(rowId) {
+        const row = document.getElementById(rowId);
+        if (row.classList.contains('tw-hidden')) {
+            row.classList.remove('tw-hidden');
+        } else {
+            row.classList.add('tw-hidden');
+        }
+    }
+</script>

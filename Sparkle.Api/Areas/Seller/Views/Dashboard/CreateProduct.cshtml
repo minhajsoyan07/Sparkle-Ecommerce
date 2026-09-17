@@ -1,0 +1,388 @@
+@model Sparkle.Domain.Catalog.Product
+@{
+    ViewData["Title"] = "Add Product";
+}
+
+<div class="tw-w-full tw-px-2 tw-py-2 tw-overflow-x-hidden">
+    <!-- Page Header -->
+    <div class="tw-flex tw-items-start tw-justify-between tw-mb-6">
+        <div>
+            <h1 class="tw-text-2xl tw-font-bold tw-text-slate-800">Add New Product</h1>
+            <p class="tw-text-sm tw-text-slate-500 tw-mt-1">Fill in the details below to list a new product in your store. All fields marked with <span class="tw-text-rose-500">*</span> are required.</p>
+        </div>
+        <a href="/Seller/Dashboard/Products" class="tw-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-bg-white tw-text-slate-600 tw-font-medium tw-text-sm tw-rounded-lg tw-border tw-border-slate-200 hover:tw-border-amber-400 tw-transition-colors">
+            <i class="bi bi-arrow-left"></i> Back to Products
+        </a>
+    </div>
+
+    <form asp-action="CreateProduct" method="post" enctype="multipart/form-data">
+        <div asp-validation-summary="ModelOnly" class="tw-hidden"></div>
+
+        <!-- Main Grid: 3 Columns -->
+        <div class="tw-grid tw-grid-cols-12 tw-gap-6">
+            
+            <!-- LEFT COLUMN: Product Info (8 cols) -->
+            <div class="tw-col-span-12 lg:tw-col-span-8 tw-space-y-6">
+                
+                <!-- Basic Information -->
+                <div class="tw-bg-white tw-rounded-xl tw-border tw-border-slate-200 tw-overflow-hidden">
+                    <div class="tw-bg-slate-50 tw-px-6 tw-py-4 tw-border-b tw-border-slate-200">
+                        <h3 class="tw-font-bold tw-text-slate-800 tw-flex tw-items-center tw-gap-2">
+                            <i class="bi bi-info-circle tw-text-amber-500"></i> Basic Information
+                        </h3>
+                        <p class="tw-text-xs tw-text-slate-500 tw-mt-1">Enter the product title and description that customers will see.</p>
+                    </div>
+                    <div class="tw-p-6 tw-space-y-5">
+                        <!-- Product Title -->
+                        <div>
+                            <label asp-for="Title" class="tw-block tw-text-sm tw-font-semibold tw-text-slate-700 tw-mb-2">
+                                Product Title <span class="tw-text-rose-500">*</span>
+                            </label>
+                            <input asp-for="Title" class="tw-w-full tw-px-4 tw-py-3 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm focus:tw-outline-none focus:tw-border-amber-400 focus:tw-ring-1 focus:tw-ring-amber-100" 
+                                   placeholder="e.g. Premium Cotton T-Shirt, Wireless Bluetooth Earbuds" />
+                            <p class="tw-text-xs tw-text-slate-400 tw-mt-1"><i class="bi bi-lightbulb"></i> Use a clear, descriptive title (50-80 characters works best)</p>
+                            <span asp-validation-for="Title" class="tw-text-rose-500 tw-text-xs tw-mt-1 tw-block"></span>
+                        </div>
+
+                        <!-- Short Description -->
+                        <div>
+                            <label asp-for="ShortDescription" class="tw-block tw-text-sm tw-font-semibold tw-text-slate-700 tw-mb-2">
+                                Short Description
+                            </label>
+                            <input asp-for="ShortDescription" class="tw-w-full tw-px-4 tw-py-3 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm focus:tw-outline-none focus:tw-border-amber-400 focus:tw-ring-1 focus:tw-ring-amber-100" 
+                                   placeholder="Brief summary shown in product listings (max 160 characters)" maxlength="160" />
+                            <p class="tw-text-xs tw-text-slate-400 tw-mt-1"><i class="bi bi-eye"></i> This appears in search results and product cards</p>
+                        </div>
+
+                        <!-- Full Description -->
+                        <div>
+                            <label asp-for="Description" class="tw-block tw-text-sm tw-font-semibold tw-text-slate-700 tw-mb-2">
+                                Full Description
+                            </label>
+                            <textarea asp-for="Description" rows="6" class="tw-w-full tw-px-4 tw-py-3 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm focus:tw-outline-none focus:tw-border-amber-400 focus:tw-ring-1 focus:tw-ring-amber-100" 
+                                      placeholder="Provide detailed product information including features, specifications, materials, care instructions, etc."></textarea>
+                            <p class="tw-text-xs tw-text-slate-400 tw-mt-1"><i class="bi bi-text-paragraph"></i> Detailed descriptions help customers make buying decisions</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Images -->
+                <div class="tw-bg-white tw-rounded-xl tw-border tw-border-slate-200 tw-overflow-hidden">
+                    <div class="tw-bg-slate-50 tw-px-6 tw-py-4 tw-border-b tw-border-slate-200">
+                        <h3 class="tw-font-bold tw-text-slate-800 tw-flex tw-items-center tw-gap-2">
+                            <i class="bi bi-images tw-text-amber-500"></i> Product Images
+                        </h3>
+                        <p class="tw-text-xs tw-text-slate-500 tw-mt-1">High-quality images increase sales. Add up to 10 photos.</p>
+                    </div>
+                    <div class="tw-p-6 tw-space-y-5">
+                        <!-- Upload Photos -->
+                        <div>
+                            <label class="tw-block tw-text-sm tw-font-semibold tw-text-slate-700 tw-mb-2">
+                                Upload from Computer
+                            </label>
+                            <div class="tw-border-2 tw-border-dashed tw-border-slate-200 tw-rounded-xl tw-p-6 tw-text-center tw-bg-slate-50/50 hover:tw-border-amber-300 tw-transition-colors">
+                                <i class="bi bi-cloud-arrow-up tw-text-4xl tw-text-slate-300 tw-mb-3"></i>
+                                <input name="ImageFiles" type="file" multiple accept="image/*" id="imageUpload"
+                                       class="tw-hidden" onchange="updateFileCount(this)" />
+                                <label for="imageUpload" class="tw-cursor-pointer">
+                                    <span class="tw-block tw-text-sm tw-font-medium tw-text-slate-600">Click to upload or drag and drop</span>
+                                    <span class="tw-block tw-text-xs tw-text-slate-400 tw-mt-1">PNG, JPG, WEBP up to 5MB each</span>
+                                </label>
+                                <p id="fileCount" class="tw-text-xs tw-text-amber-600 tw-font-medium tw-mt-2 tw-hidden"></p>
+                            </div>
+                        </div>
+
+                        <!-- Image URLs -->
+                        <div>
+                            <label class="tw-block tw-text-sm tw-font-semibold tw-text-slate-700 tw-mb-2">
+                                Or Add Image URLs
+                            </label>
+                            <div id="urlContainer" class="tw-space-y-3">
+                                <input name="ImageUrls" type="url" class="tw-w-full tw-px-4 tw-py-3 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm focus:tw-outline-none focus:tw-border-amber-400" 
+                                       placeholder="https://example.com/image.jpg" />
+                            </div>
+                            <button type="button" onclick="addUrlField()" class="tw-mt-3 tw-text-sm tw-font-medium tw-text-amber-600 hover:tw-text-amber-700 tw-flex tw-items-center tw-gap-1">
+                                <i class="bi bi-plus-circle"></i> Add another image URL
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Details (Optional) -->
+                <div class="tw-bg-white tw-rounded-xl tw-border tw-border-slate-200 tw-overflow-hidden">
+                    <div class="tw-bg-slate-50 tw-px-6 tw-py-4 tw-border-b tw-border-slate-200">
+                        <h3 class="tw-font-bold tw-text-slate-800 tw-flex tw-items-center tw-gap-2">
+                            <i class="bi bi-tags tw-text-amber-500"></i> Additional Details
+                        </h3>
+                        <p class="tw-text-xs tw-text-slate-500 tw-mt-1">Optional fields to provide more product information.</p>
+                    </div>
+                    <div class="tw-p-6">
+                        <div class="tw-grid tw-grid-cols-2 tw-gap-4">
+                            <!-- Brand -->
+                            <div>
+                                <label class="tw-block tw-text-sm tw-font-semibold tw-text-slate-700 tw-mb-2">Brand Name</label>
+                                <input type="text" name="BrandName" class="tw-w-full tw-px-4 tw-py-3 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm focus:tw-outline-none focus:tw-border-amber-400" 
+                                       placeholder="e.g. Nike, Samsung, Local Brand" />
+                            </div>
+                            <!-- SKU -->
+                            <div>
+                                <label class="tw-block tw-text-sm tw-font-semibold tw-text-slate-700 tw-mb-2">SKU / Product Code</label>
+                                <input type="text" name="Sku" class="tw-w-full tw-px-4 tw-py-3 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm focus:tw-outline-none focus:tw-border-amber-400" 
+                                       placeholder="e.g. SKU-12345 (auto-generated if empty)" />
+                            </div>
+                            <!-- Weight -->
+                            <div>
+                                <label class="tw-block tw-text-sm tw-font-semibold tw-text-slate-700 tw-mb-2">Weight (grams)</label>
+                                <input type="number" name="Weight" min="0" class="tw-w-full tw-px-4 tw-py-3 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm focus:tw-outline-none focus:tw-border-amber-400" 
+                                       placeholder="e.g. 500" />
+                            </div>
+                            <!-- Dimensions -->
+                            <div>
+                                <label class="tw-block tw-text-sm tw-font-semibold tw-text-slate-700 tw-mb-2">Dimensions (L×W×H cm)</label>
+                                <input type="text" name="Dimensions" class="tw-w-full tw-px-4 tw-py-3 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm focus:tw-outline-none focus:tw-border-amber-400" 
+                                       placeholder="e.g. 20×15×10" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Pricing & Settings (4 cols) -->
+            <div class="tw-col-span-12 lg:tw-col-span-4 tw-space-y-6">
+                
+                <!-- Pricing & Inventory -->
+                <div class="tw-bg-white tw-rounded-xl tw-border tw-border-slate-200 tw-overflow-hidden">
+                    <div class="tw-bg-gradient-to-r tw-from-amber-50 tw-to-orange-50 tw-px-6 tw-py-4 tw-border-b tw-border-slate-200">
+                        <h3 class="tw-font-bold tw-text-slate-800 tw-flex tw-items-center tw-gap-2">
+                            <i class="bi bi-currency-dollar tw-text-amber-500"></i> Pricing & Inventory
+                        </h3>
+                    </div>
+                    <div class="tw-p-6 tw-space-y-5">
+                        <!-- Price -->
+                        <div>
+                            <label class="tw-block tw-text-sm tw-font-semibold tw-text-slate-700 tw-mb-2">
+                                Selling Price <span class="tw-text-rose-500">*</span>
+                            </label>
+                            <div class="tw-relative">
+                                <span class="tw-absolute tw-left-4 tw-top-1/2 -tw-translate-y-1/2 tw-text-slate-500 tw-font-bold">৳</span>
+                                <input name="Price" type="number" min="0.01" step="0.01" required
+                                       class="tw-w-full tw-pl-10 tw-pr-4 tw-py-3 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm tw-font-bold focus:tw-outline-none focus:tw-border-amber-400" 
+                                       value="0.01" placeholder="0.00" />
+                            </div>
+                            <p class="tw-text-xs tw-text-slate-400 tw-mt-1">The price customers will pay (must be greater than 0)</p>
+                        </div>
+
+                        <!-- Compare Price -->
+                        <div>
+                            <label class="tw-block tw-text-sm tw-font-semibold tw-text-slate-700 tw-mb-2">
+                                Compare-at Price <span class="tw-text-slate-400 tw-font-normal">(Optional)</span>
+                            </label>
+                            <div class="tw-relative">
+                                <span class="tw-absolute tw-left-4 tw-top-1/2 -tw-translate-y-1/2 tw-text-slate-500 tw-font-bold">৳</span>
+                                <input name="ComparePrice" type="number" min="0" step="0.01"
+                                       class="tw-w-full tw-pl-10 tw-pr-4 tw-py-3 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm focus:tw-outline-none focus:tw-border-amber-400" 
+                                       placeholder="Original price (shows as strikethrough)" />
+                            </div>
+                            <p class="tw-text-xs tw-text-slate-400 tw-mt-1">Set higher to show discount (must be 0 or positive)</p>
+                        </div>
+
+                        <!-- Stock -->
+                        <div>
+                            <label class="tw-block tw-text-sm tw-font-semibold tw-text-slate-700 tw-mb-2">
+                                Stock Quantity <span class="tw-text-rose-500">*</span>
+                            </label>
+                            <input name="Stock" type="number" min="0" required
+                                   class="tw-w-full tw-px-4 tw-py-3 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm tw-font-bold focus:tw-outline-none focus:tw-border-amber-400" 
+                                   value="10" placeholder="How many units available?" />
+                            <p class="tw-text-xs tw-text-slate-400 tw-mt-1">Product will show "Out of Stock" when 0 (must be 0 or positive)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category -->
+                <div class="tw-bg-white tw-rounded-xl tw-border tw-border-slate-200 tw-overflow-hidden">
+                    <div class="tw-bg-slate-50 tw-px-6 tw-py-4 tw-border-b tw-border-slate-200">
+                        <h3 class="tw-font-bold tw-text-slate-800 tw-flex tw-items-center tw-gap-2">
+                            <i class="bi bi-folder tw-text-amber-500"></i> Category
+                        </h3>
+                    </div>
+                    <div class="tw-p-6">
+                        <label asp-for="CategoryId" class="tw-block tw-text-sm tw-font-semibold tw-text-slate-700 tw-mb-2">
+                            Product Category <span class="tw-text-rose-500">*</span>
+                        </label>
+                        <div class="tw-relative">
+                            <select asp-for="CategoryId" asp-items="ViewBag.Categories" required
+                                    class="tw-w-full tw-appearance-none tw-px-4 tw-py-3 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm focus:tw-outline-none focus:tw-border-amber-400 tw-pr-10">
+                                <option value="">Select a category...</option>
+                            </select>
+                            <i class="bi bi-chevron-down tw-absolute tw-right-4 tw-top-1/2 -tw-translate-y-1/2 tw-text-slate-400 tw-pointer-events-none"></i>
+                        </div>
+                        <p class="tw-text-xs tw-text-slate-400 tw-mt-1">Choose the best matching category</p>
+                        <span asp-validation-for="CategoryId" class="tw-text-rose-500 tw-text-xs tw-mt-1 tw-block"></span>
+                    </div>
+                </div>
+
+                <!-- Product Status -->
+                <div class="tw-bg-white tw-rounded-xl tw-border tw-border-slate-200 tw-overflow-hidden">
+                    <div class="tw-bg-slate-50 tw-px-6 tw-py-4 tw-border-b tw-border-slate-200">
+                        <h3 class="tw-font-bold tw-text-slate-800 tw-flex tw-items-center tw-gap-2">
+                            <i class="bi bi-toggle-on tw-text-amber-500"></i> Product Status
+                        </h3>
+                    </div>
+                    <div class="tw-p-6">
+                        <div class="tw-flex tw-items-center tw-justify-between tw-p-4 tw-bg-emerald-50 tw-rounded-lg tw-border tw-border-emerald-100">
+                            <div>
+                                <p class="tw-text-sm tw-font-semibold tw-text-emerald-700">Publish Immediately</p>
+                                <p class="tw-text-xs tw-text-emerald-600">Product will be visible to customers</p>
+                            </div>
+                            <input type="checkbox" name="IsActive" value="true" checked
+                                   class="tw-w-5 tw-h-5 tw-rounded tw-border-emerald-300 tw-text-emerald-500 focus:tw-ring-emerald-200" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="tw-sticky tw-top-4 tw-space-y-3">
+                    <button type="submit" class="tw-w-full tw-py-4 tw-bg-gradient-to-r tw-from-amber-500 tw-to-orange-500 tw-text-white tw-font-bold tw-rounded-xl hover:tw-shadow-lg hover:tw-shadow-amber-200 tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2">
+                        <i class="bi bi-check-circle"></i> Publish Product
+                    </button>
+                    <a href="/Seller/Dashboard/Products" class="tw-block tw-w-full tw-py-3 tw-text-center tw-text-slate-600 tw-font-medium tw-text-sm tw-bg-white tw-border tw-border-slate-200 tw-rounded-xl hover:tw-bg-slate-50 tw-transition-colors">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    function addUrlField() {
+        const container = document.getElementById('urlContainer');
+        const input = document.createElement('input');
+        input.name = 'ImageUrls';
+        input.type = 'url';
+        input.placeholder = 'https://example.com/image.jpg';
+        input.className = 'tw-w-full tw-px-4 tw-py-3 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm focus:tw-outline-none focus:tw-border-amber-400';
+        container.appendChild(input);
+    }
+
+    function updateFileCount(input) {
+        const count = input.files.length;
+        const countEl = document.getElementById('fileCount');
+        if (count > 0) {
+            countEl.textContent = `${count} file${count > 1 ? 's' : ''} selected`;
+            countEl.classList.remove('tw-hidden');
+        } else {
+            countEl.classList.add('tw-hidden');
+        }
+    }
+
+    const priceInput = document.querySelector('input[name="Price"]');
+    const stockInput = document.querySelector('input[name="Stock"]');
+    const comparePriceInput = document.querySelector('input[name="ComparePrice"]');
+
+    // Prevent negative price input in real-time
+    priceInput.addEventListener('input', function() {
+        let value = parseFloat(this.value) || 0;
+        if (value < 0.01) {
+            this.value = '';
+        }
+    });
+
+    priceInput.addEventListener('blur', function() {
+        if (!this.value || parseFloat(this.value) < 0.01) {
+            this.value = '0.01';
+        }
+    });
+
+    // Prevent negative price on paste
+    priceInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text');
+        const value = parseFloat(text);
+        if (!isNaN(value) && value >= 0.01) {
+            this.value = value.toFixed(2);
+        } else {
+            this.value = '0.01';
+        }
+    });
+
+    // Prevent negative stock input in real-time
+    stockInput.addEventListener('input', function() {
+        let value = parseInt(this.value) || 0;
+        if (value < 0) {
+            this.value = '';
+        }
+    });
+
+    stockInput.addEventListener('blur', function() {
+        if (!this.value || parseInt(this.value) < 0) {
+            this.value = '0';
+        }
+    });
+
+    // Prevent negative stock on paste
+    stockInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text');
+        const value = parseInt(text);
+        if (!isNaN(value) && value >= 0) {
+            this.value = value;
+        } else {
+            this.value = '0';
+        }
+    });
+
+    // Prevent negative compare price input in real-time
+    if (comparePriceInput) {
+        comparePriceInput.addEventListener('input', function() {
+            let value = parseFloat(this.value) || 0;
+            if (value < 0) {
+                this.value = '';
+            }
+        });
+
+        comparePriceInput.addEventListener('blur', function() {
+            if (!this.value || parseFloat(this.value) < 0) {
+                this.value = '';
+            }
+        });
+
+        comparePriceInput.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            const value = parseFloat(text);
+            if (!isNaN(value) && value >= 0) {
+                this.value = value.toFixed(2);
+            } else {
+                this.value = '';
+            }
+        });
+    }
+
+    // Validate form on submit
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const price = parseFloat(priceInput.value);
+        const stock = parseInt(stockInput.value);
+
+        if (!priceInput.value || isNaN(price) || price <= 0) {
+            e.preventDefault();
+            alert('❌ Price must be greater than 0!');
+            priceInput.focus();
+            return false;
+        }
+
+        if (!stockInput.value || isNaN(stock) || stock < 0) {
+            e.preventDefault();
+            alert('❌ Stock quantity cannot be negative!');
+            stockInput.focus();
+            return false;
+        }
+
+        return true;
+    });
+</script>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

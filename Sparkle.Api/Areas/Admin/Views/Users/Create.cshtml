@@ -1,0 +1,123 @@
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title">Create New User</h2>
+        <p class="text-muted">Manually create a new user account with assigned role.</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<form asp-action="Create" method="post">
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="content-card mb-4">
+                <h5 class="card-title fw-bold mb-3 border-bottom pb-2">Account Information</h5>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" name="Name" class="form-control" required placeholder="John Doe" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email Address *</label>
+                        <input type="email" name="Email" class="form-control" required placeholder="user@example.com" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Phone Number *</label>
+                        <input type="tel" name="PhoneNumber" class="form-control" required placeholder="+880 1700-000000" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Username *</label>
+                        <input type="text" name="UserName" class="form-control" required placeholder="johndoe" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Password *</label>
+                    <input type="password" name="Password" class="form-control" required placeholder="Enter secure password" />
+                    <small class="text-muted">Minimum 6 characters</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Confirm Password *</label>
+                    <input type="password" name="ConfirmPassword" class="form-control" required placeholder="Re-enter password" />
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="content-card mb-4">
+                <h5 class="card-title fw-bold mb-3 border-bottom pb-2">User Role</h5>
+                
+                <div class="mb-3">
+                    <label class="form-label">Select Role *</label>
+                    <select name="Role" class="form-select" required>
+                        <option value="">Choose a role...</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Seller">Seller</option>
+                        <option value="Customer" selected>Customer</option>
+                    </select>
+                    <small class="text-muted">Admin: Full access | Seller: Seller panel | Customer: Shopping only</small>
+                </div>
+
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-shield-check me-2"></i>
+                    <small>User will be created with <strong>email verified</strong> status.</small>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <h5 class="card-title fw-bold mb-3 border-bottom pb-2">Additional Settings</h5>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="EmailConfirmed" checked id="emailConfirmed" />
+                    <label class="form-check-label" for="emailConfirmed">
+                        Email Verified
+                    </label>
+                </div>
+
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="PhoneNumberConfirmed" checked id="phoneConfirmed" />
+                    <label class="form-check-label" for="phoneConfirmed">
+                        Phone Verified
+                    </label>
+                </div>
+
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="TwoFactorEnabled" id="twoFactor" />
+                    <label class="form-check-label" for="twoFactor">
+                        Two-Factor Authentication
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-card mt-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-2"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-check-lg me-2"></i> Create User
+            </button>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,78 @@
+@model Sparkle.Domain.Sellers.Seller
+@{
+    ViewData["Title"] = "Complete Store Setup";
+    Layout = "_SellerLayout"; // Explicitly expecting seller layout, or null if they don't have access to logic yet. 
+    // Actually, _SellerLayout might assume the seller entity exists for navigation items?
+    // Let's check _SellerLayout quickly. If it depends on ViewBag.Seller, it might crash.
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0"><i class="bi bi-shop me-2"></i>Complete Your Store Setup</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Please complete your store profile to access the dashboard.
+                    </div>
+                    
+                    <form asp-action="Setup" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        
+                        <div class="form-floating mb-3">
+                            <input asp-for="ShopName" class="form-control" placeholder="My Shop" />
+                            <label asp-for="ShopName">Shop Name / Brand Name</label>
+                            <span asp-validation-for="ShopName" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="MobileNumber" class="form-control" placeholder="017..." />
+                            <label asp-for="MobileNumber">Business Contact Number</label>
+                            <span asp-validation-for="MobileNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <textarea asp-for="BusinessAddress" class="form-control" placeholder="Address" style="height: 100px"></textarea>
+                            <label asp-for="BusinessAddress">Business Address</label>
+                            <span asp-validation-for="BusinessAddress" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="City" class="form-control" placeholder="Dhaka" />
+                                    <label asp-for="City">City</label>
+                                    <span asp-validation-for="City" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="District" class="form-control" placeholder="District" />
+                                    <label asp-for="District">District</label>
+                                    <span asp-validation-for="District" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                         <div class="form-floating mb-4">
+                            <textarea asp-for="ShopDescription" class="form-control" placeholder="Description" style="height: 100px"></textarea>
+                            <label asp-for="ShopDescription">Store Description (Optional)</label>
+                            <span asp-validation-for="ShopDescription" class="text-danger"></span>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 btn-lg">
+                            <i class="bi bi-check-circle-fill me-2"></i> Create Store Profile
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,275 @@
+@model Sparkle.Domain.Reviews.ProductReview
+@{
+    ViewData["Title"] = "Review Details";
+    Layout = "~/Areas/Seller/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .review-detail-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    .detail-header {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        padding: 1.5rem;
+    }
+    .rating-large {
+        display: flex;
+        gap: 0.25rem;
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .rating-large .star {
+        color: white;
+    }
+    .rating-large .star.empty {
+        opacity: 0.4;
+    }
+    .detail-body {
+        padding: 1.5rem;
+    }
+    .product-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+    }
+    .product-card img {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+    .review-section {
+        margin-bottom: 1.5rem;
+    }
+    .review-section-title {
+        font-size: 0.85rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    .review-images-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.75rem;
+    }
+    .review-images-grid img {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    .detailed-ratings {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+    .detailed-rating-item {
+        text-align: center;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 8px;
+    }
+    .detailed-rating-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f59e0b;
+    }
+    .detailed-rating-label {
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+    .response-form {
+        background: #f0fdf4;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #bbf7d0;
+    }
+    .existing-response {
+        background: #f0fdf4;
+        border-left: 4px solid #10b981;
+        padding: 1rem;
+        border-radius: 0 8px 8px 0;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to Reviews
+    </a>
+</div>
+
+<div class="review-detail-card">
+    <div class="detail-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <div class="rating-large">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <i class="bi bi-star-fill star @(i <= Model.Rating ? "" : "empty")"></i>
+                    }
+                </div>
+                <h5 class="mb-1">@(Model.Title ?? "No Title")</h5>
+                <p class="mb-0 opacity-75">
+                    by @(Model.User?.FullName ?? "Customer") • @Model.ReviewDate.ToString("MMMM d, yyyy")
+                </p>
+            </div>
+            @if (Model.IsVerifiedPurchase)
+            {
+                <span class="badge bg-white text-success">
+                    <i class="bi bi-patch-check-fill me-1"></i>Verified Purchase
+                </span>
+            }
+        </div>
+    </div>
+    
+    <div class="detail-body">
+        @if (Model.Product != null)
+        {
+            <div class="product-card">
+                @if (Model.Product.Images?.Any() == true)
+                {
+                    <img src="@Model.Product.Images.First().Url" alt="@Model.Product.Title" />
+                }
+                else
+                {
+                    <div style="width:80px;height:80px;background:#e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-box text-muted" style="font-size:2rem;"></i>
+                    </div>
+                }
+                <div>
+                    <h6 class="mb-1">@Model.Product.Title</h6>
+                    <p class="text-muted mb-0">Product ID: @Model.ProductId</p>
+                    @if (Model.OrderItem?.Order != null)
+                    {
+                        <small class="text-muted">
+                            Order #@Model.OrderItem.Order.OrderNumber • @Model.PurchaseDate?.ToString("MMM d, yyyy")
+                        </small>
+                    }
+                </div>
+            </div>
+        }
+        
+        <div class="review-section">
+            <div class="review-section-title">Review</div>
+            <p style="font-size: 1rem; line-height: 1.7; color: #1e293b;">
+                @(string.IsNullOrEmpty(Model.Comment) ? "No comment provided." : Model.Comment)
+            </p>
+        </div>
+        
+        @if (Model.QualityRating.HasValue || Model.ValueForMoneyRating.HasValue || Model.AccuracyRating.HasValue)
+        {
+            <div class="review-section">
+                <div class="review-section-title">Detailed Ratings</div>
+                <div class="detailed-ratings">
+                    @if (Model.QualityRating.HasValue)
+                    {
+                        <div class="detailed-rating-item">
+                            <div class="detailed-rating-value">@Model.QualityRating/5</div>
+                            <div class="detailed-rating-label">Quality</div>
+                        </div>
+                    }
+                    @if (Model.ValueForMoneyRating.HasValue)
+                    {
+                        <div class="detailed-rating-item">
+                            <div class="detailed-rating-value">@Model.ValueForMoneyRating/5</div>
+                            <div class="detailed-rating-label">Value for Money</div>
+                        </div>
+                    }
+                    @if (Model.AccuracyRating.HasValue)
+                    {
+                        <div class="detailed-rating-item">
+                            <div class="detailed-rating-value">@Model.AccuracyRating/5</div>
+                            <div class="detailed-rating-label">Accuracy</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        
+        @if (Model.Images?.Any() == true)
+        {
+            <div class="review-section">
+                <div class="review-section-title">Customer Photos</div>
+                <div class="review-images-grid">
+                    @foreach (var img in Model.Images)
+                    {
+                        <img src="@img.ImageUrl" alt="Review photo" />
+                    }
+                </div>
+            </div>
+        }
+        
+        <hr class="my-4">
+        
+        <div class="review-section">
+            <div class="review-section-title">
+                <i class="bi bi-reply me-1"></i>Your Response
+            </div>
+            
+            @if (!string.IsNullOrEmpty(Model.SellerResponse))
+            {
+                <div class="existing-response mb-3">
+                    <p class="mb-2">@Model.SellerResponse</p>
+                    <small class="text-muted">
+                        Responded on @Model.SellerResponseDate?.ToString("MMMM d, yyyy")
+                    </small>
+                </div>
+                
+                <form asp-action="DeleteResponse" method="post" class="d-inline">
+                    <input type="hidden" name="reviewId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-outline-danger btn-sm" 
+                            onclick="return confirm('Delete your response?')">
+                        <i class="bi bi-trash me-1"></i>Delete Response
+                    </button>
+                </form>
+            }
+            
+            <div class="response-form mt-3">
+                <form asp-action="Respond" method="post">
+                    <input type="hidden" name="reviewId" value="@Model.Id" />
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            @(string.IsNullOrEmpty(Model.SellerResponse) ? "Write a Response" : "Update Your Response")
+                        </label>
+                        <textarea name="response" class="form-control" rows="4" 
+                                  placeholder="Thank the customer for their feedback or address their concerns...">@Model.SellerResponse</textarea>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            A thoughtful response shows you care about customer satisfaction
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-send me-1"></i>
+                        @(string.IsNullOrEmpty(Model.SellerResponse) ? "Submit Response" : "Update Response")
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <hr class="my-4">
+        
+        <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 0.85rem;">
+            <div>
+                <i class="bi bi-hand-thumbs-up me-1"></i>@Model.HelpfulCount found helpful
+                <span class="mx-2">•</span>
+                <i class="bi bi-hand-thumbs-down me-1"></i>@Model.NotHelpfulCount not helpful
+            </div>
+            @if (Model.ReportCount > 0)
+            {
+                <div class="text-warning">
+                    <i class="bi bi-flag me-1"></i>@Model.ReportCount reports
+                </div>
+            }
+        </div>
+    </div>
+</div>

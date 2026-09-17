@@ -1,0 +1,118 @@
+@model Sparkle.Api.Controllers.ProfileController.SecurityViewModel
+@{
+    ViewData["Title"] = "Security";
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<div class="tw-bg-white tw-rounded-2xl tw-border tw-border-slate-100 tw-overflow-hidden tw-shadow-sm">
+    <!-- Header -->
+    <div class="tw-px-6 tw-py-5 tw-border-b tw-border-slate-50 tw-bg-white">
+        <h6 class="tw-font-bold tw-text-slate-900 tw-text-base tw-mb-1 tw-flex tw-items-center tw-gap-2">
+            <i class="bi bi-shield-lock tw-text-orange-500"></i> Security Settings
+        </h6>
+        <p class="tw-text-[11px] tw-text-slate-500 tw-mb-0">Secure your account with two-factor authentication and strong passwords</p>
+    </div>
+
+    <div class="tw-divide-y tw-divide-slate-50">
+        <!-- Email Section -->
+        <div class="tw-p-6 tw-transition-all hover:tw-bg-slate-50/30">
+            <div class="tw-flex tw-justify-between tw-items-center tw-gap-4">
+                <div class="tw-flex tw-gap-4 tw-items-start">
+                    <div class="tw-w-10 tw-h-10 tw-rounded-xl tw-bg-blue-50 tw-text-blue-600 tw-flex tw-items-center tw-justify-center tw-text-lg tw-flex-shrink-0">
+                        <i class="bi bi-envelope"></i>
+                    </div>
+                    <div>
+                        <div class="tw-text-[10px] tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-wider tw-mb-0.5">Primary Email</div>
+                        <div class="tw-text-sm tw-font-bold tw-text-slate-900">@Model.Email</div>
+                        <div class="tw-text-[11px] tw-text-slate-500 tw-mt-0.5">Used for account recovery and notifications</div>
+                    </div>
+                </div>
+                
+                @if (Model.EmailConfirmed)
+                {
+                    <div class="tw-flex tw-items-center tw-gap-1.5 tw-px-3 tw-py-1 tw-bg-emerald-50 tw-text-emerald-700 tw-rounded-full tw-border tw-border-emerald-100">
+                        <i class="bi bi-patch-check-fill tw-text-xs"></i>
+                        <span class="tw-text-[10px] tw-font-bold">Verified</span>
+                    </div>
+                }
+                else
+                {
+                    <button class="tw-flex tw-items-center tw-gap-1.5 tw-px-3 tw-py-1 tw-bg-orange-50 tw-text-orange-700 tw-rounded-full tw-border tw-border-orange-100 hover:tw-bg-orange-100 tw-transition-all">
+                        <i class="bi bi-exclamation-circle-fill tw-text-xs"></i>
+                        <span class="tw-text-[10px] tw-font-bold">Verify Now</span>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Password Section -->
+        <div class="tw-p-6 tw-transition-all hover:tw-bg-slate-50/30">
+            <div class="tw-flex tw-justify-between tw-items-center tw-gap-4">
+                <div class="tw-flex tw-gap-4 tw-items-start">
+                    <div class="tw-w-10 tw-h-10 tw-rounded-xl tw-bg-orange-50 tw-text-orange-600 tw-flex tw-items-center tw-justify-center tw-text-lg tw-flex-shrink-0">
+                        <i class="bi bi-key"></i>
+                    </div>
+                    <div>
+                        <div class="tw-text-[10px] tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-wider tw-mb-0.5">Account Password</div>
+                        <div class="tw-text-sm tw-font-bold tw-text-slate-900 tw-tracking-widest">•••••••••••••</div>
+                        <div class="tw-text-[11px] tw-text-slate-500 tw-mt-0.5">
+                            @if (Model.HasPassword) { <span>Strong password active</span> } else { <span class="tw-text-orange-600">No password set</span> }
+                        </div>
+                    </div>
+                </div>
+                
+                <a href="/auth/change-password" class="tw-bg-white tw-text-slate-700 tw-px-4 tw-py-2 tw-rounded-xl tw-text-xs tw-font-bold tw-border tw-border-slate-200 hover:tw-bg-slate-50 hover:tw-border-slate-300 tw-transition-all tw-no-underline tw-shadow-sm">
+                    Update Password
+                </a>
+            </div>
+        </div>
+
+        <!-- Two-Factor Auth -->
+        <div class="tw-p-6 tw-transition-all hover:tw-bg-slate-50/30">
+            <div class="tw-flex tw-justify-between tw-items-center tw-gap-4">
+                <div class="tw-flex tw-gap-4 tw-items-start">
+                    <div class="tw-w-10 tw-h-10 tw-rounded-xl tw-bg-purple-50 tw-text-purple-600 tw-flex tw-items-center tw-justify-center tw-text-lg tw-flex-shrink-0">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <div>
+                        <div class="tw-text-[10px] tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-wider tw-mb-0.5">2FA Authentication</div>
+                        <div class="tw-text-sm tw-font-bold tw-text-slate-900">Secure Account Access</div>
+                        <div class="tw-text-[11px] tw-text-slate-500 tw-mt-0.5">Requires a verification code when you sign in</div>
+                    </div>
+                </div>
+                
+                <div class="tw-flex tw-items-center tw-gap-4">
+                    @if (!Model.TwoFactorEnabled) {
+                        <span class="tw-bg-slate-100 tw-text-slate-500 tw-px-2 tw-py-0.5 tw-rounded tw-text-[9px] tw-font-bold tw-uppercase">Soon</span>
+                    }
+                    <label class="tw-relative tw-inline-flex tw-items-center tw-cursor-not-allowed">
+                        <input type="checkbox" class="tw-sr-only tw-peer" disabled @(Model.TwoFactorEnabled ? "checked" : "")>
+                        <div class="tw-w-10 tw-h-5 tw-bg-slate-200 tw-rounded-full peer peer-checked:tw-after:tw-translate-x-full peer-checked:tw-after:tw-border-white tw-after:tw-content-[''] tw-after:tw-absolute tw-after:tw-top-[2px] tw-after:tw-left-[2px] tw-after:tw-bg-white tw-after:tw-border-gray-300 tw-after:tw-border tw-after:tw-rounded-full tw-after:tw-h-4 tw-after:tw-w-4 tw-after:tw-transition-all peer-checked:tw-bg-orange-500 tw-opacity-50"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="tw-p-6 tw-bg-red-50/20">
+            <div class="tw-flex tw-justify-between tw-items-center tw-gap-4">
+                <div class="tw-flex tw-gap-4 tw-items-start">
+                    <div class="tw-w-10 tw-h-10 tw-rounded-xl tw-bg-red-50 tw-text-red-500 tw-flex tw-items-center tw-justify-center tw-text-lg tw-flex-shrink-0">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <div class="tw-text-[10px] tw-font-bold tw-text-red-500 tw-uppercase tw-tracking-wider tw-mb-0.5">Danger Zone</div>
+                        <div class="tw-text-sm tw-font-bold tw-text-slate-900">Delete Account</div>
+                        <div class="tw-text-[11px] tw-text-slate-500 tw-mt-0.5">Permanently delete your account and data</div>
+                    </div>
+                </div>
+                
+                <form asp-action="DeleteAccount" asp-controller="Profile" method="post" class="tw-m-0">
+                    <button type="submit" onclick="return confirm('Permanently delete account? This cannot be undone.');" class="tw-bg-white tw-text-red-500 tw-px-4 tw-py-2 tw-rounded-xl tw-text-xs tw-font-bold tw-border tw-border-red-100 hover:tw-bg-red-50 hover:tw-border-red-200 tw-transition-all tw-shadow-sm">
+                        Deactivate
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

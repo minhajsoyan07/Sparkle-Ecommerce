@@ -1,0 +1,482 @@
+@model Sparkle.Domain.Catalog.Product
+
+@{
+    ViewData["Title"] = "Edit Product";
+    Layout = "~/Areas/Seller/Views/Shared/_SellerLayout.cshtml";
+}
+
+<style>
+    :root {
+        --primary: #f97316;
+        --primary-dark: #ea580c;
+        --success: #22c55e;
+        --danger: #ef4444;
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-500: #64748b;
+        --slate-700: #334155;
+        --slate-800: #1e293b;
+    }
+
+    .page-wrapper {
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--slate-800);
+        margin: 0;
+    }
+
+    .page-subtitle {
+        font-size: 0.9rem;
+        color: var(--slate-500);
+        margin: 4px 0 0;
+    }
+
+    .back-link {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .back-link:hover {
+        color: var(--primary-dark);
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 24px;
+        width: 100%;
+    }
+
+    @@media (max-width: 900px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .form-card {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid var(--slate-100);
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+    .form-section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--slate-800);
+        margin: 0 0 20px;
+    }
+
+    .form-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--slate-500);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-label .required {
+        color: var(--primary);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid var(--slate-200);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        color: var(--slate-700);
+        background: var(--slate-50);
+        transition: all 0.15s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid var(--slate-200);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        color: var(--slate-700);
+        background: var(--slate-50);
+        cursor: pointer;
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+    }
+
+    .price-input-group {
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--slate-200);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--slate-50);
+    }
+
+    .price-input-group:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+    }
+
+    .price-prefix {
+        padding: 12px 14px;
+        background: var(--slate-100);
+        color: var(--slate-600);
+        font-weight: 600;
+        font-size: 0.9rem;
+        border-right: 1px solid var(--slate-200);
+    }
+
+    .price-input-group input {
+        flex: 1;
+        border: none;
+        padding: 12px 14px;
+        font-size: 0.9rem;
+        background: transparent;
+    }
+
+    .price-input-group input:focus {
+        outline: none;
+    }
+
+    .image-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .image-item {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid var(--slate-200);
+    }
+
+    .image-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .upload-area {
+        border: 2px dashed var(--slate-200);
+        border-radius: 8px;
+        padding: 16px;
+        background: var(--slate-50);
+        text-align: center;
+    }
+
+    .upload-area:hover {
+        border-color: var(--primary);
+        background: rgba(249, 115, 22, 0.05);
+    }
+
+    .upload-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: #fff;
+        border: 1px solid var(--primary);
+        border-radius: 8px;
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+
+    .upload-btn:hover {
+        background: var(--primary);
+        color: #fff;
+    }
+
+    .upload-hint {
+        font-size: 0.8rem;
+        color: var(--slate-500);
+        margin-top: 8px;
+    }
+
+    .status-toggle {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background: var(--slate-50);
+        border-radius: 8px;
+    }
+
+    .status-toggle input[type="checkbox"] {
+        width: 40px;
+        height: 22px;
+        accent-color: var(--success);
+    }
+
+    .status-toggle-label {
+        font-weight: 600;
+        color: var(--slate-700);
+    }
+
+    .status-toggle-hint {
+        font-size: 0.8rem;
+        color: var(--slate-500);
+        margin: 4px 0 0;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+
+    .btn-discard {
+        padding: 12px 24px;
+        background: #fff;
+        border: 1px solid var(--slate-200);
+        border-radius: 8px;
+        color: var(--slate-600);
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-discard:hover {
+        background: var(--slate-50);
+        color: var(--slate-700);
+    }
+
+    .btn-save {
+        padding: 12px 24px;
+        background: var(--success);
+        border: none;
+        border-radius: 8px;
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+
+    .btn-save:hover {
+        background: #16a34a;
+    }
+
+    .mb-20 { margin-bottom: 20px; }
+    .mb-16 { margin-bottom: 16px; }
+</style>
+
+<!-- Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Edit Product</h1>
+        <p class="page-subtitle">Update your product listing details</p>
+    </div>
+    <a asp-action="Index" class="back-link">
+        <i class="bi bi-arrow-left"></i> Back to Inventory
+    </a>
+</div>
+
+    <form asp-action="Edit" enctype="multipart/form-data">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="CreatedAt" />
+        <input type="hidden" asp-for="SellerId" />
+        <input type="hidden" asp-for="Slug" />
+
+        <div class="form-grid">
+            <!-- Left Column -->
+            <div class="left-column">
+                <!-- Basic Information -->
+                <div class="form-card">
+                    <h2 class="form-section-title">Basic Information</h2>
+                    
+                    <div class="mb-20">
+                        <label asp-for="Title" class="form-label">Product Title <span class="required">*</span></label>
+                        <input asp-for="Title" class="form-control" placeholder="e.g. Premium Cotton T-Shirt" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-20">
+                        <label asp-for="ShortDescription" class="form-label">Short Description</label>
+                        <textarea asp-for="ShortDescription" class="form-control" rows="2" placeholder="Brief summary for list views..."></textarea>
+                        <span asp-validation-for="ShortDescription" class="text-danger small"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Description" class="form-label">Full Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="6" placeholder="Complete product details, features, specifications..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Media -->
+                <div class="form-card">
+                    <h2 class="form-section-title">Media</h2>
+                    
+                    @if (Model.Images != null && Model.Images.Any())
+                    {
+                        <div class="mb-16">
+                            <label class="form-label">Current Photos</label>
+                            <div class="image-gallery">
+                                @foreach (var img in Model.Images.OrderBy(i => i.SortOrder))
+                                {
+                                    <div class="image-item">
+                                        <img src="@img.Url" alt="Product image" />
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div>
+                        <label class="form-label">Add New Photos</label>
+                        <div class="upload-area">
+                            <label class="upload-btn">
+                                <i class="bi bi-cloud-upload"></i> Choose files
+                                <input type="file" name="newImages" multiple accept="image/*" style="display: none;" id="imageInput" />
+                            </label>
+                            <span id="fileCount" style="margin-left: 12px; color: var(--slate-500);">No file chosen</span>
+                        </div>
+                        <p class="upload-hint">New images will be added to existing ones</p>
+                    </div>
+                </div>
+
+                <!-- Specifications -->
+                <div class="form-card">
+                    <h2 class="form-section-title">Specifications</h2>
+                    
+                    <div class="mb-20">
+                        <label asp-for="Weight" class="form-label">Weight</label>
+                        <input asp-for="Weight" class="form-control" placeholder="e.g. 500g" />
+                        <span asp-validation-for="Weight" class="text-danger small"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Dimensions" class="form-label">Dimensions</label>
+                        <input asp-for="Dimensions" class="form-control" placeholder="e.g. 30 x 20 x 10 cm" />
+                        <span asp-validation-for="Dimensions" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="right-column">
+                <!-- Pricing & Inventory -->
+                <div class="form-card">
+                    <h2 class="form-section-title">Pricing & Inventory</h2>
+                    
+                    <div class="mb-20">
+                        <label asp-for="BasePrice" class="form-label">Price (৳) <span class="required">*</span></label>
+                        <div class="price-input-group">
+                            <span class="price-prefix">৳</span>
+                            <input asp-for="BasePrice" type="number" step="0.01" min="0" placeholder="0" />
+                        </div>
+                        <span asp-validation-for="BasePrice" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-20">
+                        <label asp-for="DiscountPercent" class="form-label">Discount %</label>
+                        <input asp-for="DiscountPercent" type="number" step="1" min="0" max="100" class="form-control" placeholder="0" />
+                        <span asp-validation-for="DiscountPercent" class="text-danger small"></span>
+                    </div>
+
+                    @{
+                        var totalStock = Model.Variants?.Sum(v => v.Stock) ?? 0;
+                        var isSimple = Model.Variants?.Count <= 1;
+                    }
+                    <div>
+                        <label class="form-label">Update Stock @(isSimple ? "" : "(Total)")</label>
+                        <input name="stockUpdate" type="number" min="0" class="form-control" value="@totalStock" />
+                        @if (!isSimple)
+                        {
+                            <p class="upload-hint">Updating stock here will only work for products with a single variant. Use the Inventory page for multi-variant products.</p>
+                        }
+                    </div>
+                </div>
+
+                <!-- Organization -->
+                <div class="form-card">
+                    <h2 class="form-section-title">Organization</h2>
+                    
+                    <div>
+                        <label asp-for="CategoryId" class="form-label">Category <span class="required">*</span></label>
+                        <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories">
+                            <option value="">Select Category</option>
+                        </select>
+                        <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="form-card">
+                    <h2 class="form-section-title">Status</h2>
+                    
+                    <div class="status-toggle">
+                        <input type="checkbox" asp-for="IsActive" />
+                        <div>
+                            <div class="status-toggle-label">Active Listing</div>
+                            <p class="status-toggle-hint">Inactive products are hidden from your store</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a asp-action="Index" class="btn-discard">Discard</a>
+                    <button type="submit" class="btn-save">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+<script>
+    document.getElementById('imageInput')?.addEventListener('change', function() {
+        const count = this.files.length;
+        document.getElementById('fileCount').textContent = count > 0 
+            ? count + ' file(s) selected' 
+            : 'No file chosen';
+    });
+</script>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

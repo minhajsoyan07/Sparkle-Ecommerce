@@ -1,0 +1,173 @@
+@model List<Sparkle.Domain.Catalog.Category>
+@{
+    ViewData["Title"] = "Manage Categories";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var searchQuery = ViewBag.SearchQuery as string;
+    var productCounts = ViewBag.ProductCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
+}
+
+<link rel="stylesheet" href="~/css/admin/categories.css" asp-append-version="true" />
+
+<div class="content-header" style="margin-bottom: 2rem;">
+    <div>
+        <h2 class="content-title mb-2">Categories</h2>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">Manage product categories, images, and hierarchy.</p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-primary" style="padding: 0.6rem 1.5rem;">
+            <i class="bi bi-plus-lg me-2"></i> Add Category
+        </a>
+    </div>
+</div>
+
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <form method="get" class="d-flex gap-2 flex-grow-1" style="max-width: 500px;">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" name="q" class="form-control border-start-0" placeholder="Search categories..." value="@searchQuery">
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+        
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light text-dark border px-3 py-2">
+                <i class="bi bi-tags me-1"></i> @Model.Count Categories
+            </span>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="categories-table">
+            <thead>
+                <tr>
+                    <th style="width: 100px;">Visual</th>
+                    <th style="width: 30%;">Category</th>
+                    <th style="width: 25%;">Slug</th>
+                    <th style="width: 10%;">Products</th>
+                    <th style="width: 10%;">Order</th>
+                    <th style="width: 10%;">Status</th>
+                    <th class="text-end" style="width: 15%;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    foreach (var category in Model)
+                    {
+                        var productCount = productCounts.ContainsKey(category.Id) ? productCounts[category.Id] : 0;
+                        <tr data-category-id="@category.Id" class="category-row">
+                            <td>
+                                <div class="category-visual" style="position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background-color: #f5f5f5; border-radius: 8px; overflow: hidden; border: 1px solid #ddd;">
+                                    @if (!string.IsNullOrEmpty(category.ImageUrl))
+                                    {
+                                        <a href="@category.ImageUrl" data-lightbox="category-images" data-title="@category.Name" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                                            <img src="@category.ImageUrl" alt="@category.Name" class="category-image" style="max-width: 100%; max-height: 100%; object-fit: contain; padding: 4px;" title="Click to view full image" />
+                                        </a>
+                                    }
+                                    else if (!string.IsNullOrEmpty(category.Icon))
+                                    {
+                                        <div class="category-icon-wrapper" style="font-size: 2rem; color: #007bff;">
+                                            <i class="bi @category.Icon"></i>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="category-icon-wrapper default" style="font-size: 2rem; color: #ccc;">
+                                            <i class="bi bi-folder"></i>
+                                        </div>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                <div class="category-info">
+                                    <div class="category-name fw-bold">@category.Name</div>
+                                    @if (!string.IsNullOrEmpty(category.Description))
+                                    {
+                                        <div class="category-description">@category.Description</div>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                <code class="category-slug">@category.Slug</code>
+                            </td>
+                            <td>
+                                @if (productCount > 0)
+                                {
+                                    <span class="badge bg-primary-subtle text-primary" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
+                                        <i class="bi bi-box-seam me-1"></i> @productCount
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary" style="font-size: 0.85rem;">@category.DisplayOrder</span>
+                            </td>
+                            <td>
+                                @if (category.IsActive)
+                                {
+                                    <span class="badge bg-success-subtle text-success">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Active
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-subtle text-warning">
+                                        <i class="bi bi-pause-circle-fill me-1"></i> Inactive
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="action-buttons">
+                                    <a asp-action="Edit" asp-route-id="@category.Id" class="btn btn-sm btn-outline-primary" title="Edit Category">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@category.Id" method="post" style="display:inline;" 
+                                          onsubmit="return confirm('Are you sure you want to delete @category.Name? This will remove all products from this category.');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Category">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-tags display-3 text-muted mb-3 d-block opacity-25"></i>
+                                <h5 class="text-muted mb-2">No Categories Found</h5>
+                                <p class="text-muted mb-3">
+                                    @if (!string.IsNullOrEmpty(searchQuery))
+                                    {
+                                        <span>No categories match your search criteria.</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Get started by creating your first product category.</span>
+                                    }
+                                </p>
+                                @if (string.IsNullOrEmpty(searchQuery))
+                                {
+                                    <a asp-action="Create" class="btn btn-primary">
+                                        <i class="bi bi-plus-lg me-2"></i> Create First Category
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="~/js/admin/categories.js" asp-append-version="true"></script>

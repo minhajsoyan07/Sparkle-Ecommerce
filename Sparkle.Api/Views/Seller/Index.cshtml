@@ -1,0 +1,479 @@
+@using Sparkle.Domain.Sellers
+@using Sparkle.Domain.Catalog
+@model Seller
+@{
+    ViewData["Title"] = $"{Model.ShopName} - Store Details";
+    var products = ViewBag.Products as List<Product> ?? new List<Product>();
+    var totalStock = products.Sum(p => p.Variants?.Sum(v => v.Stock) ?? 0);
+    var totalReviews = products.Sum(p => p.TotalReviews);
+    var avgRating = products.Any()
+        ? products.Average(p => p.AverageRating > 0 ? (double)p.AverageRating : (double)Model.Rating)
+        : (double)Model.Rating;
+    var cityDistrict = string.Join(", ", new[] { Model.City, Model.District }.Where(x => !string.IsNullOrWhiteSpace(x)));
+    var location = !string.IsNullOrWhiteSpace(cityDistrict) ? cityDistrict : Model.Country;
+    var logoText = string.IsNullOrWhiteSpace(Model.ShopName) ? "S" : Model.ShopName.Substring(0, 1).ToUpper();
+}
+
+<style>
+    body {
+        background-color: #f1f5f9;
+    }
+
+    .seller-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .card-custom {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+    }
+
+    .card-header-custom {
+        padding: 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        background: transparent;
+    }
+
+    .info-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        color: #1e293b;
+        font-weight: 500;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .shop-avatar-lg {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        flex: 0 0 auto;
+    }
+
+    .shop-avatar-lg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .status-badge {
+        padding: 0.35em 0.8em;
+        font-size: 0.85em;
+        font-weight: 600;
+        border-radius: 9999px;
+        text-transform: capitalize;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .status-approved {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .metric-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #f8fafc;
+        padding: 1rem;
+    }
+
+    .metric-value {
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 800;
+        line-height: 1.1;
+    }
+
+    .metric-label {
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: 0.25rem;
+    }
+
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .table-custom th,
+    .table thead th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        background: #f8fafc;
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        white-space: nowrap;
+    }
+
+    .table-custom td,
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .product-thumb {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+    }
+
+    .text-xxs {
+        font-size: 0.72rem;
+    }
+
+    .policy-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem;
+    }
+
+    @@media (max-width: 767px) {
+        .seller-container {
+            padding: 0.75rem;
+        }
+
+        .card-body.p-4,
+        .card-header-custom {
+            padding: 1rem !important;
+        }
+
+        .shop-avatar-lg {
+            width: 64px;
+            height: 64px;
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<div class="seller-container">
+    <div class="card-custom mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-4">
+                <div class="d-flex gap-4">
+                    <div class="shop-avatar-lg">
+                        @if (!string.IsNullOrWhiteSpace(Model.StoreLogo))
+                        {
+                            <img src="@Model.StoreLogo" alt="@Model.ShopName logo" />
+                        }
+                        else if (!string.IsNullOrWhiteSpace(Model.LogoUrl))
+                        {
+                            <img src="@Model.LogoUrl" alt="@Model.ShopName logo" />
+                        }
+                        else
+                        {
+                            @logoText
+                        }
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center flex-wrap gap-3 mb-1">
+                            <h1 class="h3 fw-bold mb-0 text-dark">@Model.ShopName</h1>
+                            <span class="status-badge status-approved">
+                                <i class="bi bi-check-circle-fill me-1"></i> Approved Seller
+                            </span>
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center gap-3 text-secondary mt-2">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-calendar-event me-2 text-muted"></i>
+                                <span>Joined @Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-geo-alt me-2 text-muted"></i>
+                                <span>@location</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-truck me-2 text-muted"></i>
+                                <span>@(Model.Type == SellerType.City ? "Platform pickup available" : "Seller drop to hub")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="#inventory" class="btn btn-primary btn-action text-white">
+                        <i class="bi bi-basket3"></i> View Inventory
+                    </a>
+                    <a href="/search?sellerId=@Model.Id" class="btn btn-outline-secondary btn-action">
+                        <i class="bi bi-box-arrow-up-right"></i> Browse Products
+                    </a>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-4">
+                <div class="col-6 col-lg-3">
+                    <div class="metric-card">
+                        <div class="metric-value">@avgRating.ToString("0.0")</div>
+                        <div class="metric-label">Rating</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="metric-card">
+                        <div class="metric-value">@products.Count</div>
+                        <div class="metric-label">Products</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="metric-card">
+                        <div class="metric-value">@(Model.TotalSales > 0 ? Model.TotalSales.ToString("N0") : totalReviews.ToString("N0"))</div>
+                        <div class="metric-label">@(Model.TotalSales > 0 ? "Sales" : "Reviews")</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="metric-card">
+                        <div class="metric-value">@(totalStock > 0 ? totalStock.ToString("N0") : "Live")</div>
+                        <div class="metric-label">@(totalStock > 0 ? "In Stock" : "Status")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card-custom mb-4">
+                <div class="card-header-custom">
+                    <h5 class="fw-bold mb-0 text-dark">About Shop</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-secondary mb-0" style="line-height: 1.7;">
+                        @(Model.ShopDescription ?? "No description provided.")
+                    </p>
+                </div>
+            </div>
+
+            <div class="card-custom" id="inventory">
+                <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="fw-bold mb-0 text-dark">Inventory Overview</h5>
+                    <span class="badge bg-light text-secondary rounded-pill px-3 py-2 border">@products.Count items</span>
+                </div>
+
+                <div class="table-responsive">
+                    @if (products.Any())
+                    {
+                        <table class="table align-middle mb-0 table-custom">
+                            <thead>
+                                <tr>
+                                    <th class="ps-3">Product</th>
+                                    <th>Category</th>
+                                    <th class="text-end">Price</th>
+                                    <th class="text-center">Stock</th>
+                                    <th class="text-center">Rating</th>
+                                    <th class="text-end pe-3">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var product in products)
+                                {
+                                    var imageUrl = product.Images?.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url;
+                                    var stock = product.Variants?.Sum(v => v.Stock) ?? 0;
+                                    var hasStockTracking = product.Variants?.Any() == true;
+                                    <tr>
+                                        <td class="ps-3 py-2">
+                                            <div class="d-flex align-items-center">
+                                                <div class="position-relative me-3">
+                                                    @if (!string.IsNullOrWhiteSpace(imageUrl))
+                                                    {
+                                                        <img src="@imageUrl" class="rounded border product-thumb" alt="@product.Title" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="rounded bg-light border d-flex align-items-center justify-content-center text-muted product-thumb">
+                                                            <i class="bi bi-image"></i>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                <div class="d-flex flex-column justify-content-center">
+                                                    <h6 class="mb-0 text-sm fw-bold text-dark text-truncate" style="max-width: 260px;">@product.Title</h6>
+                                                    <div class="text-xs text-secondary mt-0">
+                                                        <span>@product.CreatedAt.ToString("MMM dd, yyyy - h:mm tt")</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-2">
+                                            <span class="text-xs fw-bold text-secondary">
+                                                @(product.Category?.Name ?? "Uncategorized")
+                                            </span>
+                                        </td>
+                                        <td class="py-2 text-end">
+                                            <span class="text-sm fw-bold text-dark">&#2547;@product.Price.ToString("N0")</span>
+                                            @if (product.DiscountPercent.HasValue && product.DiscountPercent.Value > 0)
+                                            {
+                                                <div class="text-xxs text-success fw-bold">@product.DiscountPercent.Value.ToString("0")% off</div>
+                                            }
+                                        </td>
+                                        <td class="py-2 text-center">
+                                            @if (!hasStockTracking)
+                                            {
+                                                <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 text-xxs border border-success-subtle">Available</span>
+                                            }
+                                            else if (stock > 0)
+                                            {
+                                                <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 text-xxs border border-success-subtle">@stock in stock</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 text-xxs border border-secondary-subtle">Out of stock</span>
+                                            }
+                                        </td>
+                                        <td class="py-2 text-center">
+                                            <span class="text-sm fw-bold text-dark">
+                                                <i class="bi bi-star-fill text-warning me-1"></i>@product.AverageRating.ToString("0.0")
+                                            </span>
+                                            <div class="text-xxs text-secondary">@product.TotalReviews reviews</div>
+                                        </td>
+                                        <td class="py-2 text-end pe-3">
+                                            <a href="/Home/Product/@product.Id" class="btn btn-icon btn-sm btn-light text-primary border shadow-sm" title="View product">
+                                                <i class="bi bi-box-arrow-up-right"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="p-5 text-center text-muted">
+                            <i class="bi bi-basket3 display-6 mb-3 d-block text-secondary opacity-25"></i>
+                            <p class="mb-0">No products available in this shop.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card-custom mb-4">
+                <div class="card-header-custom">
+                    <h5 class="fw-bold mb-0 text-dark">Store Information</h5>
+                </div>
+                <div class="card-body p-4 d-flex flex-column gap-4">
+                    <div>
+                        <div class="info-label">Mobile Number</div>
+                        <div class="info-value d-flex align-items-center gap-2">
+                            <i class="bi bi-phone text-primary"></i>
+                            @(!string.IsNullOrWhiteSpace(Model.MobileNumber) ? Model.MobileNumber : "Not provided")
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="info-label">Email Address</div>
+                        <div class="info-value d-flex align-items-center gap-2">
+                            <i class="bi bi-envelope text-primary"></i>
+                            @if (!string.IsNullOrWhiteSpace(Model.Email))
+                            {
+                                <a href="mailto:@Model.Email" class="text-decoration-none text-dark">@Model.Email</a>
+                            }
+                            else
+                            {
+                                <span class="text-muted fst-italic">Not provided</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="info-label">Business Address</div>
+                        <div class="info-value d-flex align-items-start gap-2">
+                            <i class="bi bi-building text-primary mt-1"></i>
+                            <span>
+                                @if (!string.IsNullOrWhiteSpace(Model.BusinessAddress))
+                                {
+                                    @Model.BusinessAddress
+                                    <br />
+                                    @location
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">Address not provided</span>
+                                }
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-custom mb-4">
+                <div class="card-header-custom">
+                    <h5 class="fw-bold mb-0 text-dark">Fulfillment</h5>
+                </div>
+                <div class="card-body p-4 d-flex flex-column gap-3">
+                    <div class="policy-box">
+                        <div class="info-label">Seller Type</div>
+                        <div class="info-value">@(Model.Type == SellerType.City ? "City seller - platform pickup available" : "Remote seller - drops to nearest hub")</div>
+                    </div>
+                    <div class="policy-box">
+                        <div class="info-label">Processing Time</div>
+                        <div class="info-value">@(Model.ProcessingTime ?? "1-3 business days")</div>
+                    </div>
+                    <div class="policy-box">
+                        <div class="info-label">Shipping Policy</div>
+                        <div class="info-value">@(Model.ShippingPolicy ?? "Delivery handled through Sparkle logistics partners.")</div>
+                    </div>
+                    <div class="policy-box">
+                        <div class="info-label">Return Policy</div>
+                        <div class="info-value">@(Model.ReturnPolicy ?? "Standard Sparkle return policy applies.")</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-custom">
+                <div class="card-header-custom">
+                    <h5 class="fw-bold mb-0 text-dark">Verification</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center text-success me-3 fw-bold fs-5 shadow-sm" style="width: 56px; height: 56px; background-color: #dcfce7;">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">Approved by Sparkle</div>
+                            <div class="small text-muted">Store is active and visible to customers</div>
+                        </div>
+                    </div>
+                    <div class="info-label">NID Verification</div>
+                    <div class="info-value">
+                        @(Model.IsNidVerified ? "Verified" : "Not verified")
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

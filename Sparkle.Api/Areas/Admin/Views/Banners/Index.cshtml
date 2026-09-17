@@ -1,0 +1,160 @@
+@model IEnumerable<Sparkle.Domain.Marketing.Banner>
+@{
+    ViewData["Title"] = "Banner Management";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var searchQuery = ViewBag.Search as string;
+}
+
+<div class="content-header" style="margin-bottom: 2rem;">
+    <div>
+        <h2 class="content-title mb-2">Banner Management</h2>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">Manage promotional banners, hero images, and campaign graphics.</p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-primary" style="padding: 0.6rem 1.5rem;">
+            <i class="bi bi-plus-lg me-2"></i> Add Banner
+        </a>
+    </div>
+</div>
+
+<form method="get" class="content-card mb-4">
+    <div class="d-flex flex-wrap gap-3 align-items-center">
+        <div class="input-group" style="max-width: 300px;">
+            <span class="input-group-text bg-light border-end-0">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" name="search" class="form-control border-start-0" placeholder="Search banners..." value="@searchQuery">
+        </div>
+        <select name="type" class="form-select" style="width: 160px;">
+            <option value="">All Types</option>
+            <option value="Hero" selected='@(ViewBag.Type == "Hero" ? "selected" : null)'>Hero</option>
+            <option value="Sidebar">Sidebar</option>
+            <option value="TopStrip">Top Strip</option>
+            <option value="CategoryBanner">Category</option>
+            <option value="ProductBanner">Product</option>
+        </select>
+        <select name="position" class="form-select" style="width: 160px;">
+            <option value="">All Positions</option>
+            <option value="Homepage">Homepage</option>
+            <option value="CategoryPage">Category Page</option>
+            <option value="ProductPage">Product Page</option>
+            <option value="CheckoutPage">Checkout</option>
+        </select>
+        <select name="isActive" class="form-select" style="width: 140px;">
+            <option value="">All Status</option>
+            <option value="True">Active</option>
+            <option value="False">Inactive</option>
+        </select>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-filter me-1"></i> Filter
+        </button>
+        @if (!string.IsNullOrEmpty(searchQuery) || !string.IsNullOrEmpty(ViewBag.Type as string) || !string.IsNullOrEmpty(ViewBag.Position as string) || ViewBag.IsActive.HasValue)
+        {
+            <a href="/Admin/Banners" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle me-1"></i> Clear
+            </a>
+        }
+    </div>
+</form>
+
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <span class="badge bg-light text-dark border px-3 py-2">
+            <i class="bi bi-images me-1"></i> @Model.Count() Banners
+        </span>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="row g-4">
+            @foreach (var banner in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border h-100" style="border-radius: 12px; overflow: hidden;">
+                        <div class="banner-preview" style="height: 180px; background: @(banner.BackgroundColor ?? "#f8f9fa"); position: relative;">
+                            @if (!string.IsNullOrEmpty(banner.ImageUrlDesktop))
+                            {
+                                <img src="@banner.ImageUrlDesktop" alt="@banner.Title" style="width: 100%; height: 100%; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                                    <i class="bi bi-image fs-1"></i>
+                                </div>
+                            }
+                            <div class="position-absolute top-0 end-0 m-2">
+                                @if (banner.IsActive)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle me-1"></i> Active
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-pause-circle me-1"></i> Inactive
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-body py-3">
+                            <h6 class="card-title mb-1 fw-bold">@banner.Title</h6>
+                            <p class="text-muted small mb-2">
+                                <span class="badge bg-light text-dark me-1">@banner.BannerType</span>
+                                <span class="badge bg-light text-dark">@banner.Position</span>
+                            </p>
+                            @if (!string.IsNullOrEmpty(banner.SubTitle))
+                            {
+                                <p class="card-text small text-muted mb-2">@banner.SubTitle</p>
+                            }
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted small">
+                                    <i class="bi bi-arrow-up me-1"></i> Order: @banner.DisplayOrder
+                                </span>
+                                <div>
+                                    <form asp-action="ToggleStatus" asp-route-id="@banner.Id" method="post" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-outline-@(banner.IsActive ? "warning" : "success")" title="@(banner.IsActive ? "Deactivate" : "Activate")">
+                                            <i class="bi bi-@(banner.IsActive ? "pause-circle" : "play-circle")"></i>
+                                        </button>
+                                    </form>
+                                    <a asp-action="Edit" asp-route-id="@banner.Id" class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@banner.Id" method="post" style="display:inline;"
+                                          onsubmit="return confirm('Are you sure you want to delete this banner?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-images display-3 text-muted mb-3 d-block opacity-25"></i>
+            <h5 class="text-muted mb-2">No Banners Found</h5>
+            <p class="text-muted mb-3">
+                @if (!string.IsNullOrEmpty(searchQuery))
+                {
+                    <span>No banners match your search criteria.</span>
+                }
+                else
+                {
+                    <span>Get started by creating your first promotional banner.</span>
+                }
+            </p>
+            @if (string.IsNullOrEmpty(searchQuery))
+            {
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-2"></i> Create First Banner
+                </a>
+            }
+        </div>
+    }
+</div>

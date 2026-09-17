@@ -1,0 +1,159 @@
+@model Sparkle.Domain.Reviews.ProductReview
+@{
+    ViewData["Title"] = "Review Edit History";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .history-page { max-width: 800px; }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #64748b;
+        text-decoration: none;
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin-bottom: 1.25rem;
+        transition: color 0.2s;
+    }
+    .back-link:hover { color: #0f172a; }
+    .back-link i { font-size: 0.9rem; }
+
+    .history-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .history-header {
+        padding: 16px 22px;
+        border-bottom: 1px solid #f1f5f9;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .history-header h6 { font-size: 0.85rem; font-weight: 700; color: #1e293b; margin: 0; }
+
+    .history-entry {
+        padding: 18px 22px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .history-entry:last-child { border-bottom: none; }
+
+    .entry-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .entry-badge {
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        background: #eef2ff;
+        color: #6366f1;
+    }
+    .entry-date {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+
+    .diff-block {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+        font-size: 0.82rem;
+    }
+    .diff-row {
+        padding: 8px 14px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        gap: 10px;
+    }
+    .diff-row:last-child { border-bottom: none; }
+    .diff-row.old { background: #fef2f2; color: #991b1b; }
+    .diff-row.new { background: #f0fdf4; color: #166534; }
+    .diff-prefix {
+        font-weight: 700;
+        width: 16px;
+        flex-shrink: 0;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #94a3b8;
+    }
+    .empty-state i { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
+</style>
+
+<div class="history-page">
+    <a href="@Url.Action("Details", new { id = Model.Id })" class="back-link">
+        <i class="bi bi-arrow-left"></i> Back to Review #@Model.Id
+    </a>
+
+    <div class="history-card">
+        <div class="history-header">
+            <i class="bi bi-clock-history" style="color: #6366f1;"></i>
+            <h6>Edit History — @(Model.User?.FullName ?? "Unknown") · @Model.Product?.Title</h6>
+        </div>
+
+        @if (Model.EditHistory?.Any() == true)
+        {
+            @foreach (var entry in Model.EditHistory.OrderByDescending(h => h.EditedAt))
+            {
+                <div class="history-entry">
+                    <div class="entry-meta">
+                        <span class="entry-badge">@entry.EditType</span>
+                        <span class="entry-date">@entry.EditedAt.ToString("dd MMM yyyy, hh:mm tt")</span>
+                    </div>
+
+                    @if (entry.PreviousRating.HasValue && entry.NewRating.HasValue && entry.PreviousRating != entry.NewRating)
+                    {
+                        <div class="mb-2" style="font-size: 0.82rem;">
+                            <span class="text-muted">Rating:</span>
+                            <span style="color: #991b1b; text-decoration: line-through;">@entry.PreviousRating★</span>
+                            <i class="bi bi-arrow-right mx-1" style="font-size: 0.7rem; color: #94a3b8;"></i>
+                            <span style="color: #166534; font-weight: 600;">@entry.NewRating★</span>
+                        </div>
+                    }
+
+                    @if (entry.PreviousComment != entry.NewComment)
+                    {
+                        <div class="diff-block">
+                            @if (!string.IsNullOrWhiteSpace(entry.PreviousComment))
+                            {
+                                <div class="diff-row old">
+                                    <span class="diff-prefix">−</span>
+                                    <span>@entry.PreviousComment</span>
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(entry.NewComment))
+                            {
+                                <div class="diff-row new">
+                                    <span class="diff-prefix">+</span>
+                                    <span>@entry.NewComment</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="bi bi-clock-history"></i>
+                <p>No edit history recorded for this review.</p>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,396 @@
+/* ============================================
+ SPARKLE HOMEPAGE - EXACT REFERENCE MATCH
+  100% Copy of Reference Screenshots
+   ============================================ */
+
+/* COMPLETE RESET - Remove All Previous Styling */
+* {
+    box-sizing: border-box;
+}
+
+.card-base,
+.flash-card-inner,
+.sparkle-product-card,
+.trending-card,
+.category-card,
+.featured-product-card,
+.recommendation-card {
+    all: initial;
+    box-sizing: border-box;
+}
+
+/* ============================================
+   EXACT CARD DESIGN FROM SCREENSHOTS
+   ============================================ */
+
+/* Base Card Structure */
+.flash-card-inner,
+.trending-card,
+.recommendation-card,
+.sparkle-product-card {
+    background: #fff;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    transition: all 0.2s ease;
+    display: block;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+
+/* Hover Effect - Subtle Shadow Only (No Lift) */
+.flash-card-inner:hover,
+.trending-card:hover,
+.recommendation-card:hover,
+.sparkle-product-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    /* slightly deeper shadow instead of lift */
+}
+
+/* ============================================
+ IMAGE SECTION - EXACT DIMENSIONS
+   ============================================ */
+
+.flash-img-container,
+.trending-image-wrapper,
+.recommendation-image,
+.spc-img-container,
+.card-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.flash-img,
+.trending-image-wrapper img,
+.recommendation-image img,
+.spc-img,
+.card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+
+/* ============================================
+   BADGES - EXACT POSITIONING
+   ============================================ */
+
+/* Out of Stock Badge - Centered */
+.out-of-stock-badge,
+.stock-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 8px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 4px;
+    z-index: 10;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* Discount Badge - Top Left */
+.discount-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #dc3545;
+    color: white;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 3px;
+    z-index: 5;
+}
+
+/* ============================================
+   CARD BODY - ZERO EXTRA PADDING
+   ============================================ */
+
+.flash-card-body,
+.trending-card-body,
+.recommendation-card-body,
+.spc-details,
+.card-body-content {
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* ============================================
+   PRODUCT TITLE - EXACT TYPOGRAPHY
+   ============================================ */
+
+.flash-title,
+.trending-product-title,
+.recommendation-title,
+.spc-title,
+.card-title {
+    font-size: 14px;
+    font-weight: 400;
+    color: #212529;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 40px;
+    margin: 0 0 6px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ============================================
+   PRICE SECTION - EXACT MATCH
+   ============================================ */
+
+.flash-prices,
+.trending-price,
+.recommendation-price,
+.spc-price-row,
+.card-price-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 4px 0;
+}
+
+.current-price,
+.spc-price,
+.card-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ff6a00;
+    font-family: 'SolaimanLipi', -apple-system, sans-serif;
+}
+
+.old-price,
+.spc-old-price,
+.card-old-price {
+    font-size: 14px;
+    color: #999;
+    text-decoration: line-through;
+    font-weight: 400;
+}
+
+/* ============================================
+   RATING STARS - EXACT MATCH
+   ============================================ */
+
+.flash-rating,
+.trending-rating,
+.spc-rating-area,
+.card-rating-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #666;
+    margin: 4px 0;
+}
+
+.rating-stars,
+.card-star,
+.spc-star-icon {
+    display: none;
+}
+
+.rating-count {
+    color: #999;
+    font-size: 12px;
+}
+
+/* ============================================
+   ADD TO CART BUTTON - EXACT MATCH
+   ============================================ */
+
+.btn-flash-add,
+.add-to-cart-btn,
+.card-action-btn,
+.btn-quick-add {
+    background: linear-gradient(135deg, #ff6a00 0%, #ff8c42 100%);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: auto;
+    box-shadow: 0 2px 6px rgba(255, 106, 0, 0.25);
+}
+
+.btn-flash-add:hover,
+.add-to-cart-btn:hover,
+.card-action-btn:hover {
+    background: linear-gradient(135deg, #ff5500 0%, #ff7700 100%);
+    box-shadow: 0 4px 12px rgba(255, 106, 0, 0.35);
+}
+
+.btn-flash-add i,
+.add-to-cart-btn i,
+.card-action-btn i {
+    font-size: 16px;
+}
+
+/* ============================================
+   SECTION LAYOUTS - EXACT SPACING
+   ============================================ */
+
+.flash-sale-section,
+.trending-section,
+.recommendation-section,
+.homepage-section {
+    padding: 0;
+    margin: 20px 0;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 0;
+}
+
+.section-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #212529;
+    margin: 0;
+}
+
+.section-badge {
+    background: #ff6a00;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* ============================================
+   GRID LAYOUTS - EXACT FROM SCREENSHOT
+   ============================================ */
+
+.flash-grid,
+.trending-grid,
+.recommendation-grid,
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+    gap: 18px;
+    padding: 0;
+    margin: 0;
+}
+
+/* ============================================
+   HIDE OUT OF STOCK - REQUIREMENT
+   ============================================ */
+
+.flash-card-inner[data-stock="0"],
+.trending-card[data-stock="0"],
+.recommendation-card[data-stock="0"],
+.sparkle-product-card[data-stock="0"],
+[data-in-stock="false"],
+.out-of-stock-hidden {
+    display: none !important;
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS - EXACT MATCH
+   ============================================ */
+
+/* Mobile (2 columns) */
+@media (max-width: 768px) {
+
+    .flash-grid,
+    .trending-grid,
+    .recommendation-grid,
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .flash-img-container,
+    .trending-image-wrapper,
+    .recommendation-image,
+    .spc-img-container {
+        height: 160px;
+    }
+
+    .section-title {
+        font-size: 20px;
+    }
+}
+
+/* Tablet (4 columns) */
+@media (min-width: 769px) and (max-width: 1024px) {
+
+    .flash-grid,
+    .trending-grid,
+    .recommendation-grid,
+    .product-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Desktop (6 columns) */
+@media (min-width: 1025px) {
+
+    .flash-grid,
+    .trending-grid,
+    .recommendation-grid,
+    .product-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 12px;
+    }
+}
+
+/* ============================================
+   CONTAINER SPACING - ZERO PADDING
+   ============================================ */
+
+.container {
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.homepage-wrapper {
+    background: #f5f5f5;
+    min-height: 100vh;
+}
+
+/* ============================================
+   SECTION DIVIDERS - CLEAN SEPARATION
+   ============================================ */
+
+.section-divider {
+    height: 1px;
+    background: #e0e0e0;
+    margin: 24px 0;
+}

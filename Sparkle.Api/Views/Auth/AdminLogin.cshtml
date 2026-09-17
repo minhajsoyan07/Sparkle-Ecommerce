@@ -1,0 +1,449 @@
+@model Sparkle.Api.Controllers.AuthController.LoginViewModel
+@{
+    var langCookie = Context.Request.Cookies["sparkle-lang"] == "bn" ? "bn" : "en";
+    var isBangla = langCookie == "bn";
+    var siteTitle = await SettingsService.GetValueAsync("SiteTitle", "Sparkle");
+    ViewData["Title"] = "Admin Login";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(isBangla ? $"অ্যাডমিন লগইন - {siteTitle}" : $"Admin Login - {siteTitle}")</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Admin Theme: Deep Blue & Gold */
+            --primary-color: #1e3a8a;
+            --primary-dark: #1e40af;
+            --primary-light: #3b82f6;
+            --accent-color: #fbbf24;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --bg-color: #f8fafc;
+            --input-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * { font-family: 'Inter', system-ui, -apple-system, sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background-color: var(--bg-color);
+            background: radial-gradient(circle at top right, #1e3a8a 0%, #0f172a 100%);
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 2rem; 
+            position: relative;
+        }
+
+        .login-container { 
+            width: 100%; 
+            background: #ffffff;
+            border-radius: 20px; 
+            box-shadow: 0 40px 80px -12px rgba(0, 0, 0, 0.3);
+            overflow: hidden; 
+            display: grid; 
+            grid-template-columns: 0.85fr 1fr; 
+            min-height: 550px; 
+        }
+
+        /* Left Side */
+        .login-left { 
+            background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); 
+            padding: 3rem; 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            
+            /* Professional Logo Container */
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 10px 16px; 
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .brand-logo:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+        
+        .brand-logo img {
+            height: 50px; 
+            width: auto;
+            max-width: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .left-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .admin-icon-circle {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+        }
+
+        .admin-icon-circle i { font-size: 2.5rem; color: var(--accent-color); }
+
+        .login-left h1 { 
+            font-size: 2rem; 
+            font-weight: 700; 
+            line-height: 1.2;
+            margin-bottom: 0.5rem; 
+            color: white;
+        }
+
+        .login-left .admin-badge {
+            background: var(--accent-color);
+            color: #0f172a;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .login-left p { 
+            font-size: 0.95rem; 
+            opacity: 0.8; 
+            margin-bottom: 0;
+            font-weight: 400;
+            color: #cbd5e1;
+            max-width: 90%;
+        }
+
+        .features-list { margin-top: 2rem; text-align: left; }
+        .feature-item { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; font-size: 0.9rem; color: #e2e8f0; }
+        .feature-item i { color: var(--accent-color); }
+
+        /* Right Side */
+        .login-right { 
+            padding: 3rem; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: #fff;
+        }
+
+        .form-group { margin-bottom: 1.5rem; }
+        
+        .form-label { 
+            font-size: 0.95rem; 
+            font-weight: 600; 
+            color: var(--text-dark); 
+            margin-bottom: 0.5rem; 
+            display: block; 
+        }
+
+        .form-control { 
+            height: 48px; /* Standard Professional Height */
+            border: 2px solid #e2e8f0; 
+            border-radius: 10px; 
+            padding: 0 1rem; 
+            font-size: 0.95rem; 
+            width: 100%; 
+            transition: all 0.2s; 
+            background: #f8fafc;
+            color: var(--text-dark);
+        }
+
+        .form-control:focus { 
+            border-color: var(--primary-light); 
+            background: white;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); 
+            outline: none; 
+        }
+
+        .password-toggle:hover { color: var(--text-dark); }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px; 
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #94a3b8; /* --text-light */
+            padding: 5px; /* Increase click area */
+        }
+        
+        /* --- NEW STYLES for Header, Options & Button --- */
+
+        .auth-wrapper {
+            width: 100%;
+            max-width: min(850px, 95vw);
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Back Navigation Link */
+        .nav-back {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .nav-back:hover {
+            color: #fff;
+            transform: translateX(-3px);
+        }
+
+        /* Form Header */
+        .form-header {
+            margin-bottom: 2rem;
+        }
+        
+        .form-header h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-header p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        /* Options Row (Remember Me / Forgot Password) */
+        .options-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        
+        .options-row label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .options-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+            margin-top: -1px; /* Align with text */
+        }
+        
+        .options-row a {
+            color: var(--primary-light);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .options-row a:hover {
+            color: var(--primary-dark);
+        }
+
+        /* Primary Button Style */
+        .btn-primary {
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(30, 58, 138, 0.35);
+            background: linear-gradient(to right, var(--primary-dark), var(--primary-color));
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="nav-back"><i class="bi bi-arrow-left"></i> @(isBangla ? "হোম" : "Home")</a>
+    
+    <div class="auth-wrapper">
+        <div class="login-container">
+            <!-- Left Side -->
+            <div class="login-left">
+                <!-- LOGO ADDED HERE -->
+                <div class="brand-logo">
+                    <img src="~/images/logo.png" alt="@siteTitle" asp-append-version="true" />
+                </div>
+
+                <div class="left-content">
+                    <div class="admin-icon-circle">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <span class="admin-badge">@(isBangla ? "সুপার অ্যাডমিন" : "Super Admin")</span>
+                    <h1>@(isBangla ? "অ্যাডমিন প্যানেল" : "Admin Dashboard")</h1>
+                    <p>@(isBangla ? "নিরাপদ এলাকায় আপনাকে স্বাগতম" : "Welcome to the secure area")</p>
+                    
+                    <div class="features-list">
+                        <div class="feature-item"><i class="bi bi-check-circle-fill"></i> <span>System Monitoring</span></div>
+                        <div class="feature-item"><i class="bi bi-check-circle-fill"></i> <span>User Management</span></div>
+                        <div class="feature-item"><i class="bi bi-check-circle-fill"></i> <span>Order Processing</span></div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 0.8rem; opacity: 0.6; text-align: center;">
+                    &copy; @DateTime.Now.Year @siteTitle. All rights reserved.
+                </div>
+            </div>
+
+            <!-- Right Side -->
+            <div class="login-right">
+                <div class="form-header">
+                    <h2>@(isBangla ? "সাইন ইন করুন" : "Sign In")</h2>
+                    <p>@(isBangla ? "আপনার অ্যাডমিন ক্রেডেনশিয়াল ব্যবহার করুন" : "Enter your admin credentials to access")</p>
+                </div>
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <form method="post" asp-action="AdminLogin" asp-controller="Auth" autocomplete="off">
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    
+                    <!-- Standard Label: Email -->
+                    <div class="form-group">
+                        <label asp-for="Email" class="form-label">@(isBangla ? "ইমেইল" : "Email Address")</label>
+                        <input asp-for="Email" type="email" class="form-control" id="Email" placeholder="name@example.com" autocomplete="off" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Standard Label: Password -->
+                    <div class="form-group">
+                        <label asp-for="Password" class="form-label">@(isBangla ? "পাসওয়ার্ড" : "Password")</label>
+                        <div class="password-wrapper position-relative">
+                            <input asp-for="Password" type="password" class="form-control" id="password" placeholder="••••••••" style="padding-right: 45px;" />
+                            <i class="bi bi-eye password-toggle" id="togglePassword"></i>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="options-row">
+                        <label>
+                            <input asp-for="RememberMe" type="checkbox" /> @(isBangla ? "মনে রাখুন" : "Remember me")
+                        </label>
+                        <a href="#">@(isBangla ? "পাসওয়ার্ড ভুলে গেছেন?" : "Forgot password?")</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary">@(isBangla ? "প্রবেশ করুন" : "Access Dashboard")</button>
+                    
+                    <div class="text-center mt-4">
+                        <p class="text-muted small">
+                            @(isBangla ? "ব্যবহারকারী হিসেবে লগইন করতে চান?" : "Not an admin?") 
+                            <a href="/auth/login" style="color: var(--primary-light); text-decoration: none; font-weight: 600;">@(isBangla ? "ব্যবহারকারী লগইন" : "User Login")</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#password'); 
+        if (togglePassword && password) {
+            togglePassword.addEventListener('click', function () {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                this.classList.toggle('bi-eye');
+                this.classList.toggle('bi-eye-slash');
+            });
+        }
+
+        // Email Logical Validation (Standardized)
+        (function() {
+            const emailField = document.getElementById('Email'); 
+            if(emailField) {
+                emailField.addEventListener('blur', function(e) {
+                    const val = e.target.value.trim();
+                    const span = document.querySelector('span[data-valmsg-for="Email"]');
+                    // Standard Email Regex
+                    const emailRegex = /^[a-zA-Z0-9._%+-]+@@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    
+                    if (val.length > 0) {
+                        if (!emailRegex.test(val)) {
+                            if (span) {
+                                span.textContent = "Invalid email format";
+                                span.className = "text-danger field-validation-error small";
+                                span.style.display = 'flex';
+                            }
+                        } else {
+                            // Clear error if valid
+                            if (span && span.textContent === "Invalid email format") {
+                                span.textContent = "";
+                                span.style.display = 'none';
+                            }
+                        }
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

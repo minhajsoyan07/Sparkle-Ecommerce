@@ -1,0 +1,102 @@
+@model Sparkle.Domain.Marketing.Campaign
+@{
+    ViewData["Title"] = "Create Campaign";
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title">Create Campaign</h2>
+        <p class="text-muted">Start a new marketing campaign.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back to List
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="content-card">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-8">
+                        <label asp-for="Name" class="form-label fw-bold">Campaign Name <span class="text-danger">*</span></label>
+                        <input asp-for="Name" class="form-control" placeholder="e.g., Winter Clearance" required />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="CampaignType" class="form-label fw-bold">Type</label>
+                        <select asp-for="CampaignType" class="form-select">
+                            <option value="SeasonalSale">Seasonal Sale</option>
+                            <option value="BrandDay">Brand Day</option>
+                            <option value="CategorySale">Category Sale</option>
+                            <option value="MegaSale">Mega Sale</option>
+                            <option value="Custom">Custom</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Description" class="form-label fw-bold">Description</label>
+                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Campaign details and internal notes..."></textarea>
+                </div>
+
+                <h5 class="fw-bold border-bottom pb-2 mb-3">Schedule</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="StartDate" class="form-label fw-bold">Start Date <span class="text-danger">*</span></label>
+                        <input asp-for="StartDate" type="datetime-local" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="EndDate" class="form-label fw-bold">End Date <span class="text-danger">*</span></label>
+                        <input asp-for="EndDate" type="datetime-local" class="form-control" required />
+                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold border-bottom pb-2 mb-3">Display Settings</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label asp-for="BackgroundColor" class="form-label fw-bold">Background Color</label>
+                            <input asp-for="BackgroundColor" type="color" class="form-control form-control-color w-100" value="#ffffff" title="Choose background color">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label asp-for="TextColor" class="form-label fw-bold">Text Color</label>
+                            <input asp-for="TextColor" type="color" class="form-control form-control-color w-100" value="#000000" title="Choose text color">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="DisplayOrder" class="form-label fw-bold">Display Order</label>
+                        <input asp-for="DisplayOrder" type="number" class="form-control" value="0" />
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                             <div class="form-check form-switch mb-2">
+                                 <input asp-for="IsActive" class="form-check-input" type="checkbox" checked />
+                                 <label asp-for="IsActive" class="form-check-label">Active</label>
+                             </div>
+                        </div>
+                        <div class="col-md-6">
+                             <div class="form-check form-switch">
+                                 <input asp-for="IsFeatured" class="form-check-input" type="checkbox" />
+                                 <label asp-for="IsFeatured" class="form-check-label">Featured on Homepage</label>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-2"></i>Create Campaign
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

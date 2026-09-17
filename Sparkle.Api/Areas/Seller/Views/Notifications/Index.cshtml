@@ -1,0 +1,174 @@
+@{
+    ViewData["Title"] = "Notifications";
+    Layout = "~/Areas/Seller/Views/Shared/_SellerLayout.cshtml";
+}
+
+<style>
+    .notification-container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .notification-header {
+        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+        padding: 1.5rem;
+        border-bottom: 2px solid #f1f5f9;
+    }
+    
+    .notification-item {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        gap: 1rem;
+        align-items: start;
+        transition: background 0.2s;
+    }
+    
+    .notification-item:hover {
+        background: #f8fafc;
+    }
+    
+    .notification-item.unread {
+        background: #f0f9ff;
+        border-left: 4px solid #10b981;
+    }
+    
+    .notification-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .notification-icon.order {
+        background: #dbeafe;
+        color: #3b82f6;
+    }
+    
+    .notification-icon.stock {
+        background: #fef3c7;
+        color: #f59e0b;
+    }
+    
+    .notification-icon.review {
+        background: #f3e8ff;
+        color: #a855f7;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #10b981;
+    }
+</style>
+
+<div class="mb-4">
+    <h3><i class="bi bi-bell me-2 text-primary"></i>Seller Notifications</h3>
+    <p class="text-muted">Stay updated with your store activities</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">12</div>
+        <div class="text-muted">Unread Notifications</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">5</div>
+        <div class="text-muted">New Orders Today</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">3</div>
+        <div class="text-muted">Low Stock Alerts</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">8</div>
+        <div class="text-muted">New Reviews</div>
+    </div>
+</div>
+
+<div class="notification-container">
+    <div class="notification-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Recent Notifications</h5>
+            <button class="btn btn-sm btn-outline-primary">Mark All as Read</button>
+        </div>
+    </div>
+    
+    <div class="notification-item unread">
+        <div class="notification-icon order">
+            <i class="bi bi-box-seam"></i>
+        </div>
+        <div class="flex-grow-1">
+            <h6 class="mb-1">New Order Received</h6>
+            <p class="text-muted mb-1">Order #ORD-12456 - ৳2,450</p>
+            <small class="text-muted">5 minutes ago</small>
+        </div>
+        <span class="badge bg-success">New</span>
+    </div>
+    
+    <div class="notification-item unread">
+        <div class="notification-icon stock">
+            <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <div class="flex-grow-1">
+            <h6 class="mb-1">Low Stock Alert</h6>
+            <p class="text-muted mb-1">Product "Wireless Mouse" has only 3 units left</p>
+            <small class="text-muted">1 hour ago</small>
+        </div>
+        <span class="badge bg-warning">Alert</span>
+    </div>
+    
+    <div class="notification-item unread">
+        <div class="notification-icon review">
+            <i class="bi bi-star"></i>
+        </div>
+        <div class="flex-grow-1">
+            <h6 class="mb-1">New Review Received</h6>
+            <p class="text-muted mb-1">5-star review on "Gaming Keyboard"</p>
+            <small class="text-muted">2 hours ago</small>
+        </div>
+        <span class="badge bg-success">New</span>
+    </div>
+    
+    <div class="notification-item">
+        <div class="notification-icon order">
+            <i class="bi bi-box-seam"></i>
+        </div>
+        <div class="flex-grow-1">
+            <h6 class="mb-1">Order Shipped</h6>
+            <p class="text-muted mb-1">Order #ORD-12440 has been shipped</p>
+            <small class="text-muted">5 hours ago</small>
+        </div>
+    </div>
+    
+    <div class="notification-item">
+        <div class="notification-icon review">
+            <i class="bi bi-star"></i>
+        </div>
+        <div class="flex-grow-1">
+            <h6 class="mb-1">Review Response Needed</h6>
+            <p class="text-muted mb-1">Customer left a 3-star review - consider responding</p>
+            <small class="text-muted">1 day ago</small>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,167 @@
+@model List<TransactionItem>
+@{
+    ViewData["Title"] = "Transaction History";
+    Layout = "_ProfileLayout";
+}
+
+<div class="tw-bg-white tw-rounded-2xl tw-border tw-border-slate-100 tw-overflow-hidden tw-shadow-sm">
+    <!-- Header -->
+    <div class="tw-px-6 tw-py-4 tw-border-b tw-border-slate-50 tw-flex tw-justify-between tw-items-center">
+        <div>
+            <h6 class="tw-font-bold tw-text-slate-900 tw-text-base tw-mb-0">
+                <i class="bi bi-clock-history tw-mr-1.5 tw-text-orange-500"></i> Transaction History
+            </h6>
+            <p class="tw-text-[11px] tw-text-slate-500 tw-mb-0">View and track all your recent payments</p>
+        </div>
+        <button class="tw-bg-slate-50 tw-text-slate-600 tw-px-3 tw-py-1.5 tw-rounded-xl tw-text-[11px] tw-font-bold hover:tw-bg-slate-100 tw-transition-all tw-flex tw-items-center tw-gap-1.5" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="tw-px-6 tw-py-4 tw-bg-slate-50/30 tw-border-b tw-border-slate-50">
+        <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-4 tw-gap-4">
+            <div>
+                <label class="tw-block tw-text-[10px] tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-wider tw-mb-1.5">Type</label>
+                <select id="typeFilter" class="tw-w-full tw-px-3 tw-py-2 tw-bg-white tw-border tw-border-slate-200 tw-rounded-xl tw-text-xs tw-text-slate-700 focus:tw-border-orange-500 tw-outline-none tw-transition-all">
+                    <option value="all">All Types</option>
+                    <option value="purchase">Purchase</option>
+                    <option value="refund">Refund</option>
+                    <option value="wallet">Wallet</option>
+                </select>
+            </div>
+            <div>
+                <label class="tw-block tw-text-[10px] tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-wider tw-mb-1.5">Status</label>
+                <select id="statusFilter" class="tw-w-full tw-px-3 tw-py-2 tw-bg-white tw-border tw-border-slate-200 tw-rounded-xl tw-text-xs tw-text-slate-700 focus:tw-border-orange-500 tw-outline-none tw-transition-all">
+                    <option value="all">All Status</option>
+                    <option value="completed">Completed</option>
+                    <option value="pending">Pending</option>
+                    <option value="failed">Failed</option>
+                </select>
+            </div>
+            <div>
+                <label class="tw-block tw-text-[10px] tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-wider tw-mb-1.5">Date From</label>
+                <input type="date" id="dateFrom" class="tw-w-full tw-px-3 tw-py-2 tw-bg-white tw-border tw-border-slate-200 tw-rounded-xl tw-text-xs tw-text-slate-700 focus:tw-border-orange-500 tw-outline-none tw-transition-all" />
+            </div>
+            <div>
+                <label class="tw-block tw-text-[10px] tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-wider tw-mb-1.5">Date To</label>
+                <input type="date" id="dateTo" class="tw-w-full tw-px-3 tw-py-2 tw-bg-white tw-border tw-border-slate-200 tw-rounded-xl tw-text-xs tw-text-slate-700 focus:tw-border-orange-500 tw-outline-none tw-transition-all" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="tw-overflow-x-auto">
+        @if (Model != null && Model.Any())
+        {
+            <table class="tw-w-full tw-text-left tw-border-collapse">
+                <thead>
+                    <tr class="tw-bg-slate-50/50">
+                        <th class="tw-px-6 tw-py-4 tw-text-[10px] tw-font-extrabold tw-text-slate-400 tw-uppercase tw-tracking-widest">Transaction</th>
+                        <th class="tw-px-6 tw-py-4 tw-text-[10px] tw-font-extrabold tw-text-slate-400 tw-uppercase tw-tracking-widest">Date & Time</th>
+                        <th class="tw-px-6 tw-py-4 tw-text-[10px] tw-font-extrabold tw-text-slate-400 tw-uppercase tw-tracking-widest">Type</th>
+                        <th class="tw-px-6 tw-py-4 tw-text-[10px] tw-font-extrabold tw-text-slate-400 tw-uppercase tw-tracking-widest">Amount</th>
+                        <th class="tw-px-6 tw-py-4 tw-text-[10px] tw-font-extrabold tw-text-slate-400 tw-uppercase tw-tracking-widest">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionTableBody" class="tw-divide-y tw-divide-slate-50">
+                    @foreach (var transaction in Model)
+                    {
+                        <tr class="tw-transition-all hover:tw-bg-slate-50/50" data-type="@transaction.Type" data-status="@transaction.Status">
+                            <td class="tw-px-6 tw-py-4">
+                                <div class="tw-flex tw-flex-col">
+                                    <span class="tw-text-xs tw-font-bold tw-text-slate-900">@transaction.Description</span>
+                                    <span class="tw-text-[10px] tw-text-slate-400 tw-font-mono">#@transaction.Id</span>
+                                </div>
+                            </td>
+                            <td class="tw-px-6 tw-py-4">
+                                <div class="tw-flex tw-flex-col">
+                                    <span class="tw-text-xs tw-font-medium tw-text-slate-700">@transaction.Date.ToString("d MMM, yyyy")</span>
+                                    <span class="tw-text-[10px] tw-text-slate-400">@transaction.Date.ToString("hh:mm tt")</span>
+                                </div>
+                            </td>
+                            <td class="tw-px-6 tw-py-4">
+                                <span class="tw-px-2 tw-py-1 tw-bg-slate-100 tw-text-slate-600 tw-rounded-lg tw-text-[10px] tw-font-bold tw-uppercase">@transaction.Type</span>
+                            </td>
+                            <td class="tw-px-6 tw-py-4">
+                                <span class="tw-text-sm tw-font-bold @(transaction.IsCredit ? "tw-text-emerald-600" : "tw-text-slate-900")">
+                                    @(transaction.IsCredit ? "+" : "-")৳@transaction.Amount.ToString("N0")
+                                </span>
+                            </td>
+                            <td class="tw-px-6 tw-py-4">
+                                @{
+                                    var (statusBg, statusColor) = transaction.Status.ToLower() switch
+                                    {
+                                        "completed" => ("tw-bg-emerald-50", "tw-text-emerald-600"),
+                                        "pending" => ("tw-bg-amber-50", "tw-text-amber-600"),
+                                        "failed" => ("tw-bg-red-50", "tw-text-red-600"),
+                                        _ => ("tw-bg-slate-50", "tw-text-slate-500")
+                                    };
+                                }
+                                <span class="tw-px-2.5 tw-py-1 @statusBg @statusColor tw-rounded-full tw-text-[10px] tw-font-bold">
+                                    @transaction.Status
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="tw-text-center tw-py-20 tw-px-6">
+                <div class="tw-w-16 tw-h-16 tw-mx-auto tw-mb-4 tw-bg-slate-50 tw-rounded-3xl tw-flex tw-items-center tw-justify-center tw-text-slate-300">
+                    <i class="bi bi-inbox tw-text-2xl"></i>
+                </div>
+                <h6 class="tw-font-bold tw-text-slate-900 tw-text-base tw-mb-1">No Transactions Found</h6>
+                <p class="tw-text-xs tw-text-slate-500 tw-mb-0">You haven't made any transactions yet.</p>
+            </div>
+        }
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="tw-px-6 tw-py-4 tw-border-t tw-border-slate-50 tw-flex tw-justify-between tw-items-center tw-bg-slate-50/20">
+            <span class="tw-text-[10px] tw-text-slate-500 tw-font-medium">Showing @Model.Count records</span>
+            <div class="tw-flex tw-gap-1">
+                <button class="tw-w-8 tw-h-8 tw-rounded-xl tw-bg-white tw-border tw-border-slate-100 tw-text-slate-600 hover:tw-bg-slate-50 tw-transition-all tw-flex tw-items-center tw-justify-center disabled:tw-opacity-40" disabled>
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="tw-w-8 tw-h-8 tw-rounded-xl tw-bg-orange-500 tw-text-white tw-flex tw-items-center tw-justify-center tw-text-xs tw-font-bold tw-shadow-md tw-shadow-orange-500/20">1</button>
+                <button class="tw-w-8 tw-h-8 tw-rounded-xl tw-bg-white tw-border tw-border-slate-100 tw-text-slate-600 hover:tw-bg-slate-50 tw-transition-all tw-flex tw-items-center tw-justify-center">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        const typeFilter = document.getElementById('typeFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const rows = document.querySelectorAll('#transactionTableBody tr');
+
+        function filterRecords() {
+            const type = typeFilter.value.toLowerCase();
+            const status = statusFilter.value.toLowerCase();
+
+            rows.forEach(row => {
+                const rowType = row.dataset.type.toLowerCase();
+                const rowStatus = row.dataset.status.toLowerCase();
+                
+                const typeMatch = type === 'all' || rowType === type;
+                const statusMatch = status === 'all' || rowStatus === status;
+
+                if (typeMatch && statusMatch) {
+                    row.classList.remove('tw-hidden');
+                } else {
+                    row.classList.add('tw-hidden');
+                }
+            });
+        }
+
+        typeFilter.addEventListener('change', filterRecords);
+        statusFilter.addEventListener('change', filterRecords);
+    </script>
+}

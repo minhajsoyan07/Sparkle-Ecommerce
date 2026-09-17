@@ -1,0 +1,2455 @@
+@using System.Collections.Generic
+@using Sparkle.Api.Controllers
+@using System.Linq
+@model HomepageViewModel
+@{
+    var langCookie = Context.Request.Cookies["sparkle-lang"] == "bn" ? "bn" : "en";
+    var isBangla = langCookie == "bn";
+    var isGuestMode = Context.Request.Cookies["GuestMode"] == "true";
+    ViewData["Title"] = isBangla ? "বাংলাদেশের বৃহত্তম অনলাইন শপিং মল" : "Bangladesh's Largest Online Shopping Mall";
+
+    var categoryIconMap = new Dictionary<string, (string Icon, string ColorClass)>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["electronics-gadgets"] = ("bi-laptop", "text-primary"),
+        ["fashion-lifestyle"] = ("bi-bag-heart", "text-danger"),
+        ["home-living"] = ("bi-house-heart", "text-success"),
+        ["mobiles-tablets"] = ("bi-phone", "text-info"),
+        ["groceries-essentials"] = ("bi-basket", "text-warning"),
+        ["beauty-personal-care"] = ("bi-heart-pulse", "text-danger"),
+        ["sports-outdoors"] = ("bi-bicycle", "text-success"),
+        ["laptops-computers"] = ("bi-pc-display", "text-primary"),
+        ["automotive-bike"] = ("bi-car-front", "text-dark"),
+        ["pet-supplies"] = ("bi-emoji-smile", "text-warning"),
+        ["books-stationery"] = ("bi-book-half", "text-primary"),
+        ["baby-kids-mom"] = ("bi-balloon-heart", "text-danger"),
+        ["home-appliances"] = ("bi-plug", "text-secondary"),
+        ["jewelry-accessories"] = ("bi-gem", "text-warning"),
+        ["kitchen-small-appliances"] = ("bi-cup-hot", "text-danger"),
+        ["local-bd-brands"] = ("bi-geo-alt", "text-success"),
+        ["medicine-wellness"] = ("bi-capsule", "text-success"),
+        ["travel-luggage"] = ("bi-suitcase", "text-info"),
+        ["toys-games"] = ("bi-controller", "text-warning"),
+        ["photography-camera"] = ("bi-camera", "text-info"),
+        ["art-crafts"] = ("bi-palette", "text-warning"),
+        ["musical-instruments"] = ("bi-music-note-beamed", "text-primary"),
+        ["garden-outdoor"] = ("bi-tree", "text-success"),
+        ["fitness-gym"] = ("bi-heart-pulse", "text-danger")
+    };
+
+    var categoryTitleMap = new Dictionary<string, (string En, string Bn)>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["electronics-gadgets"] = ("Electronics & Gadgets", "ইলেকট্রনিক্স ও গ্যাজেটস"),
+        ["mobiles-tablets"] = ("Mobiles & Tablets", "মোবাইল ও ট্যাবলেট"),
+        ["laptops-computers"] = ("Laptops & Computers", "ল্যাপটপ ও কম্পিউটার"),
+        ["fashion-lifestyle"] = ("Fashion & Lifestyle", "ফ্যাশন ও লাইফস্টাইল"),
+        ["beauty-personal-care"] = ("Beauty & Personal Care", "বিউটি ও পার্সোনাল কেয়ার"),
+        ["home-living"] = ("Home & Living", "হোম ও লিভিং"),
+        ["home-appliances"] = ("Home Appliances", "হোম অ্যাপ্লায়েন্স"),
+        ["kitchen-small-appliances"] = ("Kitchen Appliances", "কিচেন অ্যাপ্লায়েন্স"),
+        ["groceries-essentials"] = ("Groceries & Essentials", "গ্রোসারি ও নিত্যপ্রয়োজনীয়"),
+        ["baby-kids-mom"] = ("Baby, Kids & Mom", "বেবি, কিডস ও মম"),
+        ["toys-games"] = ("Toys & Games", "টয়স ও গেমস"),
+        ["books-stationery"] = ("Books & Stationery", "বই ও স্টেশনারি"),
+        ["sports-outdoors"] = ("Sports & Outdoors", "স্পোর্টস ও আউটডোর"),
+        ["automotive-bike"] = ("Automotive & Bike", "অটোমোটিভ ও বাইক"),
+        ["pet-supplies"] = ("Pet Supplies", "পেট সাপ্লাইস"),
+        ["jewelry-accessories"] = ("Jewelry & Accessories", "জুয়েলারি ও এক্সেসরিজ"),
+        ["local-bd-brands"] = ("Local BD Brands", "লোকাল বাংলাদেশি ব্র্যান্ড"),
+        ["medicine-wellness"] = ("Medicine & Wellness", "মেডিসিন ও ওয়েলনেস"),
+        ["travel-luggage"] = ("Travel & Luggage", "ট্রাভেল ও লাগেজ"),
+        ["photography-camera"] = ("Photography & Camera", "ফটোগ্রাফি ও ক্যামেরা"),
+        ["art-crafts"] = ("Art & Crafts", "আর্ট ও ক্রাফটস"),
+        ["musical-instruments"] = ("Musical Instruments", "মিউজিক্যাল ইন্সট্রুমেন্টস"),
+        ["garden-outdoor"] = ("Garden & Outdoor", "গার্ডেন ও আউটডোর"),
+        ["fitness-gym"] = ("Fitness & Gym", "ফিটনেস ও জিম")
+    };
+
+    var featuredCategorySlugs = new[]
+    {
+        "electronics-gadgets",
+        "fashion-lifestyle",
+        "home-living",
+        "mobiles-tablets",
+        "laptops-computers",
+        "home-appliances",
+        "kitchen-small-appliances",
+        "beauty-personal-care",
+        "jewelry-accessories",
+        "groceries-essentials",
+        "baby-kids-mom",
+        "toys-games",
+        "books-stationery",
+        "sports-outdoors",
+        "automotive-bike",
+        "pet-supplies",
+        "local-bd-brands",
+        "medicine-wellness",
+        "travel-luggage",
+        "photography-camera",
+        "art-crafts",
+        "musical-instruments",
+        "garden-outdoor",
+        "fitness-gym"
+    };
+
+    var orderLookup = featuredCategorySlugs
+        .Select((slug, index) => new { slug, index })
+        .ToDictionary(x => x.slug, x => x.index, StringComparer.OrdinalIgnoreCase);
+
+    var featuredCategories = Model.Categories
+        .OrderBy(c => {
+             return !string.IsNullOrEmpty(c.Slug) && orderLookup.ContainsKey(c.Slug) 
+                ? orderLookup[c.Slug] 
+                : 999;
+        })
+        .ThenBy(c => c.Name)
+        .ToList();
+}
+
+<!-- Hero Banner Section -->
+<section class="hero-section">
+    <div class="container">
+        <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000" data-aos="fade-in" data-aos-duration="400">
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="4" aria-label="Slide 5"></button>
+            </div>
+            <div class="carousel-inner">
+                <!-- Banner 1: Electronics Super Sale -->
+                <div class="carousel-item active">
+                    <div class="hero-slide" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.75) 0%, rgba(118, 75, 162, 0.75) 100%), url('https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?q=80&w=2070&auto=format&fit=crop') center/cover;">
+                        <div class="hero-content">
+                            <div class="hero-text" data-aos="fade-right" data-aos-duration="500" data-aos-delay="50">
+                                <span class="hero-badge"><i class="bi bi-lightning-charge-fill"></i> @(isBangla ? "মেগা অফার" : "MEGA OFFER")</span>
+                                <h1 class="hero-title">@(isBangla ? "ইলেকট্রনিক্স সুপার সেল" : "Electronics Super Sale")</h1>
+                                <p class="hero-subtitle">@(isBangla ? "স্মার্টফোন, ল্যাপটপ ও গ্যাজেটে সর্বোচ্চ ৬০% পর্যন্ত ছাড়" : "Up to 60% Off on Smartphones, Laptops & Gadgets")</p>
+                                <a href="/category/electronics-gadgets" class="btn-hero">@(isBangla ? "এখনই কিনুন" : "Shop Now") <i class="bi bi-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banner 2: Fashion Week -->
+                <div class="carousel-item">
+                    <div class="hero-slide" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); background-image: url('https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center;">
+                        <div class="hero-content">
+                            <div class="hero-text" data-aos="fade-up" data-aos-delay="200">
+                                <span class="hero-badge"><i class="bi bi-stars"></i> @(isBangla ? "নতুন কালেকশন" : "NEW COLLECTION")</span>
+                                <h1 class="hero-title">@(isBangla ? "ফ্যাশন উইক ২০২৫" : "Fashion Week 2025")</h1>
+                                <p class="hero-subtitle">@(isBangla ? "ট্রেন্ডি পোশাক, জুতা ও এক্সেসরিজে বিশাল ছাড়" : "Trendy Apparel, Footwear & Accessories - Massive Discounts")</p>
+                                <a href="/category/fashion-lifestyle" class="btn-hero">@(isBangla ? "কালেকশন দেখুন" : "Explore Collection") <i class="bi bi-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banner 3: Smart Home Solutions -->
+                <div class="carousel-item">
+                    <div class="hero-slide" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); background-image: url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=2071&auto=format&fit=crop'); background-size: cover; background-position: center;">
+                        <div class="hero-content">
+                            <div class="hero-text" data-aos="fade-left" data-aos-delay="200">
+                                <span class="hero-badge"><i class="bi bi-house-heart-fill"></i> @(isBangla ? "স্মার্ট হোম" : "SMART HOME")</span>
+                                <h1 class="hero-title">@(isBangla ? "হোম অ্যাপ্লায়েন্স সেল" : "Home Appliance Sale")</h1>
+                                <p class="hero-subtitle">@(isBangla ? "এসি, ফ্রিজ, ওয়াশিং মেশিনে ৫০% পর্যন্ত ছাড় + ফ্রি ডেলিভারি" : "AC, Fridge, Washing Machine - Up to 50% Off + Free Delivery")</p>
+                                <a href="/category/home-appliances" class="btn-hero">@(isBangla ? "অফার দেখুন" : "View Offers") <i class="bi bi-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banner 4: Fitness & Wellness -->
+                <div class="carousel-item">
+                    <div class="hero-slide" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); background-image: url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center;">
+                        <div class="hero-content">
+                            <div class="hero-text" data-aos="zoom-in" data-aos-delay="200">
+                                <span class="hero-badge"><i class="bi bi-heart-pulse-fill"></i> @(isBangla ? "ফিটনেস গোল" : "FITNESS GOALS")</span>
+                                <h1 class="hero-title">@(isBangla ? "স্বাস্থ্যকর জীবনযাপন শুরু করুন" : "Start Your Fitness Journey")</h1>
+                                <p class="hero-subtitle">@(isBangla ? "জিম ইকুইপমেন্ট, ইয়োগা ম্যাট ও হেলথ সাপ্লিমেন্ট" : "Gym Equipment, Yoga Mats & Health Supplements")</p>
+                                <a href="/category/fitness-gym" class="btn-hero">@(isBangla ? "শপ করুন" : "Shop Fitness") <i class="bi bi-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banner 5: Kids & Baby Products -->
+                <div class="carousel-item">
+                    <div class="hero-slide" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); background-image: url('https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?q=80&w=2073&auto=format&fit=crop'); background-size: cover; background-position: center;">
+                        <div class="hero-content">
+                            <div class="hero-text" data-aos="fade-down" data-aos-delay="200">
+                                <span class="hero-badge"><i class="bi bi-balloon-heart-fill"></i> @(isBangla ? "বাচ্চাদের জন্য" : "FOR KIDS")</span>
+                                <h1 class="hero-title">@(isBangla ? "শিশুদের বিশেষ কালেকশন" : "Kids Special Collection")</h1>
+                                <p class="hero-subtitle">@(isBangla ? "খেলনা, পোশাক, বই ও শিক্ষামূলক পণ্যে ৪০% ছাড়" : "Toys, Clothing, Books & Educational Products - 40% Off")</p>
+                                <a href="/category/baby-kids-mom" class="btn-hero">@(isBangla ? "দেখুন" : "Explore Now") <i class="bi bi-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+    </div>
+</section>
+
+
+<!-- Quick Category Access Grid -->
+<div class="container my-5" data-aos="fade-up" data-aos-duration="400">
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: #e0e0e0 !important;">
+        <div class="d-flex align-items-center gap-3">
+            <h2 class="flash-sale-title mb-0" style="font-size: 1.1rem; font-weight: 500 !important; color: #212121;">
+                @(isBangla ? "ক্যাটাগরি থেকে কিনুন" : "Shop by Category")
+            </h2>
+        </div>
+        @if (featuredCategories.Count > 12)
+        {
+            <a href="javascript:void(0)" id="seeMoreBtn" class="see-more-pill text-decoration-none" onclick="toggleCategoryDisplay(event)">
+                <span id="seeMoreText">@(isBangla ? "আরও দেখুন" : "See More")</span> <i class="bi bi-chevron-down" id="seeMoreIcon"></i>
+            </a>
+        }
+    </div>
+
+    <div class="row g-3 g-lg-4" id="categoryGrid">
+        @for (int i = 0; i < featuredCategories.Count; i++)
+        {
+            var category = featuredCategories[i];
+            var slugKey = category.Slug ?? string.Empty;
+            var iconInfo = categoryIconMap.TryGetValue(slugKey, out var info)
+                ? info
+                : (Icon: "bi-grid-1x2", ColorClass: "text-muted");
+
+            var displayTitle = categoryTitleMap.TryGetValue(slugKey, out var titleInfo)
+                ? (isBangla ? titleInfo.Bn : titleInfo.En)
+                : category.Name;
+
+            var displayStyle = i >= 12 ? "display: none;" : "";
+            
+            // Use custom image if available, otherwise use icon
+            var hasCustomImage = !string.IsNullOrEmpty(category.ImageUrl);
+            var finalImgUrl = category.ImageUrl;
+            var iconWidth = hasCustomImage ? "80px" : "60px";
+
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2 category-card-item" data-index="@i" style="@displayStyle">
+                <a href="/category/@category.Slug" class="category-card text-decoration-none d-block">
+                    <div class="card border-0 shadow-sm h-100 text-center p-3 hover-lift">
+                        <div class="category-icon mb-2 mx-auto" style="position: relative; width: @iconWidth; height: 60px; display: flex; align-items: center; justify-content: center;">
+                            @if (hasCustomImage)
+                            {
+                                <img src="@finalImgUrl" alt="@displayTitle" class="img-fluid" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 4px;" />
+                            }
+                            else
+                            {
+                                <i class="@iconInfo.Icon fs-2 @iconInfo.ColorClass"></i>
+                            }
+                        </div>
+                        <h6 class="mb-0 category-title">@displayTitle</h6>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+    
+    
+
+</div>
+
+
+@foreach (var item in Model.Sections)
+{
+    @if (item.SectionType == "FlashSale")
+    {
+        <section class="flash-sale-section py-4" id="flash-deals-@item.Id" style="@(item.BackgroundColor != null ? $"background-color: {item.BackgroundColor};" : "background-color: white;")">
+            @if (!string.IsNullOrEmpty(item.BannerImageUrl))
+            {
+                <div style="background-image: url('@item.BannerImageUrl'); background-size: cover; background-position: center; position: absolute; inset: 0; opacity: 0.1; pointer-events: none;"></div>
+            }
+            <div class="container" style="position: relative; z-index: 2;">
+                <!-- Section Header -->
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: rgba(0,0,0,0.1) !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <h2 class="flash-sale-title mb-0" style="font-size: 1.1rem; font-weight: 500 !important; color: #212121;">@(item.DisplayTitle ?? (isBangla ? "ফ্ল্যাশ সেল" : "Flash Sale"))</h2>
+                        <span class="on-sale-badge" style="background-color: #f57224; color: white; padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">@(isBangla ? "চলছে এখন" : "On Sale Now")</span>
+                    </div>
+                    <a href="/search" class="shop-all-btn" style="position: relative; z-index: 100; border: 1px solid #f57224; color: #f57224; background: transparent; padding: 8px 20px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: all 0.2s; cursor: pointer;">@(isBangla ? "সব দেখুন" : "ALL PRODUCT")</a>
+                </div>
+                
+                <!-- Products Grid -->
+                <div>
+                    <div class="horizontal-scroll-container" id="flashDealsContainer" style="scroll-behavior: smooth; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;">
+                        <div class="d-flex gap-4 pb-3" style="min-width: min-content;">
+                        @foreach (var product in Model.FlashDeals.Take(item.MaxProductsToDisplay > 0 ? item.MaxProductsToDisplay : 24))
+                        {
+                            var firstImage = product.Images.FirstOrDefault()?.Url ?? "https://via.placeholder.com/300x300";
+                            var rnd = new Random(product.Id);
+                            var ratingVal = (3.5 + (rnd.NextDouble() * 1.5));
+                            var reviewCount = rnd.Next(10, 500);
+                            var stockVal = rnd.Next(5, 50);
+                            var isFree = rnd.Next(0, 2) == 0;
+                            
+                            <div class="flash-product-card" style="flex: 0 0 186.665px; max-width: 186.665px;">
+                                <partial name="_ProductCard" model="@(new {
+                                    Id = product.Id,
+                                    Title = product.Title,
+                                    ImageUrl = firstImage,
+                                    Price = product.Price,
+                                    BasePrice = product.BasePrice,
+                                    DiscountPercent = product.DiscountPercent ?? 0,
+                                    Stock = stockVal,
+                                    Rating = ratingVal,
+                                    Reviews = reviewCount,
+                                    IsFreeShipping = isFree,
+                                    ConfidenceScore = 0
+                                })" />
+                            </div>
+                        }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+    else if (item.SectionType == "TrendingProducts")
+    {
+        <!-- Trending Now Section -->
+        <section class="trending-section py-4" style="@(item.BackgroundColor != null ? $"background-color: {item.BackgroundColor};" : "background-color: #fafafa;")">
+            <div class="container">
+                <!-- Section Header - Minimal -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <h2 class="mb-0" style="font-size: 1rem; font-weight: 600; color: #333;">
+                            @(item.DisplayTitle ?? (isBangla ? "ট্রেন্ডিং পণ্য" : "Trending Now"))
+                        </h2>
+                        <span class="d-inline-flex align-items-center gap-1 px-2 py-0 rounded" 
+                              style="background: #10b981; font-size: 0.55rem; font-weight: 600; color: white;">
+                            <span class="spinner-grow spinner-grow-sm" style="width: 5px; height: 5px;" role="status"></span>
+                            LIVE
+                        </span>
+                    </div>
+                    
+                    <a href="/search" class="d-inline-flex align-items-center gap-1 text-decoration-none px-3 py-1" 
+                       style="background: #f57224; color: white; font-size: 0.75rem; font-weight: 500; border-radius: 4px;">
+                        @(isBangla ? "সব দেখুন" : "See All")
+                        <i class="bi bi-arrow-right" style="font-size: 0.7rem;"></i>
+                    </a>
+                </div>
+                
+                <!-- Products Grid -->
+                <div class="position-relative">
+                    <!-- Scrollable Container -->
+                    <div class="trending-scroll-container" id="trendingContainer-@item.Id">
+                        <div class="d-flex gap-3 pb-2">
+                            @for (int i = 0; i < Model.TrendingProducts.Take(item.MaxProductsToDisplay > 0 ? item.MaxProductsToDisplay : 12).Count(); i++)
+                            {
+                                var product = Model.TrendingProducts[i];
+                                var firstImage = product.Images.FirstOrDefault()?.Url ?? "https://via.placeholder.com/300x300";
+                                var stock = product.Variants.Sum(v => v.Stock);
+                                
+                                <div class="trending-product-card" data-product-id="@product.Id">
+                                    <partial name="_ProductCard" model="@(new {
+                                        Id = product.Id,
+                                        Title = product.Title,
+                                        ImageUrl = firstImage,
+                                        Price = product.Price,
+                                        BasePrice = product.BasePrice,
+                                        DiscountPercent = product.DiscountPercent ?? 0,
+                                        Stock = stock,
+                                        Rating = product.AverageRating,
+                                        Reviews = product.TotalReviews,
+                                        IsFreeShipping = false,
+                                        ConfidenceScore = 0
+                                    })" />
+                                </div>
+                            }
+                            
+                            @if (Model.TrendingProducts.Count() > 12)
+                            {
+                                <div class="trending-view-all-card">
+                                    <a href="/search" class="text-decoration-none d-flex flex-column align-items-center justify-content-center h-100">
+                                        <div class="view-all-icon">
+                                            <i class="bi bi-arrow-right"></i>
+                                        </div>
+                                        <span class="view-all-text">@(isBangla ? "সব দেখুন" : "View All")</span>
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+    else if (item.SectionType == "RecommendedProducts")
+    {
+        <!-- Featured Products Grid -->
+        <div class="container my-5" data-aos="fade-up">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom" style="border-color: #e0e0e0 !important;">
+                <div class="d-flex align-items-center gap-3">
+                    <h2 class="flash-sale-title mb-0" style="font-size: 1.1rem; font-weight: 500 !important; color: #212121;">@(item.DisplayTitle ?? (isBangla ? "আপনার জন্য সাজানো পণ্য" : "Recommended For You"))</h2>
+                </div>
+            </div>
+            
+            <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3 g-lg-4" id="featuredProductsGrid-@item.Id">
+                @for (int i = 0; i < Model.FeaturedProducts.Take(item.MaxProductsToDisplay > 0 ? item.MaxProductsToDisplay : 24).Count(); i++)
+                {
+                    var product = Model.FeaturedProducts.ElementAt(i);
+                    var firstImage = product.Images.FirstOrDefault()?.Url ?? "https://via.placeholder.com/300x300";
+                    var stock = product.Variants.Sum(v => v.Stock);
+                    var isHidden = i >= 15 ? "product-card-hidden" : "";
+                    
+                    <div class="col product-card-item @isHidden" data-index="@i">
+                        <partial name="_ProductCard" model="@(new {
+                            Id = product.Id,
+                            Title = product.Title,
+                            ImageUrl = firstImage,
+                            Price = product.Price,
+                            BasePrice = product.BasePrice,
+                            DiscountPercent = product.DiscountPercent ?? 0,
+                            Stock = stock,
+                            Rating = product.AverageRating,
+                            Reviews = product.TotalReviews,
+                            IsFreeShipping = false,
+                            ConfidenceScore = 0
+                        })" />
+                    </div>
+                }
+            </div>
+            
+            @if (Model.FeaturedProducts.Count() > 15)
+            {
+                <div class="text-center mt-4 mb-4">
+                    <button class="btn btn-primary px-4 py-2 rounded-pill shadow-sm see-more-button" onclick="toggleFeaturedProducts(this)">
+                        <span class="fw-semibold">@(isBangla ? "আরও প্রোডাক্ট দেখুন" : "See More Products")</span>
+                        <i class="bi bi-chevron-down ms-2 fs-5"></i>
+                    </button>
+                </div>
+            }
+        </div>
+    }
+}
+
+<!-- Premium Dark Trust Bar -->
+<div class="minimal-trust-bar py-4 border-top border-bottom" style="background-color: #1e293b; border-color: rgba(255,255,255,0.05) !important;" data-aos="fade-up">
+    <div class="container">
+        <div class="row g-3 text-center">
+            <div class="col-6 col-md-3">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <i class="bi bi-shield-check text-emerald-400 fs-4"></i>
+                    <span class="fw-semibold text-slate-200" style="font-size: 14px;">@(isBangla ? "১০০% অরিজিনাল" : "100% Authentic")</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <i class="bi bi-truck text-blue-400 fs-4"></i>
+                    <span class="fw-semibold text-slate-200" style="font-size: 14px;">@(isBangla ? "ফ্রি ডেলিভারি" : "Free Delivery")</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <i class="bi bi-arrow-repeat text-amber-400 fs-4"></i>
+                    <span class="fw-semibold text-slate-200" style="font-size: 14px;">@(isBangla ? "৭ দিনের রিটার্ন" : "7-Day Return")</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <i class="bi bi-headset text-sky-400 fs-4"></i>
+                    <span class="fw-semibold text-slate-200" style="font-size: 14px;">@(isBangla ? "২৪/৭ সাপোর্ট" : "24/7 Support")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-emerald-400 { color: #34d399 !important; }
+    .text-blue-400 { color: #60a5fa !important; }
+    .text-amber-400 { color: #fbbf24 !important; }
+    .text-sky-400 { color: #38bdf8 !important; }
+    .text-slate-200 { color: #e2e8f0 !important; }
+</style>
+
+@section Scripts {
+<style>
+    /* ============================================
+       HERO BANNER SECTION - OPTIMIZED
+       ============================================ */
+    
+    .hero-section {
+        padding: 1.5rem 0;
+        margin-bottom: 2rem;
+    }
+
+    /* Minimal See More Pill */
+    .see-more-pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 12px;
+        border-radius: 50px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        color: #424242;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        box-shadow: none;
+        letter-spacing: 0.3px;
+    }
+    
+    .see-more-pill:hover {
+        border-color: #f57224;
+        color: #f57224;
+        box-shadow: none;
+        transform: translateY(-2px);
+        background: #fff;
+    }
+
+    .see-more-pill i {
+        transition: transform 0.3s ease;
+        font-size: 0.8rem;
+    }
+    
+    .see-more-pill:hover i {
+        transform: translateY(2px);
+    }
+    
+    .see-more-pill.expanded i {
+        transform: rotate(180deg);
+    }
+    
+    .see-more-pill.expanded:hover i {
+        transform: rotate(180deg) translateY(-2px);
+    }
+    
+    .category-card-hidden {
+        display: none !important;
+    }
+    
+    /* ========================================
+       TRENDING SECTION - Modern Clean Design
+       ======================================== */
+    
+    .trending-section {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Navigation Buttons */
+    .trending-nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: white;
+        border: 1px solid #e5e5e5;
+        box-shadow: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.2s ease;
+        color: #666;
+        font-size: 0.85rem;
+    }
+    
+    .trending-nav-btn:hover {
+        background: #f57224;
+        color: white;
+        border-color: #f57224;
+        box-shadow: none;
+    }
+    
+    .trending-nav-prev { left: 0; }
+    .trending-nav-next { right: 0; }
+    
+    /* Scroll Container */
+    .trending-scroll-container {
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding: 10px 5px;
+    }
+    
+    .trending-scroll-container::-webkit-scrollbar {
+        display: none;
+    }
+    
+    /* Product Card - Clean Modern Style */
+    /* Product Card - Clean Minimal Design */
+    .trending-product-card,
+    .flash-product-card,
+    .product-card-item .unified-product-card {
+        background: white;
+        border: 1px solid #e5e5e5; /* Thin outline border */
+        border-radius: 6px; /* Reduced from 12px */
+        overflow: hidden;
+        transition: all 0.2s ease;
+        box-shadow: none; /* Removed heavy shadow */
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    /* Layout specific for Trending */
+    .trending-product-card {
+        flex: 0 0 185px;
+        width: 185px;
+    }
+    
+    .trending-product-card:hover,
+    .flash-product-card:hover,
+    .product-card-item .unified-product-card:hover {
+        border-color: #f57224;
+        box-shadow: none;
+        transform: none;
+    }
+    
+    /* Product Image */
+    .trending-product-image {
+        position: relative;
+        width: 100%;
+        height: 160px;
+        overflow: hidden;
+        background: #f5f5f5;
+    }
+    
+    .trending-product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+    
+    .trending-product-card:hover .trending-product-image img {
+        transform: scale(1.08);
+    }
+    
+    /* Rank Badge */
+    .trending-product-rank {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: rgba(0, 0, 0, 0.75);
+        color: white;
+        font-weight: 600;
+        font-size: 0.65rem;
+        min-width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        z-index: 2;
+    }
+    
+    /* Discount Badge */
+    .trending-product-discount {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #ef4444;
+        color: white;
+        font-weight: 600;
+        font-size: 0.6rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+    
+    /* Product Details */
+    .trending-product-details {
+        padding: 6px 8px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .trending-product-title {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 6px;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 2.2em;
+    }
+    
+    .trending-product-price {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #f57224;
+    }
+    
+    .trending-product-old-price {
+        font-size: 0.7rem;
+        color: #9ca3af;
+        text-decoration: line-through;
+        margin-left: 6px;
+    }
+    
+    /* Add to Cart Button */
+    .trending-product-actions {
+        padding: 0 12px 12px;
+    }
+    
+    .trending-add-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 8px 10px;
+        background: #f57224;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .trending-add-btn:hover {
+        background: #e65c00;
+    }
+    
+    .trending-add-btn i {
+        font-size: 0.85rem;
+    }
+    
+    /* View All Card */
+    .trending-view-all-card {
+        flex: 0 0 140px;
+        width: 140px;
+        min-height: 200px;
+        background: #f5f5f5;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+    
+    .trending-view-all-card:hover {
+        background: #ebebeb;
+    }
+    
+    .view-all-icon {
+        width: 40px;
+        height: 40px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.2s ease;
+    }
+    
+    .trending-view-all-card:hover .view-all-icon {
+        background: #f57224;
+    }
+    
+    .view-all-icon i {
+        font-size: 1rem;
+        color: #f57224;
+        transition: color 0.2s ease;
+    }
+    
+    .trending-view-all-card:hover .view-all-icon i {
+        color: white;
+    }
+    
+    .view-all-text {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #333;
+    }
+    
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .trending-nav-btn {
+            width: 36px;
+            height: 36px;
+            font-size: 0.9rem;
+        }
+        
+        .trending-nav-prev { left: 5px; }
+        .trending-nav-next { right: 5px; }
+        
+        .trending-product-card {
+            flex: 0 0 190px;
+            width: 190px;
+        }
+        
+        .trending-product-image {
+            height: 180px;
+        }
+        
+        .trending-product-details {
+            padding: 12px;
+        }
+        
+        .trending-product-title {
+            font-size: 0.8rem;
+        }
+        
+        .trending-product-price {
+            font-size: 1rem;
+        }
+    }
+    
+    
+    .hero-section .carousel {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .hero-slide {
+        height: 240px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-slide::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to right, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.2) 100%);
+        z-index: 1;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        padding: 0 4rem;
+    }
+    
+    .hero-text {
+        max-width: 600px;
+    }
+    
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(8px);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.55rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+        font-weight: 900;
+        color: white;
+        margin-bottom: 1rem;
+        line-height: 1.1;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    
+    .hero-subtitle {
+        font-size: 0.9rem;
+        color: white;
+        margin-bottom: 1.5rem;
+        font-weight: 500;
+        line-height: 1.5;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .btn-hero {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center; /* Ensures content is centered */
+        gap: 6px;
+        background: white;
+        color: #1a1a1a;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.75rem;
+        line-height: 1; /* Fixes vertical text alignment */
+        text-decoration: none;
+        transition: all 0.2s ease;
+        box-shadow: none;
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .btn-hero:hover {
+        transform: translateY(-2px);
+        box-shadow: none;
+        color: #1a1a1a;
+        background: #f8f9fa;
+    }
+    
+    .btn-hero i {
+        transition: transform 0.3s ease;
+    }
+    
+    .btn-hero:hover i {
+        transform: translateX(4px);
+    }
+    
+    /* Carousel Controls */
+    .hero-section .carousel-control-prev,
+    .hero-section .carousel-control-next {
+        width: 40px;
+        height: 40px;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 10;
+        pointer-events: auto;
+    }
+    
+    .hero-section .carousel:hover .carousel-control-prev,
+    .hero-section .carousel:hover .carousel-control-next {
+        opacity: 1;
+    }
+    
+    .hero-section .carousel-control-prev:hover,
+    .hero-section .carousel-control-next:hover {
+        opacity: 1;
+        transform: translateY(-50%) scale(1.05);
+    }
+    
+    .hero-section .carousel-control-prev-icon,
+    .hero-section .carousel-control-next-icon {
+        width: 40px;
+        height: 40px;
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 50%;
+        background-size: 20px;
+        backdrop-filter: blur(8px);
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .hero-section .carousel-control-prev-icon {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z'/%3e%3c/svg%3e");
+    }
+    
+    .hero-section .carousel-control-next-icon {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+    }
+    
+    .hero-section .carousel-control-prev:hover .carousel-control-prev-icon,
+    .hero-section .carousel-control-next:hover .carousel-control-next-icon {
+        background-color: white;
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Carousel Indicators */
+    .hero-section .carousel-indicators {
+        margin-bottom: 1rem;
+    }
+    
+    .hero-section .carousel-indicators button {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin: 0 4px;
+        background-color: rgba(255, 255, 255, 0.5);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .hero-section .carousel-indicators button.active {
+        width: 24px;
+        border-radius: 4px;
+        background-color: white;
+    }
+    
+    /* Responsive Design */
+    @@media (max-width: 992px) {
+        .hero-slide {
+            height: 300px; /* Reduced from 340px */
+        }
+        
+        .hero-content {
+            padding: 0 2rem;
+        }
+        
+        .hero-title {
+            font-size: 2.2rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+    }
+    
+    @@media (max-width: 768px) {
+        .hero-slide {
+            height: 220px; /* Reduced from 250px */
+        }
+        
+        .hero-content {
+            padding: 0 1.5rem;
+        }
+        
+        .hero-title {
+            font-size: 1.8rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .btn-hero {
+            padding: 6px 16px;
+            font-size: 0.75rem;
+        }
+        
+        .hero-section .carousel-control-prev,
+        .hero-section .carousel-control-next {
+            display: none;
+        }
+    }
+
+    /* ============================================
+       GLOBAL SECTION STYLES
+       ============================================ */
+    
+    .sparkle-section-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin: 0;
+    }
+    
+    .sparkle-section-subtitle {
+        font-size: 0.95rem;
+        color: #666;
+        margin: 0;
+    }
+    
+    /* ============================================
+       CATEGORY SECTION - BALANCED GRID LAYOUT
+       ============================================ */
+    
+    .category-card .card {
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        background: white;
+        border: 1px solid #e5e5e5;
+        min-height: 140px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        box-shadow: none;
+    }
+    
+    .category-card .card:hover {
+        transform: none;
+        box-shadow: none !important;
+        border-color: #f57224;
+        background: #fffbf8;
+    }
+    
+    .category-icon {
+        width: 50px;
+        height: 50px;
+        background: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+        border: 1px solid #f0f0f0;
+    }
+    
+    .category-card .card:hover .category-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+    
+    .category-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #2d2d2d;
+        line-height: 1.3;
+        min-height: 2.6em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    
+    @@media (max-width: 576px) {
+        .category-card .card {
+            min-height: 120px;
+        }
+        
+        .category-icon {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .category-title {
+            font-size: 0.8rem;
+        }
+    }
+    
+    /* Category Hidden State */
+    .category-card-hidden {
+        display: none !important;
+    }
+
+    /* ============================================
+       FLASH DEALS SECTION - OPTIMIZED
+       ============================================ */
+    
+    .flash-deals-section {
+        background: linear-gradient(135deg, #fff5ed 0%, #ffe8d6 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .flash-deals-section::before {
+        content: '';
+        position: absolute;
+        top: -150px;
+        right: -150px;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(255, 106, 0, 0.08) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    
+    .flash-icon-badge {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #ff6a00 0%, #ff8c00 100%);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 20px rgba(255, 106, 0, 0.3);
+        flex-shrink: 0;
+    }
+    
+    .flash-icon-badge i {
+        font-size: 1.75rem;
+        color: white;
+        animation: flashIconPulse 2s ease-in-out infinite;
+    }
+    
+    @@keyframes flashIconPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .flash-countdown-box {
+        background: white;
+        border-radius: 16px;
+        padding: 16px 24px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        border: 2px solid #ffe8d6;
+    }
+    
+    .countdown-inner {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .countdown-text {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        white-space: nowrap;
+    }
+    
+    .countdown-units {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .time-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 50px;
+    }
+    
+    .time-num {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #ff6a00;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+    
+    .time-txt {
+        font-size: 0.65rem;
+        color: #999;
+        text-transform: uppercase;
+        margin-top: 4px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    .time-sep {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #ff6a00;
+        line-height: 1;
+        padding: 0 4px;
+    }
+    
+    .flash-card {
+        height: 100%;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        height: 100%;
+    }
+    
+    .flash-card-inner {
+        background: white;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid #e5e5e5;
+        box-shadow: none;
+        transition: all 0.2s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .flash-card:hover .flash-card-inner {
+        transform: none;
+        box-shadow: none;
+        border-color: #f57224;
+    }
+    
+    .flash-img-container {
+        position: relative;
+        width: 100%;
+        height: 150px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    
+    @@media (max-width: 768px) {
+        .flash-img-container {
+            height: 130px;
+        }
+    }
+    
+    .flash-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+    
+    .flash-card:hover .flash-img {
+        transform: scale(1.08);
+    }
+    
+    .discount-tag {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: linear-gradient(135deg, #ff1744 0%, #ff4569 100%);
+        color: white;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(255, 23, 68, 0.35);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        z-index: 2;
+        animation: badgePulse 2s ease-in-out infinite;
+    }
+    
+    @@keyframes badgePulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    .star-tag {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        color: #7c5b00;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        box-shadow: 0 3px 10px rgba(255, 215, 0, 0.4);
+        z-index: 2;
+    }
+    
+    .stock-tag {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 152, 0, 0.95);
+        color: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        backdrop-filter: blur(4px);
+        z-index: 2;
+    }
+    
+    .flash-card-body {
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+    }
+    
+    .flash-title {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #2d2d2d;
+        line-height: 1.4;
+        margin: 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 2.8em;
+    }
+    
+    .flash-prices {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin-top: auto;
+    }
+    
+    .current-price {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #ff1744;
+        line-height: 1;
+    }
+    
+    .old-price {
+        font-size: 0.8rem;
+        color: #999;
+        text-decoration: line-through;
+        font-weight: 500;
+    }
+    
+    .btn-flash-add {
+        width: 100%;
+        background: linear-gradient(135deg, #ff6a00 0%, #ff8c00 100%);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(255, 106, 0, 0.25);
+    }
+    
+    .btn-flash-add:hover {
+        background: linear-gradient(135deg, #ff5500 0%, #ff7700 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(255, 106, 0, 0.35);
+    }
+    
+    .btn-flash-add i {
+        font-size: 1rem;
+    }
+    
+
+    /* ============================================
+       TRENDING SECTION - OPTIMIZED
+       ============================================ */
+    
+    .trending-section {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .trending-section::before {
+        content: '';
+        position: absolute;
+        top: -150px;
+        left: -150px;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .trending-icon-badge {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        flex-shrink: 0;
+    }
+    
+    .trending-icon-badge i {
+        font-size: 1.75rem;
+        color: white;
+    }
+
+    .trending-icon-wrapper {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(239, 68, 68, 0.12);
+        padding: 5px 14px;
+        border-radius: 20px;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .live-dot {
+        width: 8px;
+        height: 8px;
+        background: #ef4444;
+        border-radius: 50%;
+        animation: livePulse 2s ease-in-out infinite;
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+    }
+
+    .live-text {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #ef4444;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    @@keyframes livePulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.6; transform: scale(0.9); }
+    }
+
+    .btn-see-all {
+        background: white;
+        color: #10b981;
+        border: 1px solid #10b981;
+        padding: 10px 28px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: none;
+    }
+
+    .btn-see-all:hover {
+        background: #10b981;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: none;
+    }
+
+    .btn-see-all i {
+        transition: transform 0.3s ease;
+    }
+
+    .btn-see-all:hover i {
+        transform: translateX(4px);
+    }
+
+    .trending-card .card {
+        border-radius: 6px;
+        overflow: hidden;
+        transition: all 0.2s ease;
+        background: white;
+        box-shadow: none;
+        border: 1px solid #e5e5e5;
+    }
+
+    .trending-card:hover .card {
+        transform: translateY(-2px);
+        box-shadow: none;
+        border-color: #f57224;
+    }
+
+    .trending-image-wrapper {
+        position: relative;
+        overflow: hidden;
+        height: 140px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+    .trending-image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+
+    .trending-card:hover .trending-image-wrapper img {
+        transform: scale(1.1);
+    }
+
+    .sparkle-featured-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: rgba(255, 215, 0, 0.95);
+        color: #7c5b00;
+        border: none;
+        padding: 6px;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+    }
+
+    .quick-add-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .trending-card:hover .quick-add-overlay {
+        opacity: 1;
+    }
+
+    .btn-quick-add {
+        background: white;
+        color: #10b981;
+        border: none;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        transform: scale(0.8);
+    }
+
+    .trending-card:hover .btn-quick-add {
+        transform: scale(1);
+    }
+
+    .btn-quick-add:hover {
+        background: #10b981;
+        color: white;
+        transform: scale(1.1);
+    }
+
+    .trending-product-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.3;
+        margin-bottom: 0.5rem;
+        min-height: 2.6em;
+    }
+
+    .trending-price {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.5rem;
+    }
+
+    .trending-price .current-price {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #10b981;
+    }
+
+    .trending-discount {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        color: #dc2626;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    .trending-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 8px;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .trending-rating {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #666;
+    }
+
+    .trending-rating i {
+        color: #fbbf24;
+        font-size: 0.85rem;
+    }
+    
+    .trending-rank {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 3;
+    }
+    
+    .rank-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        font-weight: 800;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.5);
+        border: 2px solid white;
+    }
+    
+    .trending-card .card-body {
+        padding: 10px;
+    }
+    
+    .trending-product-title {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #2d2d2d;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.4;
+        margin-bottom: 10px;
+        min-height: 2.8em;
+    }
+    
+    .trending-price {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    
+    .trending-price .current-price {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #10b981;
+    }
+
+    /* ============================================
+       FEATURED PRODUCTS SECTION - PROFESSIONAL DESIGN
+       ============================================ */
+    
+    /* Product Card Hidden State */
+    .product-card-hidden {
+        display: none !important;
+    }
+    
+    /* Featured Product Card Container */
+    .featured-product-card {
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        overflow: hidden;
+        height: 100%;
+        background: white;
+        box-shadow: none;
+        border: 1px solid #e5e5e5;
+    }
+    
+    .product-card:hover .featured-product-card {
+        transform: translateY(-2px);
+        box-shadow: none !important;
+        border-color: #f57224;
+    }
+    
+    /* Product Image - Reduced Height */
+    .product-card .product-image-wrapper {
+        height: 170px; /* Reduced further for compactness */
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    
+    .product-image-wrapper img {
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .product-card:hover .product-image-wrapper img {
+        transform: scale(1.1);
+    }
+    
+    /* Product Title */
+    .product-card .product-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 2.6em;
+        transition: color 0.2s ease;
+        margin-bottom: 4px !important;
+    }
+    
+    .product-card .product-title:hover {
+        color: #dc2626;
+    }
+    
+    /* Product Description */
+    .product-card .product-description {
+        font-size: 0.75rem;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 1.3em;
+        margin-bottom: 6px !important;
+    }
+    
+    /* Premium Price Section */
+    .product-card .current-price {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #dc2626;
+        letter-spacing: -0.5px;
+    }
+    
+    .product-card .original-price {
+        font-size: 0.85rem;
+        color: #9ca3af;
+        text-decoration: line-through;
+        font-weight: 500;
+    }
+
+    .save-badge {
+        background-color: #fee2e2;
+        color: #dc2626;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: auto;
+    }
+
+    .product-price-section {
+        margin-bottom: 10px !important;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    /* Add to Cart Button - Classic Style */
+    .add-to-cart-btn {
+        background: #dc2626; /* Solid red */
+        border: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 10px 16px;
+        height: 42px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(220, 38, 38, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        color: white;
+    }
+    
+    .add-to-cart-btn:hover {
+        background: #b91c1c;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        color: white;
+    }
+    
+    .add-to-cart-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+    }
+    
+    .add-to-cart-btn i {
+        font-size: 1.1rem;
+    }
+    
+    /* Badge Styling */
+    .product-card .badge {
+        font-weight: 600;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+    }
+
+    /* ============================================
+       TRUST BADGES SECTION - OPTIMIZED
+       ============================================ */
+    
+    .trust-badge {
+        padding: 2rem 1.5rem;
+        background: white;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        box-shadow: none;
+        border: 1px solid #e5e5e5;
+    }
+    
+    .trust-badge:hover {
+        transform: none;
+        box-shadow: none;
+        border-color: #f57224;
+    }
+    
+    .trust-badge i {
+        transition: all 0.3s ease;
+    }
+    
+    .trust-badge:hover i {
+        transform: scale(1.15) rotate(5deg);
+    }
+    
+    .trust-badge h5 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+    }
+    
+    .trust-badge .text-muted {
+        font-size: 0.875rem;
+        color: #666 !important;
+    }
+
+    /* ============================================
+       SEE MORE BUTTONS - PROFESSIONAL DESIGN
+       ============================================ */
+    
+    .see-more-button {
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        border: none;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .see-more-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .see-more-button:hover::before {
+        left: 100%;
+    }
+    
+    .see-more-button:hover {
+        background: linear-gradient(135deg, #5568d3 0%, #6941a1 100%);
+        transform: translateY(-2px);
+        box-shadow: none !important;
+    }
+    
+    .see-more-button:active {
+        transform: translateY(0);
+        box-shadow: none !important;
+    }
+    
+    .see-more-button i {
+        transition: transform 0.3s ease;
+        display: inline-block;
+    }
+    
+    .see-more-button.expanded i {
+        transform: rotate(180deg);
+    }
+    
+    @@media (max-width: 576px) {
+        .see-more-button {
+            font-size: 0.9rem;
+            padding: 0.65rem 2rem !important;
+        }
+    }
+
+    /* ============================================
+       UTILITY CLASSES
+       ============================================ */
+    
+    .hover-lift {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .hover-lift:hover {
+        transform: translateY(-4px);
+    }
+
+    .category-card-hidden {
+        display: none;
+    }
+
+    /* ============================================
+       HORIZONTAL SCROLL SECTIONS
+       ============================================ */
+    .horizontal-scroll-container {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+        padding: 5px 5px 15px 5px; /* Added padding bottom for shadow */
+        scroll-behavior: smooth;
+    }
+
+    .horizontal-scroll-container::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+
+    .scroll-card-wrapper {
+        flex: 0 0 auto;
+        width: 240px;
+        scroll-snap-align: start;
+        height: 100%;
+    }
+
+    /* Scroll Navigation Buttons */
+    .scroll-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        color: #1a1a1a;
+        font-size: 1.2rem;
+    }
+
+    .scroll-btn:hover {
+        background: linear-gradient(135deg, #ff6a00 0%, #ff8c00 100%);
+        color: white;
+        border-color: #ff6a00;
+        box-shadow: 0 6px 20px rgba(255, 106, 0, 0.4);
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    .scroll-btn:active {
+        transform: translateY(-50%) scale(0.95);
+    }
+
+    .scroll-btn-prev {
+        left: -20px;
+    }
+
+    .scroll-btn-next {
+        right: -20px;
+    }
+
+    .scroll-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+    
+    .transition-transform {
+        transition: transform 0.3s ease;
+    }
+    
+    .btn.expanded .bi-chevron-down {
+        transform: rotate(180deg);
+    }
+
+    /* ============================================
+       RESPONSIVE ADJUSTMENTS
+       ============================================ */
+    
+    @@media (max-width: 992px) {
+        .sparkle-section-title {
+            font-size: 1.5rem;
+        }
+        
+        .sparkle-section-subtitle {
+            font-size: 0.875rem;
+        }
+        
+        .category-scroll-btn {
+            display: none;
+        }
+        
+        .scroll-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+        
+        .scroll-btn-prev {
+            left: -10px;
+        }
+        
+        .scroll-btn-next {
+            right: -10px;
+        }
+    }
+    
+    @@media (max-width: 768px) {
+        .flash-icon-wrapper,
+        .trending-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            font-size: 1.5rem;
+        }
+        
+        .sparkle-section-title {
+            font-size: 1.35rem;
+        }
+        
+        .countdown-timer-wrapper {
+            width: 100%;
+        }
+        
+        .time-num {
+            font-size: 1.5rem;
+        }
+        
+        .flash-card-wrapper {
+            width: 180px;
+        }
+        
+        .flash-img-container {
+            height: 180px;
+        }
+        
+        .trending-image-wrapper {
+            height: 160px;
+        }
+        
+        .product-image-wrapper {
+            height: 200px !important;
+        }
+        
+        .trust-badge {
+            padding: 1.5rem 1rem;
+        }
+        
+        .sparkle-category-item {
+            width: 140px;
+        }
+        
+        .add-to-cart-btn {
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            height: 38px;
+        }
+        
+        .product-card .product-title {
+            font-size: 0.875rem;
+        }
+        
+        .product-card .current-price {
+            font-size: 1.1rem;
+        }
+    }
+    
+    @@media (min-width: 769px) and (max-width: 992px) {
+        .product-image-wrapper {
+            height: 220px !important;
+        }
+    }
+
+    /* Category Animation Keyframes */
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Padding Overrides to ensure 1% padding */
+    .unified-product-info, 
+    .trending-product-details,
+    .flash-product-card .unified-product-info {
+        padding: 5px !important;
+    }
+    
+    .unified-product-title,
+    .trending-product-title {
+        margin-bottom: 4px !important;
+    }
+    
+</style>
+
+<script>
+    // Countdown Timer for Flash Deals
+    function startCountdown() {
+        const endTime = new Date();
+        endTime.setHours(23, 59, 59, 999);
+        
+        const hoursEl = document.getElementById('hours');
+        const minutesEl = document.getElementById('minutes');
+        const secondsEl = document.getElementById('seconds');
+        
+        function updateCountdown() {
+            const now = new Date();
+            const diff = endTime - now;
+            
+            if (diff <= 0) {
+                if (hoursEl) hoursEl.textContent = '00';
+                if (minutesEl) minutesEl.textContent = '00';
+                if (secondsEl) secondsEl.textContent = '00';
+                return;
+            }
+            
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            if (hoursEl) hoursEl.textContent = hours.toString().padStart(2, '0');
+            if (minutesEl) minutesEl.textContent = minutes.toString().padStart(2, '0');
+            if (secondsEl) secondsEl.textContent = seconds.toString().padStart(2, '0');
+        }
+        
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    }
+    
+    // Start countdown when page loads
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startCountdown);
+    } else {
+        startCountdown();
+    }
+    
+    // Add to Cart function - Uses AJAX endpoint for seamless experience
+    async function addToCart(productId, productName, productPrice, productImage, variantId, event) {
+        
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        if (!variantId || variantId <= 0) {
+            // Try to fallback to finding it in the DOM if not provided
+            const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
+            const variantAttr = card ? card.getAttribute('data-variant-id') : null;
+            variantId = variantAttr ? parseInt(variantAttr) : 0;
+            
+            if (!variantId) {
+                showToast('Product variant not available.', 'danger');
+                console.error('No valid variant ID found for product:', productId);
+                return;
+            }
+        }
+
+        const btn = event ? event.currentTarget : document.getElementById(`addToCartBtn-${productId}`);
+        const btnText = btn ? btn.querySelector('.btn-text') : null;
+        const spinner = btn ? btn.querySelector('.spinner-border') : null;
+
+        if (btn) {
+            btn.disabled = true;
+            if (btnText) btnText.classList.add('opacity-50');
+            if (spinner) spinner.classList.remove('d-none');
+        }
+
+        try {
+            const response = await fetch('/cart/add-ajax', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    productVariantId: variantId,
+                    quantity: 1
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message || 'Product added to cart successfully.', 'success');
+                // Update cart count in header
+                updateCartBadge(result.cartCount);
+            } else {
+                showToast(result.message || 'Failed to add to cart', 'danger');
+            }
+        } catch (e) {
+            showToast('Unable to add item. Please try again.', 'danger');
+            console.error('Add to cart error:', e);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                if (btnText) btnText.classList.remove('opacity-50');
+                if (spinner) spinner.classList.add('d-none');
+            }
+        }
+    }
+
+    // Update cart badge in header
+    function updateCartBadge(count) {
+        // Ensure count is a valid number
+        const cartCount = typeof count === 'number' ? count : parseInt(count) || 0;
+        
+        const cartBadge = document.getElementById('cartCount');
+        if (cartBadge) {
+            // Format display: show 99+ if over 99
+            cartBadge.textContent = cartCount > 99 ? '99+' : cartCount;
+            // Use flex display to match CSS styling in _Layout.cshtml
+            cartBadge.style.display = cartCount > 0 ? 'flex' : 'none';
+        }
+    }
+    
+    // Wishing for Wishlist function
+    function addToWishlist(productId, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        showToast('Wishlist feature is coming soon.', 'info');
+    }
+    
+    /* Animation Keyframes - NOTE: Moved to style block */
+
+    // ===================================================================
+    // CATEGORY TOGGLE - REBUILT IMPLEMENTATION
+    // Shows 12 categories initially, all 24 when "See More" is clicked
+    // ===================================================================
+    
+    function toggleCategoryDisplay(event) {
+        if (event) event.preventDefault();
+        
+        const btn = document.getElementById('seeMoreBtn');
+        const btnText = document.getElementById('seeMoreText');
+        const btnIcon = document.getElementById('seeMoreIcon');
+        const categoryCards = document.querySelectorAll('.category-card-item');
+        
+        if (!btn || !btnText) {
+            console.error('Button elements not found');
+            return;
+        }
+        
+        // Check if we're currently expanded
+        const isExpanded = btn.classList.contains('expanded');
+        
+        // Process each card
+        categoryCards.forEach((card, index) => {
+            // First 12 cards (0-11): Always visible
+            if (index < 12) {
+                card.style.display = '';
+                card.style.removeProperty('display');
+            }
+            // Cards 12-23: Toggle visibility
+            else if (index < 24) {
+                if (isExpanded) {
+                    // Collapsing - hide cards 12-23
+                    card.style.display = 'none';
+                } else {
+                    // Expanding - show cards 12-23 with animation
+                    card.style.display = '';
+                    card.style.removeProperty('display');
+                    card.style.animation = 'fadeInUp 0.3s ease-out forwards';
+                    card.style.animationDelay = `${(index - 12) * 0.05}s`;
+                }
+            }
+            // Cards 24+: Always hidden
+            else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Toggle button state
+        if (isExpanded) {
+            btn.classList.remove('expanded');
+            btnText.textContent = '@(isBangla ? "আরও দেখুন" : "See More")';
+            if (btnIcon) btnIcon.style.transform = 'rotate(0deg)';
+        } else {
+            btn.classList.add('expanded');
+            btnText.textContent = '@(isBangla ? "কম দেখুন" : "See Less")';
+            if (btnIcon) btnIcon.style.transform = 'rotate(180deg)';
+        }
+    }
+    
+    // Make function globally available
+    window.toggleCategoryDisplay = toggleCategoryDisplay;
+    
+    // Initialize on DOM ready to ensure correct initial state
+    document.addEventListener('DOMContentLoaded', function() {
+        const categoryCards = document.querySelectorAll('.category-card-item');
+    });
+    
+    // Flash Deals Scroll Function
+    function scrollFlashDeals(direction) {
+        const container = document.getElementById('flashDealsContainer');
+        if (!container) return;
+        
+        const scrollAmount = 260; // Card width + gap
+        const currentScroll = container.scrollLeft;
+        
+        if (direction === 'left') {
+            container.scrollLeft = currentScroll - scrollAmount;
+        } else {
+            container.scrollLeft = currentScroll + scrollAmount;
+        }
+    }
+    
+    // Trending Scroll Function
+    function scrollTrending(direction) {
+        const container = document.getElementById('trendingContainer');
+        if (!container) return;
+        
+        const scrollAmount = 260; // Card width + gap
+        const currentScroll = container.scrollLeft;
+        
+        if (direction === 'left') {
+            container.scrollLeft = currentScroll - scrollAmount;
+        } else {
+            container.scrollLeft = currentScroll + scrollAmount;
+        }
+    } 
+
+    // Featured Products Toggle Function - Smooth Animation
+    function toggleFeaturedProducts() {
+        const allCards = document.querySelectorAll('.product-card-item');
+        const btn = document.getElementById('featuredSeeMoreBtn');
+        const btnText = document.getElementById('featuredSeeMoreText');
+        const btnIcon = document.getElementById('featuredSeeMoreIcon');
+        
+        if (!btn || !btnText || !btnIcon) return;
+        
+        const isExpanded = btn.classList.contains('expanded');
+        
+        allCards.forEach((card, index) => {
+            if (index >= 15) {
+                if (isExpanded) {
+                    card.classList.add('product-card-hidden');
+                    card.classList.remove('animate-fade-in-up');
+                } else {
+                    card.classList.remove('product-card-hidden');
+                    card.style.animationDelay = `${(index - 15) * 0.05}s`;
+                    card.classList.add('animate-fade-in-up');
+                }
+            }
+        });
+        
+        if (isExpanded) {
+            btn.classList.remove('expanded');
+            btnText.textContent = '@(isBangla ? "আরও প্রোডাক্ট দেখুন" : "See More Products")';
+            document.getElementById('featuredProductsGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            btn.classList.add('expanded');
+            btnText.textContent = '@(isBangla ? "কম দেখুন" : "See Less")';
+        }
+    }
+
+</script>
+}

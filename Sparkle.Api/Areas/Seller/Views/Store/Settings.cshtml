@@ -1,0 +1,323 @@
+@model Sparkle.Domain.Sellers.Seller
+@{
+    ViewData["Title"] = "Store Settings";
+}
+
+<style>
+    /* Compact Settings Theme - Orange */
+    :root {
+        --primary: #f97316;
+        --primary-dark: #ea580c;
+        --bg-surface: #ffffff;
+        --bg-subtle: #f8fafc;
+        --border-color: #e2e8f0;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+    }
+
+    .settings-container { font-size: 0.9rem; max-width: 100%; }
+
+    /* Compact Header */
+    .settings-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 10px rgba(249, 115, 22, 0.2);
+    }
+    .header-info h1 { font-size: 1.25rem; font-weight: 700; margin: 0; }
+    .header-info p { font-size: 0.8rem; opacity: 0.9; margin: 0; }
+    .header-actions .btn-view-shop {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: none;
+        padding: 0.4rem 0.85rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .header-actions .btn-view-shop:hover { background: rgba(255,255,255,0.3); }
+
+    /* Main Card */
+    .settings-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    /* Form Layout */
+    .form-section {
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .form-section:last-child { border-bottom: none; }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    .section-title { 
+        font-size: 0.95rem; 
+        font-weight: 700; 
+        color: var(--text-main); 
+        display: flex; 
+        align-items: center; 
+        gap: 0.5rem; 
+    }
+    .section-title i { color: var(--primary); font-size: 1rem; }
+
+    /* Compact Grid */
+    .compact-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+    
+    .form-group { margin-bottom: 0; }
+    .form-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .form-input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 0.85rem;
+        color: var(--text-main);
+        transition: all 0.15s;
+        background: var(--bg-subtle);
+    }
+    .form-input:focus {
+        border-color: var(--primary);
+        background: white;
+        box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
+        outline: none;
+    }
+    
+    .full-width { grid-column: span 3; }
+    .two-thirds { grid-column: span 2; }
+    
+    /* Logo Uploader */
+    .logo-upload-area {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem;
+        background: var(--bg-subtle);
+        border-radius: 8px;
+        border: 1px dashed var(--border-color);
+    }
+    .current-logo {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        background: #ddd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: 1.5rem;
+    }
+    .upload-btn {
+        font-size: 0.8rem;
+        color: var(--primary);
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    /* Toggles & Checkboxes */
+    .toggle-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--text-main);
+        cursor: pointer;
+    }
+    
+    /* Action Bar (Sticky Bottom) */
+    .action-bar {
+        position: sticky;
+        bottom: 0;
+        background: rgba(255,255,255,0.9);
+        backdrop-filter: blur(5px);
+        padding: 0.75rem 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 0.75rem;
+        z-index: 10;
+    }
+    .btn-save {
+        padding: 0.5rem 1.25rem;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        box-shadow: 0 2px 4px rgba(249, 115, 22, 0.2);
+        cursor: pointer;
+    }
+    .btn-cancel {
+        padding: 0.5rem 1rem;
+        background: white;
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+    }
+</style>
+
+<div class="settings-container">
+    <div class="settings-header">
+        <div class="header-info">
+            <h1>Store Settings</h1>
+            <p>Manage store profile & business details</p>
+        </div>
+        <div class="header-actions">
+            <a href="#" class="btn-view-shop"><i class="fas fa-external-link-alt"></i> View Shop</a>
+        </div>
+    </div>
+
+    <form asp-action="UpdateSettings" method="post" class="settings-card">
+        <!-- Identity & Branding -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="section-title"><i class="fas fa-store"></i> Identity & Branding</span>
+            </div>
+            <div class="compact-grid">
+                <div class="form-group two-thirds">
+                    <label class="form-label">Shop Name</label>
+                    <input asp-for="ShopName" class="form-input" placeholder="e.g. Daily Essentials" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Business Type</label>
+                    <select class="form-input">
+                        <option>Retail</option>
+                        <option>Wholesale</option>
+                        <option>Manufacturer</option>
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                     <label class="form-label">Store Logo</label>
+                     <div class="logo-upload-area">
+                         <div class="current-logo"><i class="fas fa-image"></i></div>
+                         <div>
+                             <div class="upload-btn">Upload New Logo</div>
+                             <div style="font-size: 0.7rem; color: #94a3b8;">Max 2MB, PNG/JPG</div>
+                         </div>
+                     </div>
+                </div>
+                <div class="form-group full-width">
+                    <label class="form-label">Shop Description</label>
+                    <textarea asp-for="ShopDescription" class="form-input" rows="2" placeholder="Brief description of your store..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Business & Tax Info -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="section-title"><i class="fas fa-file-invoice"></i> Business & Legal</span>
+            </div>
+            <div class="compact-grid">
+                <div class="form-group">
+                    <label class="form-label">Tax / VAT ID</label>
+                    <input type="text" class="form-input" placeholder="TRN-XXXX-XXXX" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Trade License</label>
+                    <input type="text" class="form-input" placeholder="License No." />
+                </div>
+                 <div class="form-group">
+                    <label class="form-label">Establishment Date</label>
+                    <input type="date" class="form-input" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact & Social -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="section-title"><i class="fas fa-address-card"></i> Contact & Social</span>
+            </div>
+            <div class="compact-grid">
+                <div class="form-group">
+                    <label class="form-label">Mobile Number</label>
+                    <input asp-for="MobileNumber" class="form-input" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input asp-for="Email" class="form-input" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Website</label>
+                    <input type="url" class="form-input" placeholder="https://" />
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label"><i class="fab fa-facebook text-primary"></i> Facebook</label>
+                    <input type="text" class="form-input" placeholder="Page URL" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fab fa-instagram text-danger"></i> Instagram</label>
+                    <input type="text" class="form-input" placeholder="Profile URL" />
+                </div>
+                 <div class="form-group">
+                    <label class="form-label"><i class="fab fa-linkedin text-info"></i> LinkedIn</label>
+                    <input type="text" class="form-input" placeholder="Profile URL" />
+                </div>
+            </div>
+        </div>
+        
+        <!-- Location -->
+        <div class="form-section">
+            <div class="section-header">
+                 <span class="section-title"><i class="fas fa-map-marker-alt"></i> Location</span>
+                 <label class="toggle-group">
+                     <input type="checkbox" checked /> Allow Pickup
+                 </label>
+            </div>
+            <div class="compact-grid">
+                <div class="form-group two-thirds">
+                    <label class="form-label">Address</label>
+                    <input asp-for="BusinessAddress" class="form-input" />
+                </div>
+                 <div class="form-group">
+                    <label class="form-label">City</label>
+                    <input asp-for="City" class="form-input" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Sticky Footer -->
+        <div class="action-bar">
+            <button type="button" class="btn-cancel">Reset</button>
+            <button type="submit" class="btn-save"><i class="fas fa-check"></i> Save Changes</button>
+        </div>
+    </form>
+</div>

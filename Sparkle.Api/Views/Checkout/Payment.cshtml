@@ -1,0 +1,277 @@
+@model Sparkle.Api.Controllers.CheckoutController.PaymentStepViewModel
+@{
+    ViewData["Title"] = "Payment - Checkout";
+    var langCookie = Context.Request.Cookies["sparkle-lang"] == "bn" ? "bn" : "en";
+    var isBangla = langCookie == "bn";
+}
+
+<style>
+    /* Orange Theme Variables */
+    :root {
+        --checkout-primary: #f85606;
+        --checkout-bg: #f5f5f5;
+        --checkout-border: #eff0f5;
+        --checkout-text: #212121;
+    }
+
+    body { background-color: var(--checkout-bg); font-family: 'Inter', sans-serif; }
+
+    .checkout-container {
+        max-width: 1188px;
+        margin: 20px auto;
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .main-col { flex: 1; min-width: 0; }
+    .sidebar-col { width: 380px; flex-shrink: 0; }
+
+    .section-card {
+        background: #fff;
+        padding: 20px;
+        margin-bottom: 12px;
+        border-radius: 0;
+    }
+
+    .section-title {
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 20px;
+        color: var(--checkout-text);
+    }
+
+    /* Payment Methods Grid */
+    .payment-grid {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .payment-option-card {
+        width: 120px;
+        height: 100px;
+        border: 1px solid var(--checkout-border);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+        background: #fff;
+        padding: 10px;
+    }
+    .payment-option-card:hover { border-color: #ddd; }
+    .payment-option-card.active {
+        border: 2px solid var(--checkout-primary);
+        position: relative;
+    }
+    .payment-option-card.active::after {
+        content: 'OK';
+        position: absolute;
+        top: 0; right: 0;
+        background: var(--checkout-primary);
+        color: white;
+        font-size: 10px;
+        padding: 0 4px;
+    }
+
+    .pay-icon {
+        font-size: 24px;
+        margin-bottom: 8px;
+        color: #555;
+    }
+    .pay-label {
+        font-size: 12px;
+        color: #555;
+        line-height: 1.2;
+    }
+
+    .bkash-icon { color: #e2136e; }
+    .nagad-icon { color: #f6921e; }
+    .card-icon { color: #1a1a1a; }
+    .cod-icon { color: #00bfa5; }
+
+    /* Right Column Summary */
+    .summary-box {
+        background: #fff;
+        padding: 16px;
+    }
+    .summary-header {
+        font-size: 16px;
+        margin-bottom: 12px;
+        color: var(--checkout-text);
+    }
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        color: #757575;
+        margin-bottom: 8px;
+    }
+    .summary-total {
+        margin-top: 16px;
+        font-size: 18px;
+        color: var(--checkout-primary);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .checkout-btn {
+        display: block;
+        width: 100%;
+        background-color: var(--checkout-primary);
+        color: white;
+        text-align: center;
+        padding: 12px 0;
+        font-size: 14px;
+        font-weight: 700;
+        text-transform: uppercase;
+        border: none;
+        border-radius: 2px;
+        text-decoration: none;
+        margin-top: 16px;
+        cursor: pointer;
+    }
+    .checkout-btn:hover { background-color: #d34b05; }
+    
+    .recommended-alert {
+        background: #fff8f8;
+        border: 1px solid #ffd6d6;
+        padding: 8px 12px;
+        font-size: 12px;
+        color: #333;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    @@media (max-width: 991px) {
+        .checkout-container { flex-direction: column; padding: 0 10px; }
+        .sidebar-col { width: 100%; }
+    }
+</style>
+
+<div class="checkout-container">
+    <div class="main-col">
+        <div class="section-card">
+            <div class="section-title">Select Payment Method</div>
+            
+            <div class="recommended-alert">
+                 <i class="bi bi-info-circle-fill" style="color: var(--checkout-primary);"></i>
+                 <span>Collect your Vouchers & Offers! Save more on your order.</span>
+            </div>
+
+            <form method="post" action="/checkout/payment" id="paymentForm">
+                <input type="hidden" name="paymentMethod" id="paymentMethodInput">
+                
+                <div class="payment-grid">
+                    <!-- Credit/Debit Card -->
+                    <div class="payment-option-card" data-method="card" onclick="selectPayment('card', this)">
+                        <i class="bi bi-credit-card-2-front pay-icon card-icon"></i>
+                        <span class="pay-label">Credit/Debit Card</span>
+                    </div>
+
+                    <!-- bKash -->
+                    <div class="payment-option-card" data-method="bkash" onclick="selectPayment('bkash', this)">
+                        <!-- Simple text icon replacement if image not available -->
+                        <i class="bi bi-phone pay-icon bkash-icon"></i> 
+                        <span class="pay-label">bKash</span>
+                    </div>
+
+                     <!-- Nagad -->
+                    <div class="payment-option-card" data-method="nagad" onclick="selectPayment('nagad', this)">
+                        <i class="bi bi-wallet2 pay-icon nagad-icon"></i>
+                        <span class="pay-label">Nagad</span>
+                    </div>
+
+                    <!-- Rocket -->
+                    <div class="payment-option-card" data-method="rocket" onclick="selectPayment('rocket', this)">
+                        <i class="bi bi-send pay-icon" style="color: #8e44ad;"></i>
+                        <span class="pay-label">Rocket</span>
+                    </div>
+
+                    <!-- Cash on Delivery -->
+                    <div class="payment-option-card" data-method="cod" onclick="selectPayment('cod', this)">
+                        <i class="bi bi-cash pay-icon cod-icon"></i>
+                        <span class="pay-label">Cash on Delivery</span>
+                    </div>
+
+                    <!-- Instalment -->
+                    <div class="payment-option-card" data-method="instalment" onclick="selectPayment('instalment', this)">
+                         <i class="bi bi-calendar-check pay-icon"></i>
+                         <span class="pay-label">Instalment</span>
+                    </div>
+                </div>
+            </form>
+            
+            <div style="margin-top: 20px; padding: 16px; background: #f9f9f9; border-radius: 4px; font-size: 12px; color: #666; line-height: 1.5;">
+                <p><strong>Note:</strong> You will be redirected to SSLCommerz to complete your secure transaction.</p>
+                <p>We do not store your card details.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="sidebar-col">
+        <div class="summary-box">
+             <h3 class="summary-header">Order Summary</h3>
+             <div class="summary-row">
+                 <span>Subtotal (@Model.Cart.Items.Count items)</span>
+                 <span>৳ @Model.Subtotal.ToString("N0")</span>
+             </div>
+             <div class="summary-row">
+                 <span>Shipping Fee</span>
+                 <span>৳ @Model.ShippingFee.ToString("N0")</span>
+             </div>
+             
+             <div class="summary-total">
+                 <span style="font-size: 14px; color: #212121;">Total Amount</span>
+                 <span style="color: var(--checkout-primary);">৳ @((Model.Subtotal + Model.ShippingFee).ToString("N0"))</span>
+             </div>
+             
+             <button onclick="submitPayment()" class="checkout-btn" id="submitBtn">@(isBangla ? "অর্ডার সম্পন্ন করুন" : "PLACE ORDER")</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function selectPayment(method, element) {
+        // Clear active
+        document.querySelectorAll('.payment-option-card').forEach(c => c.classList.remove('active'));
+        // Set active
+        element.classList.add('active');
+        // Set input
+        document.getElementById('paymentMethodInput').value = method;
+        
+        // Update button text
+        const btn = document.getElementById('submitBtn');
+        if (method === 'cod') {
+            btn.innerText = '@(isBangla ? "অর্ডার সম্পন্ন করুন" : "PLACE ORDER")';
+        } else {
+            btn.innerText = '@(isBangla ? "পেমেন্ট করুন" : "PAY NOW")';
+        }
+    }
+
+    function submitPayment() {
+        const method = document.getElementById('paymentMethodInput').value;
+        if (!method) {
+            alert("Please select a payment method");
+            return;
+        }
+        document.getElementById('paymentForm').submit();
+    }
+
+    // Auto-select if value exists
+    document.addEventListener('DOMContentLoaded', function() {
+        var selected = '@ViewBag.SelectedPaymentMethod';
+        if(selected) {
+            var card = document.querySelector(`.payment-option-card[data-method="${selected}"]`);
+            if (card) {
+                selectPayment(selected, card);
+            }
+        }
+    });
+</script>

@@ -1,0 +1,531 @@
+/* Skydash Admin Theme Variables */
+:root {
+    --sk-primary: #0d6efd;
+    /* Primary Blue */
+    --sk-secondary: #0d6efd;
+    /* Secondary Blue */
+    --sk-success: #10b981;
+    /* Emerald */
+    --sk-info: #3b82f6;
+    /* Sky Blue */
+    --sk-warning: #f59e0b;
+    /* Amber */
+    --sk-danger: #ef4444;
+    /* Red */
+    --sk-dark: #282f3a;
+    /* Dark Text */
+    --sk-muted: #8c8c8c;
+    /* Muted Text */
+    --sk-bg: #f8f9fa;
+    /* Sparkle Light Gray */
+    --font-primary: 'Nunito', 'Inter', sans-serif;
+    /* Skydash uses sleek rounding */
+
+    --sidebar-width: 220px;
+    --header-height: 60px;
+    --card-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+    /* Flat by default, shadow on hover or specific cards */
+    --card-radius: 8px;
+    --transition: all 0.3s ease;
+}
+
+/* Global Reset & Typography */
+* {
+    font-family: var(--font-primary);
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--sk-bg);
+    color: var(--sk-dark);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+/* Import Nunito for that rounded Skydash look */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap');
+
+/* Layout Grid */
+.admin-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar Styles - Skydash is White with Purple accents */
+.sidebar {
+    width: var(--sidebar-width);
+    background: #ffffff;
+    position: fixed;
+    height: 100vh;
+    z-index: 1000;
+    transition: var(--transition);
+    border-right: none;
+    box-shadow: 0px 5px 21px -5px #CDD1E1;
+}
+
+.sidebar-header {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    justify-content: flex-start;
+}
+
+.sidebar-brand {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--sk-primary);
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar-brand span {
+    color: var(--sk-primary);
+}
+
+.sidebar-menu {
+    padding: 1rem 0;
+    overflow-y: auto;
+    height: calc(100vh - var(--header-height));
+    padding-bottom: 50px;
+}
+
+.menu-label {
+    padding: 1rem 2rem 0.5rem 2rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--sk-muted);
+    font-weight: 700;
+}
+
+/* Skydash Sidebar Items */
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: #252525;
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+    position: relative;
+    border-radius: 10px;
+    margin: 4px 12px;
+}
+
+.menu-item i {
+    font-size: 1.1rem;
+    margin-right: 1rem;
+    color: #252525;
+}
+
+/* Active State */
+.menu-item.active,
+.menu-item:hover {
+    color: white;
+    background: #0d6efd;
+    box-shadow: none;
+}
+
+.menu-item.active i,
+.menu-item:hover i {
+    color: white;
+}
+
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Top Header - White with Shadow */
+.top-header {
+    height: var(--header-height);
+    background: white;
+    box-shadow: 0px 5px 21px -5px #CDD1E1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 900;
+}
+
+/* Search Bar - Minimal */
+.header-search {
+    position: relative;
+    width: 400px;
+}
+
+.header-search i {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--sk-dark);
+    font-size: 1.1rem;
+}
+
+.header-search input {
+    width: 100%;
+    padding: 0.5rem 0.5rem 0.5rem 2rem;
+    border: none;
+    font-size: 0.95rem;
+    color: var(--sk-dark);
+}
+
+.header-search input::placeholder {
+    color: #8c8c8c;
+    font-weight: 400;
+}
+
+.header-search input:focus {
+    outline: none;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    position: relative;
+    cursor: pointer;
+    color: var(--sk-dark);
+    font-size: 1.25rem;
+}
+
+.badge-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: var(--sk-danger);
+    border-radius: 50%;
+    border: 1px solid white;
+}
+
+/* Profile Dropdown */
+.user-profile img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Content Padding */
+.content-wrapper {
+    padding: 1.5rem;
+}
+
+/* Skydash Cards */
+.card {
+    background: white;
+    border-radius: var(--card-radius);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    /* Ultra-premium soft shadow */
+    margin-bottom: 1rem;
+    transition: transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: none;
+    padding: 1rem 1.25rem 0.5rem 1.25rem;
+    font-weight: 700;
+    color: var(--sk-dark);
+    font-size: 1.05rem;
+    letter-spacing: 0.3px;
+    text-transform: capitalize;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+/* Stats Cards (Solid Colors) */
+.card-tale {
+    background: linear-gradient(135deg, #7DA0FA 0%, #4B49AC 100%);
+    /* Soft Blue to Purple */
+    color: white;
+}
+
+.card-dark-blue {
+    background: linear-gradient(135deg, #4747A1 0%, #323280 100%);
+    /* Deep Purple Gradient */
+    color: white;
+}
+
+.card-light-blue {
+    background: linear-gradient(135deg, #7978E9 0%, #5C5BD6 100%);
+    /* Rich Blue-Purple */
+    color: white;
+}
+
+.card-light-danger {
+    background: linear-gradient(135deg, #FF7777 0%, #F54242 100%);
+    /* Vibrant Red */
+    color: white;
+}
+
+.stats-card-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.stats-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.stats-number {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+/* Weather Banner */
+.weather-card {
+    background: url('/images/weather.svg') no-repeat right top;
+    background-size: contain;
+    background-color: #E3F2FD;
+    /* Sky Blue backup */
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    position: relative;
+    min-height: 200px;
+}
+
+.weather-info {
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+}
+
+.weather-temp {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--sk-dark);
+}
+
+.weather-city {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--sk-muted);
+}
+
+.welcome-banner {
+    background: white;
+    border-radius: var(--card-radius);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.welcome-text h3 {
+    font-weight: 800;
+    color: var(--sk-dark);
+    margin-bottom: 0.5rem;
+}
+
+.welcome-text p {
+    color: var(--sk-muted);
+}
+
+/* Mobile Toggle */
+.mobile-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    :root {
+        --sidebar-width: 0px;
+    }
+
+    .sidebar {
+        transform: translateX(-100%);
+        width: 260px;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .mobile-toggle {
+        display: block;
+    }
+
+    .header-search {
+        display: none;
+    }
+}
+
+/* Sidebar Submenu Styles - Added Fix */
+.submenu-wrapper {
+    padding: 0.25rem 0 0.5rem 0;
+}
+
+.sub-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 0.65rem 1rem 0.65rem 1rem;
+    margin: 2px 12px 2px 24px;
+    /* Indented left margin */
+    border-radius: 10px;
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.sub-menu-item:hover {
+    color: var(--sk-primary);
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: translateX(3px);
+}
+
+.sub-menu-item.active {
+    color: var(--sk-primary);
+    background-color: rgba(0, 0, 0, 0.1);
+    font-weight: 700;
+}
+
+.sub-line {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    margin-right: 12px;
+    opacity: 0.6;
+    transition: all 0.2s;
+}
+
+.sub-menu-item:hover .sub-line,
+.sub-menu-item.active .sub-line {
+    background-color: currentColor;
+    opacity: 1;
+}
+
+/* ========================================
+   MODERN VALIDATION MESSAGES (Admin)
+   Refined to match the registration panel style
+   ======================================== */
+.field-validation-error {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.6rem 1rem;
+    margin-top: 0.5rem;
+
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.4;
+
+    color: #b91c1c;
+    /* Deep Red Text */
+    background-color: #fef2f2;
+    /* Light Red Background */
+    border: 1px solid #ef4444;
+    /* Red Border */
+    border-radius: 8px;
+    /* Rounded corners */
+
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    animation: slideInError 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Icon injection via CSS */
+.field-validation-error::before {
+    content: "\F30A";
+    /* bi-exclamation-circle */
+    font-family: "bootstrap-icons";
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+    color: #ef4444;
+    /* Match border color */
+    flex-shrink: 0;
+}
+
+/* Hide empty/valid states completely */
+.field-validation-valid {
+    display: none !important;
+}
+
+/* Summary Box Style (if used) */
+.validation-summary-errors {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    background-color: #fef2f2;
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    color: #b91c1c;
+}
+
+.validation-summary-errors ul {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+@keyframes slideInError {
+    from {
+        opacity: 0;
+        transform: translateY(-5px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Fix for outline buttons with text utility classes becoming invisible on hover/active */
+.btn-outline-success:hover, .btn-outline-success:active, .btn-outline-success.active, .btn-check:checked + .btn-outline-success,
+.btn-outline-danger:hover, .btn-outline-danger:active, .btn-outline-danger.active, .btn-check:checked + .btn-outline-danger,
+.btn-outline-primary:hover, .btn-outline-primary:active, .btn-outline-primary.active, .btn-check:checked + .btn-outline-primary,
+.btn-outline-secondary:hover, .btn-outline-secondary:active, .btn-outline-secondary.active, .btn-check:checked + .btn-outline-secondary,
+.btn-outline-dark:hover, .btn-outline-dark:active, .btn-outline-dark.active, .btn-check:checked + .btn-outline-dark {
+    color: #fff !important;
+}
+
+.btn-outline-warning:hover, .btn-outline-warning:active, .btn-outline-warning.active, .btn-check:checked + .btn-outline-warning,
+.btn-outline-info:hover, .btn-outline-info:active, .btn-outline-info.active, .btn-check:checked + .btn-outline-info,
+.btn-outline-light:hover, .btn-outline-light:active, .btn-outline-light.active, .btn-check:checked + .btn-outline-light {
+    color: #000 !important;
+}

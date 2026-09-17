@@ -1,0 +1,294 @@
+@model Sparkle.Domain.Configuration.CommissionConfig
+@{
+    ViewData["Title"] = "Commission Configuration";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    
+    var categories = ViewBag.Categories as List<Sparkle.Domain.Catalog.Category> ?? new();
+    var sellers = ViewBag.Sellers as List<Sparkle.Domain.Sellers.Seller> ?? new();
+    
+    var categoryRates = string.IsNullOrEmpty(Model.CategoryRates) 
+        ? new Dictionary<string, decimal>()
+        : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, decimal>>(Model.CategoryRates) 
+        ?? new Dictionary<string, decimal>();
+        
+    var sellerRates = string.IsNullOrEmpty(Model.SellerRates)
+        ? new Dictionary<string, decimal>()
+        : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, decimal>>(Model.SellerRates)
+        ?? new Dictionary<string, decimal>();
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-cash-stack"></i> Commission Configuration</h2>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Global Commission Rate -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-globe"></i> Global Commission Rate</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="UpdateGlobal" method="post">
+                @Html.AntiForgeryToken()
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-label">Default Commission Rate (%)</label>
+                        <input type="number" name="globalRate" class="form-control" 
+                               value="@Model.GlobalRate" min="0" max="100" step="0.1" required>
+                        <small class="text-muted">Applied to all sellers unless overridden</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Notes</label>
+                        <input type="text" name="notes" class="form-control" 
+                               value="@Model.Notes" placeholder="Optional notes">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-check-lg"></i> Update
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Category-Specific Rates -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-tags"></i> Category-Specific Rates</h5>
+        </div>
+        <div class="card-body">
+            <!-- Add Category Rate -->
+            <div class="row mb-3">
+                <div class="col-md-5">
+                    <label class="form-label">Category</label>
+                    <select id="categorySelect" class="form-select">
+                        <option value="">Select category...</option>
+                        @foreach (var cat in categories)
+                        {
+                            <option value="@cat.Id">@cat.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Commission Rate (%)</label>
+                    <input type="number" id="categoryRate" class="form-control" 
+                           placeholder="e.g., 12.5" min="0" max="100" step="0.1">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-primary w-100" onclick="addCategoryRate()">
+                        <i class="bi bi-plus-lg"></i> Add Rate
+                    </button>
+                </div>
+            </div>
+
+            <!-- Current Category Rates -->
+            @if (categoryRates.Any())
+            {
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Commission Rate</th>
+                            <th width="100">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var rate in categoryRates)
+                        {
+                            var category = categories.FirstOrDefault(c => c.Id.ToString() == rate.Key);
+                            if (category != null)
+                            {
+                                <tr>
+                                    <td>@category.Name</td>
+                                    <td><strong>@rate.Value%</strong></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" onclick="removeCategoryRate(@rate.Key)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-muted">No category-specific rates configured. Global rate will apply.</p>
+            }
+        </div>
+    </div>
+
+    <!-- Seller-Specific Rates -->
+    <div class="card">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="bi bi-shop"></i> Seller-Specific Overrides</h5>
+        </div>
+        <div class="card-body">
+            <!-- Add Seller Rate -->
+            <div class="row mb-3">
+                <div class="col-md-5">
+                    <label class="form-label">Seller</label>
+                    <select id="sellerSelect" class="form-select">
+                        <option value="">Select seller...</option>
+                        @foreach (var seller in sellers)
+                        {
+                            <option value="@seller.Id">@seller.ShopName</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Commission Rate (%)</label>
+                    <input type="number" id="sellerRate" class="form-control" 
+                           placeholder="e.g., 10.0" min="0" max="100" step="0.1">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-warning w-100" onclick="addSellerRate()">
+                        <i class="bi bi-plus-lg"></i> Add Override
+                    </button>
+                </div>
+            </div>
+
+            <!-- Current Seller Rates -->
+            @if (sellerRates.Any())
+            {
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Seller</th>
+                            <th>Commission Rate</th>
+                            <th width="100">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var rate in sellerRates)
+                        {
+                            var seller = sellers.FirstOrDefault(s => s.Id.ToString() == rate.Key);
+                            if (seller != null)
+                            {
+                                <tr>
+                                    <td>@seller.ShopName</td>
+                                    <td><strong>@rate.Value%</strong></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" onclick="removeSellerRate(@rate.Key)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-muted">No seller-specific overrides. Category or global rate will apply.</p>
+            }
+        </div>
+    </div>
+
+    <!-- Commission Hierarchy Info -->
+    <div class="alert alert-info mt-4">
+        <h6><i class="bi bi-info-circle"></i> Commission Rate Priority</h6>
+        <ol class="mb-0">
+            <li><strong>Seller-Specific Rate</strong> (highest priority)</li>
+            <li><strong>Category-Specific Rate</strong></li>
+            <li><strong>Global Rate</strong> (default fallback)</li>
+        </ol>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function addCategoryRate() {
+            const categoryId = document.getElementById('categorySelect').value;
+            const rate = document.getElementById('categoryRate').value;
+
+            if (!categoryId || !rate) {
+                showToast('Please select a category and enter a rate', 'warning');
+                return;
+            }
+
+            fetch('/Admin/Commission/SetCategoryRate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `categoryId=${categoryId}&rate=${rate}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            });
+        }
+
+        function addSellerRate() {
+            const sellerId = document.getElementById('sellerSelect').value;
+            const rate = document.getElementById('sellerRate').value;
+
+            if (!sellerId || !rate) {
+                showToast('Please select a seller and enter a rate', 'warning');
+                return;
+            }
+
+            fetch('/Admin/Commission/SetSellerRate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `sellerId=${sellerId}&rate=${rate}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            });
+        }
+
+        function removeCategoryRate(categoryId) {
+            if (!confirm('Remove this category rate?')) return;
+
+            fetch('/Admin/Commission/RemoveCategoryRate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `categoryId=${categoryId}`
+            })
+            .then(() => location.reload());
+        }
+
+        function removeSellerRate(sellerId) {
+            if (!confirm('Remove this seller override?')) return;
+
+            fetch('/Admin/Commission/RemoveSellerRate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `sellerId=${sellerId}`
+            })
+            .then(() => location.reload());
+        }
+    </script>
+}

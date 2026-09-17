@@ -1,0 +1,246 @@
+@model Sparkle.Domain.Marketing.Banner
+@{
+    ViewData["Title"] = "Create Banner";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-plus-circle"></i> Create New Banner</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <div class="row">
+            <!-- Left Column - Form Fields -->
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Banner Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Title -->
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">Title <span class="text-danger">*</span></label>
+                            <input asp-for="Title" class="form-control" placeholder="Enter banner title" required />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <!-- SubTitle -->
+                        <div class="mb-3">
+                            <label asp-for="SubTitle" class="form-label">Sub Title</label>
+                            <input asp-for="SubTitle" class="form-control" placeholder="Enter subtitle (optional)" />
+                            <span asp-validation-for="SubTitle" class="text-danger"></span>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Enter description (optional)"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <!-- Banner Type & Position -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="BannerType" class="form-label">Banner Type <span class="text-danger">*</span></label>
+                                <select asp-for="BannerType" class="form-select" required>
+                                    <option value="Hero">Hero Carousel</option>
+                                    <option value="Sidebar">Sidebar Banner</option>
+                                    <option value="TopStrip">Top Strip</option>
+                                    <option value="CategoryBanner">Category Banner</option>
+                                    <option value="ProductBanner">Product Banner</option>
+                                </select>
+                                <span asp-validation-for="BannerType" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Position" class="form-label">Position <span class="text-danger">*</span></label>
+                                <select asp-for="Position" class="form-select" required>
+                                    <option value="Homepage">Homepage</option>
+                                    <option value="Dashboard">Dashboard (Admin)</option>
+                                    <option value="CategoryPage">Category Page</option>
+                                    <option value="ProductPage">Product Page</option>
+                                    <option value="CheckoutPage">Checkout Page</option>
+                                </select>
+                                <span asp-validation-for="Position" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Images -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Images</h6>
+                            </div>
+                            <div class="card-body">
+                                <!-- Desktop Image -->
+                                <div class="mb-3">
+                                    <label class="form-label">Desktop Image (1920x600) <span class="text-danger">*</span></label>
+                                    <input type="file" name="imageDesktop" class="form-control" accept="image/*" id="imageDesktopInput" required />
+                                    <small class="text-muted">Recommended size: 1920x600 pixels</small>
+                                    <div id="imageDesktopPreview" class="mt-2" style="display:none;">
+                                        <img src="#" class="img-thumbnail" style="max-height: 150px;" />
+                                    </div>
+                                </div>
+
+                                <!-- Mobile Image -->
+                                <div class="mb-3">
+                                    <label class="form-label">Mobile Image (800x800)</label>
+                                    <input type="file" name="imageMobile" class="form-control" accept="image/*" id="imageMobileInput" />
+                                    <small class="text-muted">Recommended size: 800x800 pixels (optional)</small>
+                                    <div id="imageMobilePreview" class="mt-2" style="display:none;">
+                                        <img src="#" class="img-thumbnail" style="max-height: 150px;" />
+                                    </div>
+                                </div>
+
+                                <!-- Tablet Image -->
+                                <div class="mb-3">
+                                    <label class="form-label">Tablet Image (1200x500)</label>
+                                    <input type="file" name="imageTablet" class="form-control" accept="image/*" id="imageTabletInput" />
+                                    <small class="text-muted">Recommended size: 1200x500 pixels (optional)</small>
+                                    <div id="imageTabletPreview" class="mt-2" style="display:none;">
+                                        <img src="#" class="img-thumbnail" style="max-height: 150px;" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Link Configuration -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Link Configuration</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label asp-for="LinkUrl" class="form-label">Link URL</label>
+                                    <input asp-for="LinkUrl" class="form-control" placeholder="/products or https://example.com" />
+                                    <span asp-validation-for="LinkUrl" class="text-danger"></span>
+                                    <small class="text-muted">Leave empty if banner is not clickable</small>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="LinkTarget" class="form-label">Link Target</label>
+                                        <select asp-for="LinkTarget" class="form-select">
+                                            <option value="_self">Same Window</option>
+                                            <option value="_blank">New Window</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="ButtonText" class="form-label">Button Text</label>
+                                        <input asp-for="ButtonText" class="form-control" placeholder="Shop Now, Learn More, etc." />
+                                        <small class="text-muted">Optional button overlay text</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Settings & Schedule -->
+            <div class="col-lg-4">
+                <!-- Status & Order -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Status & Order</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" checked />
+                                <label asp-for="IsActive" class="form-check-label">Active</label>
+                            </div>
+                            <small class="text-muted">Only active banners are displayed</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DisplayOrder" class="form-label">Display Order</label>
+                            <input asp-for="DisplayOrder" class="form-control" type="number" min="0" value="0" />
+                            <small class="text-muted">Lower number = higher priority</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Schedule</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="StartDate" class="form-label">Start Date</label>
+                            <input asp-for="StartDate" class="form-control" type="datetime-local" />
+                            <small class="text-muted">Leave empty for immediate activation</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="EndDate" class="form-label">End Date</label>
+                            <input asp-for="EndDate" class="form-control" type="datetime-local" />
+                            <small class="text-muted">Leave empty for no expiration</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Styling -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Styling (Optional)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="BackgroundColor" class="form-label">Background Color</label>
+                            <input asp-for="BackgroundColor" class="form-control" type="color" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="TextColor" class="form-label">Text Color</label>
+                            <input asp-for="TextColor" class="form-control" type="color" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card">
+                    <div class="card-body">
+                        <button type="submit" class="btn btn-primary w-100 mb-2">
+                            <i class="bi bi-check-circle"></i> Create Banner
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary w-100">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Image Preview
+        function setupImagePreview(inputId, previewId) {
+            document.getElementById(inputId).addEventListener('change', function(e) {
+                const preview = document.getElementById(previewId);
+                const file = e.target.files[0];
+                
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview.querySelector('img').src = e.target.result;
+                        preview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    preview.style.display = 'none';
+                }
+            });
+        }
+
+        setupImagePreview('imageDesktopInput', 'imageDesktopPreview');
+        setupImagePreview('imageMobileInput', 'imageMobilePreview');
+        setupImagePreview('imageTabletInput', 'imageTabletPreview');
+    </script>
+}

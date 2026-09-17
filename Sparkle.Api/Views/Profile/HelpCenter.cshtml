@@ -1,0 +1,210 @@
+@{
+    ViewData["Title"] = "Help Center";
+    Layout = "_ProfileLayout";
+}
+
+<div class="tw-max-w-4xl tw-mx-auto">
+    <!-- Hero / Search Section -->
+    <div class="tw-bg-white tw-rounded-2xl tw-border tw-border-slate-100 tw-p-8 md:tw-p-12 tw-text-center tw-shadow-sm tw-mb-8 tw-relative tw-overflow-hidden">
+        <div class="tw-absolute tw-top-0 tw-left-0 tw-w-full tw-h-1 tw-bg-orange-500"></div>
+        <h2 class="tw-text-2xl md:tw-text-3xl tw-font-bold tw-text-slate-900 tw-mb-2">How can we help?</h2>
+        <p class="tw-text-xs tw-text-slate-500 tw-mb-8">Search our help center or browse categories below</p>
+        
+        <div class="tw-max-w-xl tw-mx-auto tw-relative">
+            <input type="text" id="helpSearch" 
+                   class="tw-w-full tw-pl-12 tw-pr-6 tw-py-4 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-2xl tw-text-sm focus:tw-bg-white focus:tw-border-orange-500 focus:tw-ring-4 focus:tw-ring-orange-500/5 tw-transition-all tw-outline-none" 
+                   placeholder="Search for questions (e.g., 'refund', 'track order')..." />
+            <i class="bi bi-search tw-absolute tw-left-5 tw-top-1/2 -tw-translate-y-1/2 tw-text-slate-400 tw-text-sm"></i>
+        </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-3 tw-gap-4 tw-mb-8">
+        <button onclick="showCategory('orders')" class="tw-bg-white tw-p-5 tw-rounded-2xl tw-border tw-border-slate-100 tw-text-center hover:tw-shadow-md hover:tw-border-orange-200 tw-transition-all tw-group">
+            <div class="tw-w-10 tw-h-10 tw-mx-auto tw-mb-3 tw-rounded-xl tw-bg-blue-50 tw-text-blue-500 tw-flex tw-items-center tw-justify-center tw-text-lg group-hover:tw-scale-110 tw-transition-transform">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <h6 class="tw-text-[11px] tw-font-bold tw-text-slate-900 tw-uppercase tw-tracking-wider tw-mb-1">Orders</h6>
+            <p class="tw-text-[10px] tw-text-slate-500 tw-mb-0">Tracking & History</p>
+        </button>
+
+        <button onclick="showCategory('payments')" class="tw-bg-white tw-p-5 tw-rounded-2xl tw-border tw-border-slate-100 tw-text-center hover:tw-shadow-md hover:tw-border-orange-200 tw-transition-all tw-group">
+            <div class="tw-w-10 tw-h-10 tw-mx-auto tw-mb-3 tw-rounded-xl tw-bg-emerald-50 tw-text-emerald-500 tw-flex tw-items-center tw-justify-center tw-text-lg group-hover:tw-scale-110 tw-transition-transform">
+                <i class="bi bi-credit-card"></i>
+            </div>
+            <h6 class="tw-text-[11px] tw-font-bold tw-text-slate-900 tw-uppercase tw-tracking-wider tw-mb-1">Payments</h6>
+            <p class="tw-text-[10px] tw-text-slate-500 tw-mb-0">Refunds & Wallet</p>
+        </button>
+
+        <button onclick="showCategory('shipping')" class="tw-bg-white tw-p-5 tw-rounded-2xl tw-border tw-border-slate-100 tw-text-center hover:tw-shadow-md hover:tw-border-orange-200 tw-transition-all tw-group">
+            <div class="tw-w-10 tw-h-10 tw-mx-auto tw-mb-3 tw-rounded-xl tw-bg-amber-50 tw-text-amber-500 tw-flex tw-items-center tw-justify-center tw-text-lg group-hover:tw-scale-110 tw-transition-transform">
+                <i class="bi bi-truck"></i>
+            </div>
+            <h6 class="tw-text-[11px] tw-font-bold tw-text-slate-900 tw-uppercase tw-tracking-wider tw-mb-1">Shipping</h6>
+            <p class="tw-text-[10px] tw-text-slate-500 tw-mb-0">Delivery & Fees</p>
+        </button>
+
+        <button onclick="showCategory('account')" class="tw-bg-white tw-p-5 tw-rounded-2xl tw-border tw-border-slate-100 tw-text-center hover:tw-shadow-md hover:tw-border-orange-200 tw-transition-all tw-group">
+            <div class="tw-w-10 tw-h-10 tw-mx-auto tw-mb-3 tw-rounded-xl tw-bg-purple-50 tw-text-purple-500 tw-flex tw-items-center tw-justify-center tw-text-lg group-hover:tw-scale-110 tw-transition-transform">
+                <i class="bi bi-person-circle"></i>
+            </div>
+            <h6 class="tw-text-[11px] tw-font-bold tw-text-slate-900 tw-uppercase tw-tracking-wider tw-mb-1">Account</h6>
+            <p class="tw-text-[10px] tw-text-slate-500 tw-mb-0">Security & Profile</p>
+        </button>
+
+        <button onclick="showCategory('returns')" class="tw-bg-white tw-p-5 tw-rounded-2xl tw-border tw-border-slate-100 tw-text-center hover:tw-shadow-md hover:tw-border-orange-200 tw-transition-all tw-group">
+            <div class="tw-w-10 tw-h-10 tw-mx-auto tw-mb-3 tw-rounded-xl tw-bg-rose-50 tw-text-rose-500 tw-flex tw-items-center tw-justify-center tw-text-lg group-hover:tw-scale-110 tw-transition-transform">
+                <i class="bi bi-arrow-return-left"></i>
+            </div>
+            <h6 class="tw-text-[11px] tw-font-bold tw-text-slate-900 tw-uppercase tw-tracking-wider tw-mb-1">Returns</h6>
+            <p class="tw-text-[10px] tw-text-slate-500 tw-mb-0">Policy & Claims</p>
+        </button>
+
+        <button onclick="showCategory('technical')" class="tw-bg-white tw-p-5 tw-rounded-2xl tw-border tw-border-slate-100 tw-text-center hover:tw-shadow-md hover:tw-border-orange-200 tw-transition-all tw-group">
+            <div class="tw-w-10 tw-h-10 tw-mx-auto tw-mb-3 tw-rounded-xl tw-bg-slate-50 tw-text-slate-500 tw-flex tw-items-center tw-justify-center tw-text-lg group-hover:tw-scale-110 tw-transition-transform">
+                <i class="bi bi-tools"></i>
+            </div>
+            <h6 class="tw-text-[11px] tw-font-bold tw-text-slate-900 tw-uppercase tw-tracking-wider tw-mb-1">Support</h6>
+            <p class="tw-text-[10px] tw-text-slate-500 tw-mb-0">Technical Help</p>
+        </button>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="tw-bg-white tw-rounded-2xl tw-border tw-border-slate-100 tw-overflow-hidden tw-shadow-sm tw-mb-8" id="faqSection">
+        <div class="tw-px-6 tw-py-5 tw-border-b tw-border-slate-50 tw-bg-slate-50/20">
+            <h6 class="tw-font-bold tw-text-slate-900 tw-text-sm tw-mb-0 tw-flex tw-items-center tw-gap-2">
+                <i class="bi bi-question-circle tw-text-orange-500"></i> Frequently Asked Questions
+            </h6>
+        </div>
+        
+        <div class="tw-divide-y tw-divide-slate-50">
+            <!-- FAQ Item 1 -->
+            <div class="faq-item tw-group">
+                <button onclick="toggleFaq(this)" class="tw-w-full tw-px-6 tw-py-5 tw-flex tw-justify-between tw-items-center tw-bg-white hover:tw-bg-slate-50/50 tw-transition-all">
+                    <span class="tw-text-xs tw-font-bold tw-text-slate-700 tw-text-left">How do I track my order?</span>
+                    <i class="bi bi-chevron-down tw-text-slate-300 tw-text-[10px] tw-transition-transform"></i>
+                </button>
+                <div class="faq-answer tw-hidden tw-px-6 tw-pb-5 tw-bg-white">
+                    <p class="tw-text-[11px] tw-text-slate-500 tw-leading-relaxed tw-mb-0">
+                        You can track your order by going to <span class="tw-font-bold tw-text-slate-700">My Orders</span> in your profile. Click on any specific order to see real-time tracking information, including its current facility and estimated arrival date.
+                    </p>
+                </div>
+            </div>
+
+            <!-- FAQ Item 2 -->
+            <div class="faq-item tw-group">
+                <button onclick="toggleFaq(this)" class="tw-w-full tw-px-6 tw-py-5 tw-flex tw-justify-between tw-items-center tw-bg-white hover:tw-bg-slate-50/50 tw-transition-all">
+                    <span class="tw-text-xs tw-font-bold tw-text-slate-700 tw-text-left">What payment methods do you accept?</span>
+                    <i class="bi bi-chevron-down tw-text-slate-300 tw-text-[10px] tw-transition-transform"></i>
+                </button>
+                <div class="faq-answer tw-hidden tw-px-6 tw-pb-5 tw-bg-white">
+                    <p class="tw-text-[11px] tw-text-slate-500 tw-leading-relaxed tw-mb-0">
+                        We accept secure online payments through SSLCommerz, including major Credit/Debit cards, bKash, Nagad, Rocket, and supported EMI options.
+                    </p>
+                </div>
+            </div>
+
+            <!-- FAQ Item 3 -->
+            <div class="faq-item tw-group">
+                <button onclick="toggleFaq(this)" class="tw-w-full tw-px-6 tw-py-5 tw-flex tw-justify-between tw-items-center tw-bg-white hover:tw-bg-slate-50/50 tw-transition-all">
+                    <span class="tw-text-xs tw-font-bold tw-text-slate-700 tw-text-left">What is your return policy?</span>
+                    <i class="bi bi-chevron-down tw-text-slate-300 tw-text-[10px] tw-transition-transform"></i>
+                </button>
+                <div class="faq-answer tw-hidden tw-px-6 tw-pb-5 tw-bg-white">
+                    <p class="tw-text-[11px] tw-text-slate-500 tw-leading-relaxed tw-mb-0">
+                        We offer a hassle-free <span class="tw-font-bold tw-text-slate-700">7-day return policy</span> for most manufactured items. Products must be in their original packaging with tags intact. Some exclusions apply for hygiene and personal care items.
+                    </p>
+                </div>
+            </div>
+
+            <!-- FAQ Item 4 -->
+            <div class="faq-item tw-group">
+                <button onclick="toggleFaq(this)" class="tw-w-full tw-px-6 tw-py-5 tw-flex tw-justify-between tw-items-center tw-bg-white hover:tw-bg-slate-50/50 tw-transition-all">
+                    <span class="tw-text-xs tw-font-bold tw-text-slate-700 tw-text-left">How do I contact customer support?</span>
+                    <i class="bi bi-chevron-down tw-text-slate-300 tw-text-[10px] tw-transition-transform"></i>
+                </button>
+                <div class="faq-answer tw-hidden tw-px-6 tw-pb-5 tw-bg-white">
+                    <p class="tw-text-[11px] tw-text-slate-500 tw-leading-relaxed tw-mb-0">
+                        Our dedicated team is here for you 24/7. You can reach us via the Contact section below, email us at <span class="tw-text-orange-500">support@sparkle.com</span>, or start a live chat session for immediate assistance.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Support -->
+    <div class="tw-bg-slate-900 tw-rounded-2xl tw-p-8 tw-text-center tw-relative tw-overflow-hidden">
+        <div class="tw-absolute tw-bottom-0 tw-right-0 tw-opacity-10">
+            <i class="bi bi-headset tw-text-9xl tw-text-white"></i>
+        </div>
+        <h4 class="tw-text-white tw-text-lg tw-font-bold tw-mb-2">Still need help?</h4>
+        <p class="tw-text-slate-400 tw-text-[11px] tw-mb-8">Our expert support team is always ready to guide you</p>
+        
+        <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-3 tw-gap-4">
+            <div class="tw-bg-white/5 tw-p-5 tw-rounded-xl tw-border tw-border-white/10 tw-text-left">
+                <i class="bi bi-telephone tw-text-orange-500 tw-text-lg tw-mb-3 tw-block"></i>
+                <h6 class="tw-text-white tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-widest tw-mb-1">Call Us</h6>
+                <p class="tw-text-slate-300 tw-text-xs tw-mb-0">+880-1234-56789</p>
+            </div>
+
+            <div class="tw-bg-white/5 tw-p-5 tw-rounded-xl tw-border tw-border-white/10 tw-text-left">
+                <i class="bi bi-envelope tw-text-orange-500 tw-text-lg tw-mb-3 tw-block"></i>
+                <h6 class="tw-text-white tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-widest tw-mb-1">Email Us</h6>
+                <p class="tw-text-slate-300 tw-text-xs tw-mb-0">help@sparkle.com</p>
+            </div>
+
+            <button class="tw-bg-orange-500 tw-p-5 tw-rounded-xl tw-text-left tw-transition-all hover:tw-bg-orange-600">
+                <i class="bi bi-chat-dots tw-text-white tw-text-lg tw-mb-3 tw-block"></i>
+                <h6 class="tw-text-white tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-widest tw-mb-1">Live Chat</h6>
+                <p class="tw-text-white/80 tw-text-xs tw-mb-0">Start Session Now</p>
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleFaq(button) {
+            const answer = button.nextElementSibling;
+            const icon = button.querySelector('i');
+            const isActive = !answer.classList.contains('tw-hidden');
+            
+            // Close all
+            document.querySelectorAll('.faq-answer').forEach(el => el.classList.add('tw-hidden'));
+            document.querySelectorAll('.faq-item i').forEach(el => el.classList.remove('tw-rotate-180'));
+            
+            // If it wasn't active, open it
+            if (!isActive) {
+                answer.classList.remove('tw-hidden');
+                icon.classList.add('tw-rotate-180');
+            }
+        }
+        
+        function showCategory(category) {
+            // Simplified keyword-based filtering for the demo
+            document.querySelectorAll('.faq-item').forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (category === 'all' || text.includes(category)) {
+                    item.classList.remove('tw-hidden');
+                } else {
+                    item.classList.add('tw-hidden');
+                }
+            });
+            
+            document.getElementById('faqSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // Search
+        document.getElementById('helpSearch').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.faq-item').forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(term)) {
+                    item.classList.remove('tw-hidden');
+                } else {
+                    item.classList.add('tw-hidden');
+                }
+            });
+        });
+    </script>
+}

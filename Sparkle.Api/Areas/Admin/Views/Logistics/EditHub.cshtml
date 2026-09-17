@@ -1,0 +1,120 @@
+@using Sparkle.Domain.Logistics
+@model Hub
+@{
+    ViewData["Title"] = "Edit Hub";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title">Edit Hub</h2>
+        <p class="text-muted">Update @Model.Name</p>
+    </div>
+    <a asp-action="HubDetails" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back
+    </a>
+</div>
+
+<div class="content-card">
+    <form asp-action="EditHub" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id">
+        
+        <div class="row">
+            <div class="col-lg-8">
+                <h6 class="fw-bold mb-3" style="color: var(--sk-primary);"><i class="bi bi-info-circle me-2"></i>Basic Information</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Hub Name <span class="text-danger">*</span></label>
+                        <input asp-for="Name" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Hub Code <span class="text-danger">*</span></label>
+                        <input asp-for="HubCode" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Hub Type</label>
+                        <select asp-for="Type" class="form-select">
+                            <option value="@HubType.Central">Central</option>
+                            <option value="@HubType.Regional">Regional</option>
+                            <option value="@HubType.District">District</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label>
+                        <select asp-for="OperationalStatus" class="form-select">
+                            <option value="@HubOperationalStatus.Operational">Operational</option>
+                            <option value="@HubOperationalStatus.Maintenance">Maintenance</option>
+                            <option value="@HubOperationalStatus.Closed">Closed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Capacity</label>
+                        <input asp-for="Capacity" type="number" class="form-control">
+                    </div>
+                </div>
+                
+                <h6 class="fw-bold mb-3" style="color: var(--sk-primary);"><i class="bi bi-geo-alt me-2"></i>Location</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-12">
+                        <label class="form-label">Address</label>
+                        <textarea asp-for="Address" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Area</label>
+                        <input asp-for="Area" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">District</label>
+                        <input asp-for="District" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Division</label>
+                        <input asp-for="Division" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Postal Code</label>
+                        <input asp-for="PostalCode" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Latitude</label>
+                        <input asp-for="Latitude" type="number" step="any" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Longitude</label>
+                        <input asp-for="Longitude" type="number" step="any" class="form-control">
+                    </div>
+                </div>
+                
+                <h6 class="fw-bold mb-3" style="color: var(--sk-primary);"><i class="bi bi-telephone me-2"></i>Contact</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Contact Phone</label>
+                        <input asp-for="ContactPhone" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Contact Email</label>
+                        <input asp-for="ContactEmail" type="email" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Manager Name</label>
+                        <input asp-for="ManagerName" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Manager Phone</label>
+                        <input asp-for="ManagerPhone" class="form-control">
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="HubDetails" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

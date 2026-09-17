@@ -1,0 +1,1005 @@
+/* ========================================
+   PROFESSIONAL DESIGN SYSTEM
+   ======================================== */
+
+:root {
+    /* Primary Colors - Professional Purple Gradient */
+    --primary-purple: #667eea;
+    --primary-violet: #764ba2;
+    --primary-dark: #5568d3;
+    --primary-light: #8b9eff;
+
+    /* Accent Colors */
+    --accent-blue: #3b82f6;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-yellow: #f59e0b;
+    --accent-orange: #f97316;
+
+    /* Neutral Colors */
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+
+    /* Typography - Compact Scaling */
+    --font-primary: 'SolaimanLipi', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-size-xs: 0.65rem;
+    /* 0.7 -> 0.65 */
+    --font-size-sm: 0.75rem;
+    /* 0.8 -> 0.75 */
+    --font-size-base: 0.9rem;
+    /* 0.95 -> 0.9 */
+    --font-size-lg: 1.05rem;
+    /* 1.1 -> 1.05 */
+    --font-size-xl: 1.15rem;
+    /* 1.2 -> 1.15 */
+    --font-size-2xl: 1.3rem;
+    /* 1.4 -> 1.3 */
+    --font-size-3xl: 1.6rem;
+    /* 1.7 -> 1.6 */
+    --font-size-4xl: 1.9rem;
+    /* 2.0 -> 1.9 */
+
+    /* Spacing - Tighter Layout */
+    --spacing-xs: 0.2rem;
+    --spacing-sm: 0.4rem;
+    --spacing-md: 0.8rem;
+    --spacing-lg: 1.2rem;
+    --spacing-xl: 1.6rem;
+    --spacing-2xl: 2.5rem;
+
+    /* Border Radius - Professional/Sharp */
+    --radius-sm: 2px;
+    --radius-md: 4px;
+    --radius-lg: 6px;
+    --radius-xl: 8px;
+    --radius-full: 9999px;
+
+    /* Shadows - Crisp & Professional */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-xl: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-2xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+    /* Transitions - Snappy */
+    --transition-fast: 150ms ease-out;
+    --transition-base: 200ms ease-out;
+    --transition-slow: 300ms ease-out;
+}
+
+/* ========================================
+   GLOBAL RESETS & BASE STYLES
+   ======================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'SolaimanLipi', "Segoe UI", Tahoma, sans-serif;
+    scroll-behavior: smooth;
+    background-color: #f8f9fa;
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'SolaimanLipi', "Segoe UI", Tahoma, sans-serif;
+    color: #1e293b;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+a {
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+button {
+    cursor: pointer;
+    font-family: inherit;
+}
+
+/* ========================================
+   SECTION HEADERS - CONSISTENT ACROSS PAGES
+   ======================================== */
+
+.sparkle-section-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
+
+.sparkle-section-subtitle {
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 0;
+}
+
+/* Prevent text overflow */
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.text-truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.sparkle-splash {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #ff6a00, #ff3b3f);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    transition: opacity 0.3s ease;
+}
+
+/* Global Reset for Professional Feel */
+* {
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+.sparkle-splash-inner {
+    transform: translateY(0);
+}
+
+@keyframes splashFloat {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+.sparkle-header {
+    background: linear-gradient(90deg, #ff6a00, #ff9f1c);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bg-gradient {
+    background: linear-gradient(90deg, #ff6a00, #ff9f1c) !important;
+}
+
+.btn-search {
+    background-color: #ff6a00;
+    color: #fff;
+    border: none;
+}
+
+.btn-search:hover {
+    background-color: #ff3b3f;
+    color: #fff;
+}
+
+.sparkle-sub-header {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+.sparkle-hero {
+    background: linear-gradient(135deg, #ff6a00, #ff3b3f);
+}
+
+.sparkle-product-card img {
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.sparkle-product-card {
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid #e0e0e0;
+}
+
+.sparkle-product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12) !important;
+}
+
+.sparkle-product-card:hover img {
+    transform: scale(1.05);
+}
+
+.sparkle-product-card .wishlist-heart {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+}
+
+.sparkle-skeleton {
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.sparkle-category-list .list-group-item {
+    border: 0;
+    border-bottom: 1px solid #f3f3f3;
+}
+
+.sparkle-footer {
+    background-color: #111827;
+}
+
+.text-orange {
+    color: #ff6a00;
+}
+
+.card {
+    transition: box-shadow 0.2s ease;
+}
+
+.btn {
+    transition: all 0.2s ease;
+}
+
+.btn-danger {
+    background-color: #ff6a00;
+    border-color: #ff6a00;
+}
+
+.btn-danger:hover {
+    background-color: #e65c00;
+    border-color: #e65c00;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(255, 106, 0, 0.3);
+}
+
+.btn-outline-danger {
+    color: #ff6a00;
+    border-color: #ff6a00;
+}
+
+.btn-outline-danger:hover {
+    background-color: #ff6a00;
+    border-color: #ff6a00;
+    color: white;
+}
+
+.shadow-sm {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #ff6a00;
+    box-shadow: 0 0 0 0.2rem rgba(255, 106, 0, 0.15);
+}
+
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.6em;
+}
+
+/* ========================================
+   COLOR UTILITIES
+   ======================================== */
+
+.text-danger,
+.text-primary {
+    color: #ff6a00 !important;
+}
+
+.text-success {
+    color: #10b981 !important;
+}
+
+.text-warning {
+    color: #fbbf24 !important;
+}
+
+.bg-primary {
+    background-color: #ff6a00 !important;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+.border-primary {
+    border-color: #ff6a00 !important;
+}
+
+/* ========================================
+   SPECIFIC CARD TYPES
+   ======================================== */
+
+/* Trending Cards */
+.trending-card {
+    min-height: 100%;
+    height: 100%;
+}
+
+.trending-card .card {
+    display: flex;
+    flex-direction: column;
+    border-radius: 14px;
+    overflow: hidden;
+    height: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.trending-card:hover .card {
+    transform: translateY(-4px);
+    /* Smoother */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+}
+
+.trending-card .card-img-top {
+    height: 180px;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.trending-card:hover .card-img-top {
+    transform: scale(1.1);
+}
+
+.trending-card .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 14px;
+    flex: 1;
+}
+
+.trending-card .card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    min-height: 2.8em;
+    line-height: 1.4;
+    color: #2d2d2d;
+}
+
+.trending-card .price-row .price {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #10b981;
+}
+
+/* Flash Deal Cards */
+.flash-card {
+    height: 100%;
+}
+
+.flash-card-inner {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flash-card:hover .flash-card-inner {
+    transform: translateY(-3px);
+    /* Smoother */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Category Cards */
+.sparkle-category-item .card {
+    border-radius: 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #f0f0f0;
+    background: white;
+}
+
+.sparkle-category-item .card:hover {
+    transform: translateY(-3px);
+    /* Smoother */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-color: transparent;
+}
+
+/* ========================================
+   CONTAINER & SPACING FIXES
+   ======================================== */
+
+.container,
+.container-fluid {
+    padding-right: 12px;
+    padding-left: 12px;
+    margin-right: auto;
+    margin-left: auto;
+    max-width: 100%;
+}
+
+@media (min-width: 1400px) {
+    .container {
+        max-width: 1280px;
+        /* Slightly narrower for better density */
+    }
+}
+
+/* Prevent horizontal scroll */
+.row {
+    margin-right: -15px;
+    margin-left: -15px;
+}
+
+[class*="col-"] {
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+/* ========================================
+   PRODUCT CARDS - UNIVERSAL STYLING
+   ======================================== */
+
+.product-card,
+.sparkle-product-card {
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+}
+
+.product-card .card,
+.sparkle-product-card .card {
+    border-radius: 14px;
+    border: 1px solid #f0f0f0;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.product-card:hover .card,
+.sparkle-product-card:hover .card {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-color: transparent;
+}
+
+.product-image-wrapper {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.product-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.product-card:hover .product-image-wrapper img {
+    transform: scale(1.08);
+}
+
+/* ========================================
+   FORM CONTROLS - CONSISTENT STYLING
+   ======================================== */
+
+.form-control,
+.form-select {
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #ff6a00;
+    box-shadow: 0 0 0 0.2rem rgba(255, 106, 0, 0.15);
+    outline: none;
+}
+
+/* ========================================
+   BUTTONS - ENHANCED STYLING
+   ======================================== */
+
+.btn {
+    border-radius: 8px;
+    padding: 0.65rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-lg {
+    padding: 0.85rem 2rem;
+    font-size: 1.05rem;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #ff6a00 0%, #ff8c00 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #e65f00 0%, #e67d00 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 106, 0, 0.3);
+}
+
+/* ========================================
+   STICKY ELEMENTS - PROPER Z-INDEX
+   ======================================== */
+
+.sticky-top {
+    position: sticky;
+    top: 20px;
+    z-index: 100;
+}
+
+/* ========================================
+   LOADING & SKELETON STATES
+   ======================================== */
+
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #ff6a00;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* ========================================
+   MODAL & OVERLAY FIXES
+   ======================================== */
+
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.modal {
+    z-index: 1050;
+}
+
+.modal-content {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* ========================================
+   TRENDING SECTION CUSTOMIZATIONS
+   ======================================== */
+.trending-product-card {
+    /* Show 5.5 items initially to hint scrolling.
+       Gap is 1rem (16px). 4.5 gaps approx. */
+    flex: 0 0 calc((100% - 72px) / 5.5);
+    max-width: calc((100% - 72px) / 5.5);
+    /* Ensure it doesn't shrink too much on very small screens, 
+       but user requested "initial view 6", implying desktop context mostly. 
+       Mobile response might need media query, but keeping logic distinct. */
+}
+
+/* Force square image for trending cards */
+.trending-product-card .unified-product-img {
+    height: auto !important;
+    aspect-ratio: 1 / 1;
+}
+
+@media (max-width: 992px) {
+    .trending-product-card {
+        flex: 0 0 calc((100% - 48px) / 4);
+        /* Show 4 on medium screens */
+        max-width: calc((100% - 48px) / 4);
+    }
+}
+
+@media (max-width: 768px) {
+    .trending-product-card {
+        flex: 0 0 calc((100% - 16px) / 2.2);
+        /* Show ~2.5 on mobile */
+        max-width: calc((100% - 16px) / 2.2);
+    }
+}
+
+/* ========================================
+   RESPONSIVE UTILITIES
+   ======================================== */
+
+@media (max-width: 1199.98px) {
+    .sparkle-section-title {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .sparkle-section-title {
+        font-size: 1.35rem;
+    }
+
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .sparkle-header .container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .sparkle-section-title {
+        font-size: 1.25rem;
+    }
+
+    .sparkle-section-subtitle {
+        font-size: 0.875rem;
+    }
+
+    .sparkle-product-card img {
+        height: 180px;
+    }
+
+    .trending-card .card-img-top {
+        height: 160px;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
+    .container {
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .sparkle-section-title {
+        font-size: 1.1rem;
+    }
+
+    .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* ========================================
+   ACCESSIBILITY IMPROVEMENTS
+   ======================================== */
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+:focus-visible {
+    outline: 2px solid #ff6a00;
+    outline-offset: 2px;
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+
+    .main-nav,
+    .top-bar,
+    footer,
+    .btn {
+        display: none;
+    }
+
+    body {
+        background: white;
+    }
+}
+
+/* ========================================
+   UNIFIED PRODUCT CARD (Flash Sale Style)
+   ======================================== */
+.unified-product-card {
+    background: white;
+    border-radius: 0;
+    /* Or small radius if preferred, Flash Sale had 0/default or inherited */
+    /* Based on screenshot/Flash Sale inline styles */
+    width: 100%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.unified-product-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.product-card-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    height: 100%;
+    background: white;
+}
+
+.unified-product-img {
+    width: 100%;
+    height: 165px;
+    /* Reduced from 190px */
+    overflow: hidden;
+    background: #f5f5f5;
+    position: relative;
+}
+
+.unified-product-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.unified-product-card:hover .unified-product-img img {
+    transform: scale(1.05);
+    /* Subtle zoom */
+}
+
+.unified-product-info {
+    padding: 5px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.unified-product-title {
+    font-size: 0.82rem !important;
+    font-weight: 400 !important;
+    color: #212121;
+    line-height: 1.25;
+    height: 2.6em;
+    /* 2 lines */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin: 0 0 4px 0;
+}
+
+.unified-product-price {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Price Row Elements */
+.current-price {
+    font-size: 0.95rem;
+    font-weight: 500 !important;
+    color: #f57224;
+    line-height: 1;
+}
+
+.currency-symbol {
+    font-size: 1.4em;
+    vertical-align: middle;
+    position: relative;
+    top: -2.2px;
+}
+
+.currency-symbol-sm {
+    font-size: 1.2em;
+    vertical-align: middle;
+    position: relative;
+    top: -1.5px;
+}
+
+.stock-count {
+    font-size: 0.65rem;
+    color: #9e9e9e;
+    font-weight: 400;
+}
+
+.rating-badge {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.7rem;
+    color: #ffc107;
+    /* Star color */
+}
+
+.rating-val {
+    color: #212121;
+    font-weight: 500;
+}
+
+.review-count {
+    color: #9e9e9e;
+    font-size: 0.65rem;
+}
+
+.original-price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.original-price {
+    font-size: 0.75rem;
+    color: #9e9e9e;
+    text-decoration: line-through;
+}
+
+.discount-badge {
+    font-size: 0.65rem;
+    color: #757575;
+    font-weight: 500;
+}
+
+.shipping-badge {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+/* ========================================
+   MODERN VALIDATION MESSAGES
+   Refined to match the registration panel style
+   ======================================== */
+.field-validation-error {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.6rem 1rem;
+    margin-top: 0.5rem;
+
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.4;
+
+    color: #b91c1c;
+    /* Deep Red Text */
+    background-color: #fef2f2;
+    /* Light Red Background */
+    border: 1px solid #ef4444;
+    /* Red Border */
+    border-radius: 8px;
+    /* Rounded corners */
+
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    animation: slideInError 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Icon injection via CSS */
+.field-validation-error::before {
+    content: "\F30A";
+    /* bi-exclamation-circle */
+    font-family: "bootstrap-icons";
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+    color: #ef4444;
+    /* Match border color */
+    flex-shrink: 0;
+}
+
+/* Hide empty/valid states completely */
+.field-validation-valid {
+    display: none !important;
+}
+
+/* Summary Box Style (if used) */
+.validation-summary-errors {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    background-color: #fef2f2;
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    color: #b91c1c;
+}
+
+.validation-summary-errors ul {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+@keyframes slideInError {
+    from {
+        opacity: 0;
+        transform: translateY(-5px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

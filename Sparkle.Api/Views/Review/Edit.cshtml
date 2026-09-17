@@ -1,0 +1,165 @@
+@model Sparkle.Api.Controllers.ReviewController.ReviewEditViewModel
+@{
+    ViewData["Title"] = "Edit Review";
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<style>
+    .edit-review { display: flex; flex-direction: column; gap: 14px; }
+    .er-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .er-head h5 { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; }
+    .er-head p { margin: 2px 0 0; font-size: 12px; color: #64748b; }
+    .er-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(15,23,42,.04); overflow: hidden; }
+    .er-product { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #f1f5f9; }
+    .er-product img { width: 56px; height: 56px; object-fit: cover; border-radius: 9px; border: 1px solid #e2e8f0; background: #f8fafc; }
+    .er-product-title { font-size: 14px; font-weight: 800; color: #1e293b; }
+    .er-product-meta { font-size: 11px; color: #94a3b8; display: flex; gap: 10px; flex-wrap: wrap; margin-top: 3px; }
+    .er-form { padding: 16px; }
+    .er-section { margin-bottom: 16px; }
+    .er-label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 8px; }
+    .star-row { display: flex; gap: 4px; }
+    .star-btn { width: 34px; height: 34px; border: 0; background: transparent; color: #cbd5e1; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; padding: 0; cursor: pointer; }
+    .star-btn.active { color: #f59e0b; }
+    .sub-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .sub-label { font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; }
+    .form-input, .form-textarea { width: 100%; border: 1px solid #e2e8f0; border-radius: 9px; padding: 10px 12px; font-size: 13px; outline: 0; }
+    .form-input:focus, .form-textarea:focus { border-color: #fb923c; box-shadow: 0 0 0 3px rgba(251,146,60,.12); }
+    .image-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .image-check { width: 72px; }
+    .image-check img { width: 72px; height: 72px; object-fit: cover; border-radius: 9px; border: 1px solid #e2e8f0; display: block; }
+    .image-check label { display: flex; align-items: center; gap: 5px; margin-top: 5px; font-size: 10px; color: #dc2626; font-weight: 700; cursor: pointer; }
+    .upload-input { border: 1px dashed #cbd5e1; border-radius: 10px; padding: 12px; font-size: 12px; width: 100%; }
+    .er-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
+    .btn-er { height: 36px; border-radius: 9px; padding: 0 14px; font-size: 12px; font-weight: 800; border: 1px solid #e2e8f0; background: #fff; color: #334155; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+    .btn-er.primary { background: #f97316; border-color: #f97316; color: #fff; }
+    .field-validation-error { color: #dc2626; font-size: 11px; font-weight: 700; display: block; margin-top: 4px; }
+    @@media (max-width: 720px) { .sub-grid { grid-template-columns: 1fr; } .er-head, .er-product { align-items: flex-start; flex-direction: column; } }
+</style>
+
+<div class="edit-review">
+    <div class="er-head">
+        <div>
+            <h5>Edit Review</h5>
+            <p>Update your rating, feedback, and review photos.</p>
+        </div>
+        <a href="/review" class="btn-er"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+
+    <div class="er-card">
+        <div class="er-product">
+            <img src="@(string.IsNullOrWhiteSpace(Model.ProductImage) ? "/images/placeholder.jpg" : Model.ProductImage)" alt="@Model.ProductTitle" />
+            <div>
+                <div class="er-product-title">@Model.ProductTitle</div>
+                <div class="er-product-meta">
+                    <span><i class="bi bi-shop"></i> @(Model.SellerName ?? "Sparkle Store")</span>
+                    <span><i class="bi bi-calendar3"></i> Reviewed @Model.ReviewDate.ToString("dd MMM yyyy")</span>
+                    <span><i class="bi bi-patch-check-fill"></i> @(Model.IsVerifiedPurchase ? "Verified purchase" : Model.Status)</span>
+                </div>
+            </div>
+        </div>
+
+        <form asp-action="Edit" method="post" enctype="multipart/form-data" class="er-form" id="editReviewForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="ProductId" />
+            <input type="hidden" asp-for="Rating" id="ratingInput" />
+            <input type="hidden" asp-for="QualityRating" id="qualityRatingInput" />
+            <input type="hidden" asp-for="ValueForMoneyRating" id="valueRatingInput" />
+            <input type="hidden" asp-for="AccuracyRating" id="accuracyRatingInput" />
+
+            <div class="er-section">
+                <div class="er-label">Overall Rating</div>
+                <div class="star-row" data-target="ratingInput" data-current="@Model.Rating">
+                    @for (var i = 1; i <= 5; i++)
+                    {
+                        <button type="button" class="star-btn" data-value="@i"><i class="bi bi-star-fill"></i></button>
+                    }
+                </div>
+                <span asp-validation-for="Rating"></span>
+            </div>
+
+            <div class="er-section sub-grid">
+                <div>
+                    <div class="sub-label">Product Quality</div>
+                    <div class="star-row" data-target="qualityRatingInput" data-current="@(Model.QualityRating ?? 0)">
+                        @for (var i = 1; i <= 5; i++) { <button type="button" class="star-btn" data-value="@i"><i class="bi bi-star-fill"></i></button> }
+                    </div>
+                </div>
+                <div>
+                    <div class="sub-label">Value for Money</div>
+                    <div class="star-row" data-target="valueRatingInput" data-current="@(Model.ValueForMoneyRating ?? 0)">
+                        @for (var i = 1; i <= 5; i++) { <button type="button" class="star-btn" data-value="@i"><i class="bi bi-star-fill"></i></button> }
+                    </div>
+                </div>
+                <div>
+                    <div class="sub-label">Matches Description</div>
+                    <div class="star-row" data-target="accuracyRatingInput" data-current="@(Model.AccuracyRating ?? 0)">
+                        @for (var i = 1; i <= 5; i++) { <button type="button" class="star-btn" data-value="@i"><i class="bi bi-star-fill"></i></button> }
+                    </div>
+                </div>
+            </div>
+
+            <div class="er-section">
+                <div class="er-label">Review Details</div>
+                <div class="mb-2">
+                    <input asp-for="Title" class="form-input" maxlength="100" placeholder="Short title" />
+                    <span asp-validation-for="Title"></span>
+                </div>
+                <textarea asp-for="Comment" class="form-textarea" rows="5" maxlength="1000" placeholder="Share your product experience"></textarea>
+                <span asp-validation-for="Comment"></span>
+            </div>
+
+            <div class="er-section">
+                <div class="er-label">Photos</div>
+                @if (Model.ExistingImages.Any())
+                {
+                    <div class="image-grid mb-3">
+                        @foreach (var image in Model.ExistingImages)
+                        {
+                            <div class="image-check">
+                                <img src="@image.ImageUrl" alt="Review photo" />
+                                <label>
+                                    <input type="checkbox" name="removeImageIds" value="@image.Id" />
+                                    Remove
+                                </label>
+                            </div>
+                        }
+                    </div>
+                }
+                <input type="file" name="images" class="upload-input" accept="image/*" multiple />
+                <div class="text-muted mt-2" style="font-size: 11px;">You can keep up to 5 photos total. Each image must be 5MB or smaller.</div>
+            </div>
+
+            <div class="er-actions">
+                <a href="/review" class="btn-er">Cancel</a>
+                <button type="submit" class="btn-er primary"><i class="bi bi-check2"></i> Save Review</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+<script>
+    function paintStars(row, value) {
+        row.querySelectorAll('.star-btn').forEach((button, index) => {
+            button.classList.toggle('active', index < value);
+        });
+    }
+
+    document.querySelectorAll('.star-row[data-target]').forEach(row => {
+        const target = document.getElementById(row.dataset.target);
+        let current = Number(row.dataset.current || target?.value || 0);
+        if (target && current > 0) target.value = current;
+        paintStars(row, current);
+
+        row.querySelectorAll('.star-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                current = Number(button.dataset.value);
+                if (target) target.value = current || '';
+                paintStars(row, current);
+            });
+        });
+    });
+</script>
+}

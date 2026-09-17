@@ -1,0 +1,418 @@
+@model List<Sparkle.Api.Areas.Seller.Models.SellerOrderViewModel>
+@using Sparkle.Domain.Orders
+
+@{
+    ViewData["Title"] = "Orders";
+    Layout = "~/Areas/Seller/Views/Shared/_SellerLayout.cshtml";
+    int sellerId = ViewBag.SellerId;
+    
+    var pendingCount = Model.Count(o => o.Order.Status == OrderStatus.Pending);
+    var processingCount = Model.Count(o => o.Order.Status == OrderStatus.Processing);
+    var deliveredCount = Model.Count(o => o.Order.Status == OrderStatus.Delivered);
+}
+
+
+
+<style>
+    :root {
+        --primary: #f97316;
+        --primary-dark: #ea580c;
+        --bg-surface: #ffffff;
+        --bg-subtle: #f8fafc;
+        --border-color: #e2e8f0;
+        --text-main: #334155;
+        --text-muted: #64748b;
+    }
+
+    /* Unified Toolbar - Professional & Connected */
+    .unified-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: #fff;
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 16px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        flex-wrap: wrap;
+    }
+
+    /* Segmented Tabs */
+    .tab-group {
+        display: flex;
+        gap: 2px;
+        background: var(--bg-subtle);
+        padding: 3px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+    .tab-link {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tab-link:hover { color: var(--text-main); background: rgba(0,0,0,0.02); }
+    .tab-link.active { background: #fff; color: var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .tab-link .count {
+        background: var(--border-color);
+        color: var(--text-muted);
+        padding: 1px 6px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+    .tab-link.active .count {
+        background: rgba(249, 115, 22, 0.1);
+        color: var(--primary);
+    }
+
+    /* Divider */
+    .toolbar-divider {
+        width: 1px;
+        height: 24px;
+        background: var(--border-color);
+        margin: 0 4px;
+    }
+
+    /* Search Box */
+    .search-box {
+        flex: 1;
+        min-width: 200px;
+        position: relative;
+    }
+    .search-box i {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    .search-input {
+        width: 100%;
+        padding: 8px 10px 8px 32px;
+        border: 1px solid var(--border-color);
+        border-radius: 7px;
+        font-size: 0.85rem;
+        background: var(--bg-subtle);
+        transition: all 0.2s;
+        color: var(--text-main);
+    }
+    .search-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: #fff;
+        box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
+    }
+
+    /* Action Buttons */
+    .action-btn {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 7px;
+        background: #fff;
+        color: var(--text-main);
+        font-weight: 600;
+        font-size: 0.8rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s ease;
+    }
+    .action-btn:hover { border-color: var(--primary); color: var(--primary); background: #fff7ed; }
+    .action-btn.primary {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border: none;
+        color: #fff;
+        box-shadow: 0 2px 4px rgba(249, 115, 22, 0.2);
+    }
+    .action-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(249, 115, 22, 0.3); }
+
+    /* Orders Table Card */
+    .table-card {
+        background: #fff;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .orders-table { width: 100%; border-collapse: collapse; }
+    .orders-table th {
+        background: var(--bg-subtle);
+        padding: 10px 16px;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .orders-table td {
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--bg-subtle);
+        font-size: 0.85rem;
+        color: var(--text-main);
+        vertical-align: middle;
+    }
+    .orders-table tr:last-child td { border-bottom: none; }
+    .orders-table tbody tr { transition: background 0.1s; }
+    .orders-table tbody tr:hover { background: #fffcf8; }
+
+    /* Column Specifics */
+    .order-id-cell a { 
+        font-weight: 700; 
+        color: var(--primary); 
+        text-decoration: none; 
+        font-family: monospace; 
+        font-size: 0.9rem; 
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .order-id-cell a:hover { text-decoration: underline; }
+
+    /* Customer Connection Cell */
+    .customer-cell { display: flex; align-items: center; gap: 10px; }
+    .avatar {
+        width: 32px; height: 32px; border-radius: 50%;
+        background: linear-gradient(135deg, #f97316, #ea580c);
+        color: #fff; display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 0.75rem;
+        box-shadow: 0 2px 4px rgba(249, 115, 22, 0.2);
+        border: 2px solid #fff;
+    }
+    .customer-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .customer-name { font-weight: 600; color: var(--text-main); font-size: 0.85rem; display: flex; align-items: center; gap: 4px; }
+    .badge-returning { color: #eab308; font-size: 0.75rem; }
+    .customer-type { font-size: 0.7rem; color: #94a3b8; }
+
+    /* Status Pills */
+    .status-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 4px 10px; border-radius: 12px;
+        font-size: 0.7rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .status-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+    
+    .status-pill.pending { background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; }
+    .status-pill.pending::before { background: #ea580c; }
+    
+    .status-pill.processing { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+    .status-pill.processing::before { background: #2563eb; }
+    
+    .status-pill.shipped { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
+    .status-pill.shipped::before { background: #16a34a; }
+    
+    .status-pill.delivered { background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
+    .status-pill.delivered::before { background: #059669; }
+    
+    .status-pill.cancelled { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+    .status-pill.cancelled::before { background: #dc2626; }
+
+    .amount { font-weight: 700; color: var(--text-main); font-family: monospace; font-size: 0.9rem; }
+    
+    /* Action & Connect Buttons */
+    .btn-action-group { display: flex; gap: 6px; justify-content: flex-end; }
+    .btn-icon {
+        width: 28px; height: 28px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 6px; border: 1px solid var(--border-color);
+        color: var(--text-muted); background: #fff;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+    .btn-icon:hover { color: var(--primary); border-color: var(--primary); background: #fff7ed; }
+    
+    .btn-view {
+        padding: 4px 10px; background: #fff; color: var(--text-muted);
+        border: 1px solid var(--border-color); border-radius: 6px; 
+        font-weight: 600; font-size: 0.75rem; text-decoration: none; 
+        transition: all 0.15s ease;
+        display: inline-flex; align-items: center; gap: 4px;
+    }
+    .btn-view:hover { border-color: var(--primary); color: var(--primary); }
+
+    .pagination-row {
+        padding: 8px 16px; display: flex; justify-content: flex-end; gap: 4px;
+        border-top: 1px solid var(--border-color); background: #fafafa;
+    }
+    .page-num {
+        width: 28px; height: 28px; border: 1px solid var(--border-color); background: #fff;
+        border-radius: 6px; color: var(--text-muted); font-weight: 600; font-size: 0.75rem;
+        display: flex; align-items: center; justify-content: center; text-decoration: none;
+        transition: all 0.15s;
+    }
+    .page-num:hover { border-color: var(--primary); color: var(--primary); }
+    .page-num.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    
+    .empty-state { padding: 40px; text-align: center; color: var(--text-muted); }
+    .empty-state i { font-size: 2rem; margin-bottom: 8px; opacity: 0.5; }
+</style>
+
+<div class="tw-w-full tw-px-3 tw-py-3 tw-overflow-x-hidden">
+
+<!-- Unified Toolbar: Tabs + Search + Connect Actions -->
+<div class="unified-toolbar">
+    <!-- Status Tabs -->
+    <div class="tab-group">
+        <a href="@Url.Action("Index", new { status = "All" })" 
+           class="tab-link @(string.IsNullOrEmpty(ViewBag.StatusFilter) || ViewBag.StatusFilter == "All" ? "active" : "")">
+            All <span class="count">@Model.Count</span>
+        </a>
+        <a href="@Url.Action("Index", new { status = "Pending" })" 
+           class="tab-link @(ViewBag.StatusFilter == "Pending" ? "active" : "")">
+            Pending <span class="count">@pendingCount</span>
+        </a>
+        <a href="@Url.Action("Index", new { status = "Processing" })" 
+           class="tab-link @(ViewBag.StatusFilter == "Processing" ? "active" : "")">
+            Processing <span class="count">@processingCount</span>
+        </a>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- Smart Search -->
+    <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" class="search-input" id="searchInput" placeholder="Search orders, customers..." />
+    </div>
+
+    <!-- Utility Actions -->
+    <button class="action-btn" id="dateBtn" title="Filter by Date"><i class="bi bi-calendar3"></i> Date</button>
+    <button class="action-btn" id="sortBtn" title="Sort Order"><i class="bi bi-sort-down"></i> Sort</button>
+    <button class="action-btn primary"><i class="bi bi-cloud-arrow-down"></i> Export</button>
+</div>
+
+<!-- Orders Data Table -->
+<div class="table-card">
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="bi bi-inbox-fill"></i>
+            <p>No orders found regarding your criteria.</p>
+        </div>
+    }
+    else
+    {
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th width="12%">Order ID</th>
+                    <th width="28%">Customer / Connection</th>
+                    <th width="15%">Placed On</th>
+                    <th width="15%">Fulfillment Status</th>
+                    <th width="10%">Items</th>
+                    <th width="10%">Total</th>
+                    <th width="10%" style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="ordersBody">
+                @foreach (var item in Model)
+                {
+                    var order = item.Order;
+                    
+                    var statusClass = order.Status switch
+                    {
+                        OrderStatus.Pending => "pending",
+                        OrderStatus.Processing => "processing",
+                        OrderStatus.Shipped => "shipped",
+                        OrderStatus.Delivered => "delivered",
+                        OrderStatus.Cancelled => "cancelled",
+                        _ => "pending"
+                    };
+
+                    <tr data-order="@order.OrderNumber" data-customer="@order.User?.FullName" data-date="@order.OrderDate.ToString("yyyy-MM-dd")">
+                        <td class="order-id-cell">
+                            <a href="@Url.Action("Details", new { id = order.Id })">#@order.OrderNumber</a>
+                        </td>
+                        <td>
+                            <div class="customer-cell">
+                                <div class="avatar">@item.CustomerAvatarText</div>
+                                <div class="customer-info">
+                                    <span class="customer-name">
+                                        @(order.User?.FullName ?? "Guest User")
+                                        @if(item.IsReturningCustomer) { <span class="badge-returning" title="Recurring Customer"><i class="bi bi-star-fill"></i></span> }
+                                    </span>
+                                    <span class="customer-type">
+                                        @(order.User != null ? $"Member since {item.MemberSince}" : "Guest Checkout")
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="font-size: 0.8rem; color: #64748b;">
+                            <i class="bi bi-clock" style="font-size: 0.75rem; margin-right: 4px;"></i>
+                            @order.OrderDate.ToString("MMM dd, HH:mm")
+                        </td>
+                        <td><span class="status-pill @statusClass">@order.Status</span></td>
+                        <td>
+                            <span style="font-weight: 600; color: #475569;">@item.SellerItemCount</span> 
+                            <span style="font-size:0.75rem; color:#94a3b8;">pcs</span>
+                        </td>
+                        <td class="amount">৳@item.SellerTotal.ToString("N0")</td>
+                        <td style="text-align: right;">
+                            <div class="btn-action-group">
+                                @if(order.UserId != null)
+                                {
+                                    <a href="@Url.Action("StartChat", "Chat", new { userId = order.UserId })" class="btn-icon" title="Chat with Customer">
+                                        <i class="bi bi-chat-dots-fill" style="color: var(--primary);"></i>
+                                    </a>
+                                }
+                                <a href="@Url.Action("Details", new { id = order.Id })" class="btn-view">
+                                    Details <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    @if (ViewBag.TotalPages > 1)
+    {
+        <div class="pagination-row">
+            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+            {
+                <a href="@Url.Action("Index", new { page = i, status = ViewBag.StatusFilter })" 
+                   class="page-num @(i == ViewBag.CurrentPage ? "active" : "")">@i</a>
+            }
+        </div>
+    }
+</div>
+
+<script>
+// Search Functionality
+document.getElementById('searchInput')?.addEventListener('input', function(e) {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('#ordersBody tr').forEach(row => {
+        const order = row.dataset.order?.toLowerCase() || '';
+        const customer = row.dataset.customer?.toLowerCase() || '';
+        row.style.display = (order.includes(q) || customer.includes(q)) ? '' : 'none';
+    });
+});
+
+// Sort Toggle
+let sortAsc = false;
+document.getElementById('sortBtn')?.addEventListener('click', function() {
+    const tbody = document.getElementById('ordersBody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.sort((a, b) => {
+        return sortAsc ? a.dataset.date.localeCompare(b.dataset.date) : b.dataset.date.localeCompare(a.dataset.date);
+    });
+    rows.forEach(row => tbody.appendChild(row));
+    sortAsc = !sortAsc;
+    this.innerHTML = sortAsc ? '<i class="bi bi-sort-up"></i> Sort' : '<i class="bi bi-sort-down"></i> Sort';
+});
+</script>
+</div>

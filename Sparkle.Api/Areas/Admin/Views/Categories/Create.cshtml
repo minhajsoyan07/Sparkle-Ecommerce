@@ -1,0 +1,105 @@
+@model Sparkle.Domain.Catalog.Category
+@{
+    ViewData["Title"] = "Create Category";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title">Add Category</h2>
+        <p class="text-muted">Create a new product category.</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="content-card">
+            <form asp-action="Create" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label control-label">Category Name</label>
+                    <input asp-for="Name" class="form-control" placeholder="e.g. Electronics" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Slug" class="form-label control-label">Slug (Optional)</label>
+                    <input asp-for="Slug" class="form-control" placeholder="Auto-generated if left blank" />
+                    <div class="form-text">URL-friendly version of the name.</div>
+                    <span asp-validation-for="Slug" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Icon" class="form-label control-label">Icon Class (Bootstrap Icons)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-star"></i></span>
+                            <input asp-for="Icon" class="form-control" placeholder="bi-cpu" />
+                        </div>
+                        <div class="form-text">Example: bi-phone, bi-laptop</div>
+                        <span asp-validation-for="Icon" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DisplayOrder" class="form-label control-label">Display Order</label>
+                        <input asp-for="DisplayOrder" class="form-control" type="number" />
+                        <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label control-label">Category Image</label>
+                    <div class="mb-2" style="background-color: #f5f5f5; border-radius: 8px; padding: 15px; text-align: center; min-height: 150px; display: flex; align-items: center; justify-content: center;">
+                        <div id="noImageContainer" style="text-align: center; color: #999;">
+                            <i class="bi bi-image-alt" style="font-size: 3rem; display: block; margin-bottom: 10px; opacity: 0.5;"></i>
+                            <p style="margin: 0;">No image selected yet</p>
+                        </div>
+                        <div id="previewContainer" style="display: none; flex-direction: column; align-items: center; gap: 10px;">
+                            <img id="previewImage" style="max-width: 200px; max-height: 200px; object-fit: contain;" />
+                            <small class="text-muted">Image Preview</small>
+                        </div>
+                    </div>
+                    <input type="file" name="ImageFile" class="form-control" accept="image/*" id="imageUpload" onchange="previewImage(event)" />
+                    <div class="form-text">
+                        <strong>Upload an image</strong> for this category.
+                        <br />Recommended size: 400x400px (square images work best for category cards)
+                        <br />Supported formats: PNG, JPG, WebP (Max 5MB)
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="submit" class="btn btn-primary px-4">Create Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Hide no image, show preview
+                    const noImageContainer = document.getElementById('noImageContainer');
+                    const previewContainer = document.getElementById('previewContainer');
+                    
+                    if (noImageContainer) noImageContainer.style.display = 'none';
+                    
+                    const previewImage = document.getElementById('previewImage');
+                    previewImage.src = e.target.result;
+                    previewContainer.style.display = 'flex';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+}

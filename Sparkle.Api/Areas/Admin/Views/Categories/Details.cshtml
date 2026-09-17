@@ -1,0 +1,140 @@
+@model Sparkle.Domain.Catalog.Category
+
+@{
+    ViewData["Title"] = "Category Details";
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title">Category Details</h2>
+        <p class="text-muted">View category information and product statistics.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+            <i class="bi bi-pencil-square me-2"></i> Edit Category
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <!-- Category Information -->
+        <div class="content-card mb-4">
+            <h5 class="card-title fw-bold mb-3 border-bottom pb-2">Category Information</h5>
+            
+            <div class="row mb-3">
+                <div class="col-md-3 text-muted">Name</div>
+                <div class="col-md-9 fw-bold fs-5">@Model.Name</div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-3 text-muted">Slug</div>
+                <div class="col-md-9"><code>@Model.Slug</code></div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-3 text-muted">Display Order</div>
+                <div class="col-md-9">@Model.DisplayOrder</div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-3 text-muted">Icon</div>
+                <div class="col-md-9">
+                    @if (!string.IsNullOrEmpty(Model.Icon))
+                    {
+                        <i class="bi bi-@Model.Icon fs-3"></i>
+                        <span class="ms-2 text-muted">@Model.Icon</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">No icon set</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="content-card">
+            <h5 class="card-title fw-bold mb-3 border-bottom pb-2">Additional Information</h5>
+            
+            <div class="row mb-3">
+                <div class="col-md-3 text-muted">Parent Category</div>
+                <div class="col-md-9">
+                    @if (Model.ParentId.HasValue && Model.Parent != null)
+                    {
+                        <a asp-action="Details" asp-route-id="@Model.ParentId">@Model.Parent.Name</a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Root Category</span>
+                    }
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-3 text-muted">Subcategories</div>
+                <div class="col-md-9">
+                    @if (Model.SubCategories != null && Model.SubCategories.Any())
+                    {
+                        <span class="badge bg-primary">@Model.SubCategories.Count</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">None</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Statistics -->
+        <div class="content-card mb-4">
+            <h5 class="card-title fw-bold mb-3 border-bottom pb-2">Statistics</h5>
+            
+            <div class="row g-2">
+                <div class="col-12">
+                    <div class="bg-light p-3 rounded">
+                        <div class="h4 mb-0 text-primary">@ViewBag.ProductCount</div>
+                        <div class="small text-muted">Total Products</div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="bg-light p-3 rounded">
+                        <div class="h4 mb-0 text-success">
+                            @if (Model.SubCategories != null)
+                            {
+                                @Model.SubCategories.Count
+                            }
+                            else
+                            {
+                                <text>0</text>
+                            }
+                        </div>
+                        <div class="small text-muted">Subcategories</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="content-card">
+            <h5 class="card-title fw-bold mb-3 border-bottom pb-2">Actions</h5>
+            
+            <div class="d-grid gap-2">
+                <a asp-controller="Products" asp-action="Index" asp-route-category="@Model.Id" class="btn btn-outline-primary">
+                    <i class="bi bi-box-seam me-2"></i> View Products
+                </a>
+                
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Are you sure you want to delete this category?');">
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="bi bi-trash me-2"></i> Delete Category
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,76 @@
+@model IEnumerable<Microsoft.AspNetCore.Identity.IdentityRole>
+@{
+    ViewData["Title"] = "Role Management";
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title">Roles & Permissions</h2>
+        <p class="text-muted">Manage system access roles.</p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i>Create New Role
+        </a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="content-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">Role Name</th>
+                    <th>ID</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var role in Model)
+                {
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold">@role.Name</div>
+                        </td>
+                        <td><code class="text-muted small">@role.Id</code></td>
+                        <td class="text-end pe-4">
+                            @if (role.Name != "Admin" && role.Name != "Seller" && role.Name != "User")
+                            {
+                                <form asp-action="Delete" asp-route-id="@role.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this role? Users assigned to this role may lose access.');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-dark border">System Role</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <p class="text-muted">No roles found.</p>
+        </div>
+    }
+</div>

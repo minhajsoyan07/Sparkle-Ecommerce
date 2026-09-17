@@ -1,0 +1,131 @@
+@using System.Linq
+@using System.Collections.Generic
+@model dynamic
+@{
+    var langCookie = Context.Request.Cookies["sparkle-lang"] == "bn" ? "bn" : "en";
+    var isBangla = langCookie == "bn";
+    
+    // Extract properties with safe defaults
+    var id = (long)Model.Id; // Assuming Id is long or int
+    var title = (string)Model.Title ?? "Untitled Product";
+    var imageUrl = (string)Model.ImageUrl ?? "https://via.placeholder.com/300x300";
+    var price = (decimal)(Model.Price ?? 0);
+    var basePrice = (decimal)(Model.BasePrice ?? 0);
+    var discount = (int)(Model.DiscountPercent ?? 0);
+    // Stock: null = unknown (hide badge), 0 = truly out of stock
+    int? stockRaw = null;
+    int stock = 0;
+    try {
+        var stockProp = Model.GetType().GetProperty("Stock") ?? Model.GetType().GetProperty("StockQuantity");
+        if (stockProp != null) {
+            stockRaw = (int?)stockProp.GetValue(Model, null);
+            stock = stockRaw ?? 0;
+        } else {
+            var variants = (IEnumerable<dynamic>)Model.Variants;
+            if (variants != null) {
+                stock = variants.Sum(v => (int)v.Stock);
+                stockRaw = stock;
+            }
+        }
+    } catch { stock = 0; stockRaw = null; }
+
+    var rating = (double)(Model.Rating ?? 0);
+    var reviews = (int)(Model.Reviews ?? 0);
+    var isFreeShipping = (bool)(Model.IsFreeShipping ?? false);
+    var confidenceScore = (int)(Model.ConfidenceScore ?? 0);
+
+    // Formatting
+    // Use price < basePrice as the source of truth — works even when DiscountPercent is null
+    var showDiscount = basePrice > 0 && price < basePrice;
+    var displayDiscount = discount > 0
+        ? discount
+        : (showDiscount ? (int)Math.Round((1m - price / basePrice) * 100) : 0);
+    var ratingVal = rating.ToString("0.0");
+    var dColor = isFreeShipping ? "#00bfa5" : "#9e9e9e";
+    var dCost = "60"; // Default shipping cost if not free (visual only)
+    
+    // Confidence Logic
+    var hasConfidence = confidenceScore > 0;
+    var confidenceLevel = confidenceScore >= 80 ? "high" : confidenceScore >= 60 ? "medium" : "low";
+    var confidenceColor = confidenceScore >= 80 ? "#10b981" : confidenceScore >= 60 ? "#f59e0b" : "#ef4444";
+}
+
+<div class="unified-product-card" style="flex: 0 0 100%; max-width: 100%;">
+    <a href="/home/product/@id" class="text-decoration-none d-block product-card-link" data-product-id="@id">
+        <!-- Product Image -->
+        <div class="unified-product-img position-relative">
+            <img src="@imageUrl" alt="@title" loading="lazy">
+
+        </div>
+        
+        <!-- Product Info -->
+        <div class="unified-product-info">
+            <h6 class="unified-product-title">@title</h6>
+            
+            <!-- Price Section -->
+            <div class="unified-product-price">
+            
+                <!-- Row 1: Current Price + Stock + Rating -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <!-- Left: Price + Stock -->
+                    <div class="d-flex align-items-baseline gap-1">
+                        <span class="current-price">
+                            <span class="currency-symbol">৳</span>&nbsp;@(price.ToString("0"))
+                        </span>
+                        @if(stockRaw == null) {
+                            @* Stock unknown — hide badge *@
+                        } else if(stock > 0) {
+                            <span class="stock-count text-muted" style="font-size: 0.65rem;">(@stock)</span>
+                        } else {
+                            <span class="stock-count text-danger" style="font-size: 0.65rem;">(Out)</span>
+                        }
+                    </div>
+                    
+                    <!-- Right: Rating -->
+                    <div class="rating-badge">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span class="rating-val">@ratingVal</span>
+                        <span class="review-count">(@reviews)</span>
+                    </div>
+                </div>
+
+                <!-- Row 2: Original Price + Discount -->
+                <div class="original-price-row">
+                    <!-- Left: Original Price & Discount -->
+                    <div class="d-flex align-items-center gap-1">
+                        @if(showDiscount) {
+                            <span class="original-price">
+                                <span class="currency-symbol-sm">৳</span>&nbsp;@(basePrice.ToString("0"))
+                            </span>
+                            <span class="discount-badge">-@displayDiscount%</span>
+                        } else {
+                            <!-- Spacer if no discount to keep alignment or just empty -->
+                            <span class="original-price" style="visibility: hidden;">
+                                <span class="currency-symbol-sm">৳</span>&nbsp;0
+                            </span>
+                        }
+                    </div>
+                    
+                    <!-- Right: Shipping -->
+                    <div class="shipping-badge" style="color: @dColor;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="3" width="15" height="13"></rect>
+                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                        </svg>
+                        @if(isFreeShipping) {
+                            <span>Free</span>
+                        } else {
+                            <span><span class="currency-symbol-sm">৳</span>&nbsp;@dCost</span>
+                        }
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </a>
+</div>

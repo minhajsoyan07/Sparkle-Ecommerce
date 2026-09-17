@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Payment Methods";
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<div class="tw-bg-white tw-rounded-2xl tw-border tw-border-slate-100 tw-overflow-hidden tw-shadow-sm">
+    <!-- Header -->
+    <div class="tw-px-6 tw-py-4 tw-border-b tw-border-slate-50 tw-flex tw-justify-between tw-items-center">
+        <div>
+            <h6 class="tw-font-bold tw-text-slate-900 tw-text-base tw-mb-0">
+                <i class="bi bi-credit-card tw-mr-1.5 tw-text-orange-500"></i> Payment Methods
+            </h6>
+            <p class="tw-text-[11px] tw-text-slate-500 tw-mb-0">Manage your saved credit cards and wallets</p>
+        </div>
+        <button class="tw-bg-orange-500 tw-text-white tw-px-4 tw-py-2 tw-rounded-xl tw-text-xs tw-font-bold hover:tw-bg-orange-600 tw-transition-all tw-shadow-lg tw-shadow-orange-500/20 tw-flex tw-items-center tw-gap-2">
+            <i class="bi bi-plus-lg"></i> Add New
+        </button>
+    </div>
+
+    <!-- Empty State -->
+    <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-py-20 tw-px-6">
+        <div class="tw-w-16 tw-h-16 tw-bg-slate-50 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mb-6">
+            <i class="bi bi-credit-card-2-back tw-text-3xl tw-text-slate-300"></i>
+        </div>
+        <h6 class="tw-font-bold tw-text-slate-900 tw-text-base tw-mb-2">No Payment Methods Saved</h6>
+        <p class="tw-text-slate-500 tw-text-center tw-max-w-xs tw-text-xs tw-mb-0 tw-leading-relaxed">
+            You haven't saved any payment methods yet. Link a card or wallet for a faster, one-click checkout experience.
+        </p>
+    </div>
+</div>

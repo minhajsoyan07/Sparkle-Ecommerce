@@ -1,0 +1,34 @@
+@{
+    ViewData["Title"] = "Create Role";
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title">Create New Role</h2>
+        <p class="text-muted">Define a new system access role.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back to List
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="content-card">
+            <form asp-action="Create" method="post">
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Role Name <span class="text-danger">*</span></label>
+                    <input type="text" name="roleName" class="form-control" placeholder="e.g., Editor" required />
+                    <div class="form-text">Role names must be unique.</div>
+                </div>
+
+                <div class="d-flex gap-2 pt-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-2"></i>Create Role
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

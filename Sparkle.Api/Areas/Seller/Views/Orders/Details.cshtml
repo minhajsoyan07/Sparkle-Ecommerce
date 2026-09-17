@@ -1,0 +1,362 @@
+@model Sparkle.Domain.Orders.Order
+@using Sparkle.Domain.Orders
+
+@{
+    ViewData["Title"] = "Order Details";
+    Layout = "~/Areas/Seller/Views/Shared/_SellerLayout.cshtml";
+    int sellerId = ViewBag.SellerId;
+    var sellerItems = Model.OrderItems.Where(oi => oi.ProductVariant?.Product?.SellerId == sellerId).ToList();
+    var otherItemsCount = Model.OrderItems.Count - sellerItems.Count;
+    
+    // Status badge colors
+    var statusBadgeClass = Model.Status switch
+    {
+        OrderStatus.Pending => "bg-warning text-dark",
+        OrderStatus.Confirmed => "bg-info text-white",
+        OrderStatus.Processing => "bg-primary text-white",
+        OrderStatus.Shipped => "bg-indigo text-white",
+        OrderStatus.OutForDelivery => "bg-purple text-white",
+        OrderStatus.Delivered => "bg-success text-white",
+        OrderStatus.Cancelled => "bg-danger text-white",
+        _ => "bg-secondary text-white"
+    };
+    
+    // Determine next available actions based on current status
+    var canConfirm = Model.Status == OrderStatus.Pending;
+    var canProcess = Model.Status == OrderStatus.Confirmed;
+    var canShip = Model.Status == OrderStatus.Processing;
+    var canDeliver = Model.Status == OrderStatus.Shipped || Model.Status == OrderStatus.OutForDelivery;
+    var canCancel = Model.Status != OrderStatus.Delivered && Model.Status != OrderStatus.Cancelled;
+}
+
+<style>
+    .bg-indigo { background-color: #6366f1 !important; }
+    .bg-purple { background-color: #8b5cf6 !important; }
+    .action-card { background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); }
+</style>
+
+<div class="container-fluid p-4">
+    <!-- Alert Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <h2 class="h3 fw-bold mb-0">Order #@Model.OrderNumber</h2>
+                <span class="badge @statusBadgeClass fs-6 px-3 py-2">@Model.Status</span>
+            </div>
+            <div class="text-muted">
+                <i class="bi bi-calendar3 me-1"></i> Placed on @Model.OrderDate.ToString("MMM dd, yyyy h:mm tt")
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back to Orders
+            </a>
+        </div>
+    </div>
+
+    <!-- Order Actions Card -->
+    @if (Model.Status != OrderStatus.Cancelled && Model.Status != OrderStatus.Delivered)
+    {
+        <div class="card border-0 shadow-sm mb-4 action-card">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Quick Actions</h5>
+                <div class="d-flex flex-wrap gap-3">
+                    @if (canConfirm)
+                    {
+                        <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="newStatus" value="Confirmed" />
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>Confirm Order
+                            </button>
+                        </form>
+                    }
+                    @if (canProcess)
+                    {
+                        <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="newStatus" value="Processing" />
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-gear me-2"></i>Start Processing
+                            </button>
+                        </form>
+                    }
+                    @if (canShip)
+                    {
+                        <button type="button" class="btn btn-info btn-lg text-white" data-bs-toggle="modal" data-bs-target="#shippingModal">
+                            <i class="bi bi-truck me-2"></i>Mark as Shipped
+                        </button>
+                    }
+                    @if (canDeliver)
+                    {
+                        <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="newStatus" value="Delivered" />
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-house-check me-2"></i>Mark Delivered
+                            </button>
+                        </form>
+                    }
+                    @if (canCancel)
+                    {
+                        <button type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                            <i class="bi bi-x-circle me-2"></i>Cancel Order
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    
+    @if (Model.Status == OrderStatus.Delivered)
+    {
+        <div class="alert alert-success mb-4">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong>Order Completed!</strong> This order was delivered on @(Model.DeliveredAt?.ToString("MMM dd, yyyy") ?? "N/A")
+        </div>
+    }
+    @if (Model.Status == OrderStatus.Cancelled)
+    {
+        <div class="alert alert-danger mb-4">
+            <i class="bi bi-x-circle-fill me-2"></i>
+            <strong>Order Cancelled</strong> @(!string.IsNullOrEmpty(Model.CancellationReason) ? $" - {Model.CancellationReason}" : "")
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <!-- Order Items -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="card-title fw-bold mb-0">Order Items</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Product</th>
+                                <th>Price</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end pe-4">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in sellerItems)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            @if (item.ProductVariant?.Product?.Images != null && item.ProductVariant.Product.Images.Any())
+                                            {
+                                                 <img src="@item.ProductVariant.Product.Images.First().Url" class="rounded me-3 border" width="64" height="64" style="object-fit: cover;">
+                                            }
+                                            else
+                                            {
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center me-3 border" style="width: 64px; height: 64px;">
+                                                    <i class="bi bi-image text-muted"></i>
+                                                </div>
+                                            }
+                                            <div>
+                                                <h6 class="mb-1 text-dark fw-bold">@item.ProductName</h6>
+                                                <div class="small text-muted">
+                                                    @if(!string.IsNullOrEmpty(item.ProductVariant?.Color))
+                                                    {
+                                                        <span class="me-2">Color: @item.ProductVariant.Color</span>
+                                                    }
+                                                    @if(!string.IsNullOrEmpty(item.ProductVariant?.Size))
+                                                    {
+                                                        <span class="me-2">Size: @item.ProductVariant.Size</span>
+                                                    }
+                                                </div>
+                                                <small class="text-muted">SKU: @item.ProductVariant?.Sku</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>৳@item.UnitPrice.ToString("N0")</td>
+                                    <td class="text-center">@item.Quantity</td>
+                                    <td class="text-end pe-4 fw-bold">৳@item.LineTotal.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        @if (otherItemsCount > 0)
+                        {
+                            <tfoot class="bg-light text-muted">
+                                <tr>
+                                    <td colspan="4" class="text-center py-2 small">
+                                        <em>This order contains @otherItemsCount other item(s) from different sellers.</em>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        }
+                    </table>
+                </div>
+            </div>
+
+            <!-- Shipments -->
+            @if (Model.Shipments != null && Model.Shipments.Any())
+            {
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3 border-bottom">
+                         <h5 class="card-title fw-bold mb-0">Related Shipments</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        @foreach (var shipment in Model.Shipments)
+                        {
+                            <div class="list-group-item p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold mb-1">
+                                            <a asp-controller="Shipments" asp-action="Details" asp-route-id="@shipment.Id">@shipment.ShipmentNumber</a>
+                                        </div>
+                                        <div class="small text-muted">@shipment.CourierName • @shipment.Items.Count items</div>
+                                    </div>
+                                    <div>
+                                         <span class="badge bg-light text-dark border">@shipment.Status</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Customer Info -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">Customer</h5>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-light rounded-circle p-3 me-3">
+                            <i class="bi bi-person fs-4 text-secondary"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold">@Model.User?.FullName</div>
+                            <div class="small text-muted">@Model.User?.Email</div>
+                        </div>
+                    </div>
+                    
+                    <hr class="text-muted my-3 opacity-25" />
+                    
+                    <address class="small text-secondary mb-0">
+                        <strong>@Model.ShippingAddress?.FullName</strong><br>
+                        @Model.ShippingAddress?.Line1<br>
+                        @if(!string.IsNullOrEmpty(Model.ShippingAddress?.Line2)) {
+                            <br>@Model.ShippingAddress?.Line2
+                        }
+                        @Model.ShippingAddress?.City, @Model.ShippingAddress?.PostalCode<br>
+                        <div class="mt-2"><i class="bi bi-telephone me-1"></i> @Model.ShippingAddress?.Phone</div>
+                    </address>
+                </div>
+            </div>
+
+            <!-- Payment Info -->
+            <div class="card border-0 shadow-sm">
+                 <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">Payment Summary</h5>
+                    <div class="d-flex justify-content-between mb-2 small">
+                        <span class="text-muted">Subtotal (Your Items)</span>
+                        <span class="fw-bold">৳@sellerItems.Sum(i => i.LineTotal).ToString("N0")</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 small">
+                        <span class="text-muted">Payment Method</span>
+                        <span class="fw-bold">@Model.PaymentMethod</span>
+                    </div>
+                     <div class="d-flex justify-content-between mb-3 small">
+                        <span class="text-muted">Payment Status</span>
+                         <span class="badge @(Model.PaymentStatus == PaymentStatus.Paid ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning")">
+                             @Model.PaymentStatus
+                         </span>
+                    </div>
+                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Shipping Modal -->
+<div class="modal fade" id="shippingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-truck me-2"></i>Shipping Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="AddTracking" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Courier Name</label>
+                        <select name="courierName" class="form-select" required>
+                            <option value="">Select courier...</option>
+                            <option value="Pathao">Pathao</option>
+                            <option value="RedX">RedX</option>
+                            <option value="Steadfast">Steadfast</option>
+                            <option value="Paperfly">Paperfly</option>
+                            <option value="eCourier">eCourier</option>
+                            <option value="Sundarban">Sundarban Courier</option>
+                            <option value="SA Paribahan">SA Paribahan</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tracking Number</label>
+                        <input type="text" name="trackingNumber" class="form-control" placeholder="Enter tracking number" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>Confirm Shipment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle me-2"></i>Cancel Order</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="CancelOrder" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Are you sure you want to cancel this order? This action cannot be undone.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Reason for cancellation</label>
+                        <textarea name="reason" class="form-control" rows="3" placeholder="Enter reason for cancellation..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Keep Order</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle me-1"></i>Cancel Order
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

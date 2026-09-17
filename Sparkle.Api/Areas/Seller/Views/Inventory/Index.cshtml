@@ -1,0 +1,255 @@
+@{
+    ViewData["Title"] = "Inventory Management";
+    Layout = "~/Areas/Seller/Views/Shared/_SellerLayout.cshtml";
+    var products = ViewBag.Products ?? new List<dynamic>();
+    var totalProducts = ViewBag.TotalProducts ?? 0;
+    var lowStockCount = ViewBag.LowStockCount ?? 0;
+    var outOfStockCount = ViewBag.OutOfStockCount ?? 0;
+    var currentFilter = ViewBag.CurrentFilter as string;
+    var searchQuery = ViewBag.SearchQuery as string;
+}
+
+<style>
+    .inventory-header {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+    }
+    
+    .inventory-table {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+    
+    .stock-status {
+        padding: 0.35rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .stock-status.in-stock { background: #d1fae5; color: #065f46; }
+    .stock-status.low-stock { background: #fef3c7; color: #92400e; }
+    .stock-status.out-of-stock { background: #fee2e2; color: #991b1b; }
+    
+    .filter-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        text-align: center;
+    }
+</style>
+
+<div class="inventory-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="mb-2"><i class="bi bi-boxes me-2"></i>Inventory Management</h3>
+            <p class="mb-0 opacity-90">Manage your product stock levels</p>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="text-muted small">Total Products</div>
+            <div class="fs-3 fw-bold text-primary">@totalProducts</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="text-muted small">Low Stock</div>
+            <div class="fs-3 fw-bold text-warning">@lowStockCount</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="text-muted small">Out of Stock</div>
+            <div class="fs-3 fw-bold text-danger">@outOfStockCount</div>
+        </div>
+    </div>
+</div>
+
+<div class="filter-section">
+    <form method="get" class="row g-3">
+        <div class="col-md-4">
+            <input type="text" name="search" class="form-control" placeholder="Search products..." value="@searchQuery">
+        </div>
+        <div class="col-md-3">
+            <select name="filter" class="form-select">
+                <option value="">All Status</option>
+                <option value="low" selected="@(currentFilter == "low")">Low Stock</option>
+                <option value="out" selected="@(currentFilter == "out")">Out of Stock</option>
+                <option value="active" selected="@(currentFilter == "active")">Active</option>
+                <option value="inactive" selected="@(currentFilter == "inactive")">Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-funnel me-1"></i>Filter
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="inventory-table">
+    <table class="table table-hover mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Inventory</th>
+                <th>Pricing</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ var productList = products as IEnumerable<dynamic>; }
+            @if (productList != null && productList.Any())
+            {
+                foreach (var product in productList)
+                {
+                    var stockClass = product.TotalStock == 0 ? "text-danger" : (product.TotalStock <= 10 ? "text-warning" : "text-success");
+                    var statusClass = product.TotalStock == 0 ? "out-of-stock" : (product.TotalStock <= 10 ? "low-stock" : "in-stock");
+                    var statusLabel = product.TotalStock == 0 ? "Out of Stock" : (product.TotalStock <= 10 ? "Low Stock" : "In Stock");
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                @if (!string.IsNullOrEmpty((string)product.Thumbnail))
+                                {
+                                    <img src="@product.Thumbnail" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-image text-muted"></i>
+                                    </div>
+                                }
+                                <div>
+                                    <strong>@product.Title</strong>
+                                    @if (!(bool)product.IsActive)
+                                    {
+                                        <span class="badge bg-secondary ms-1">Inactive</span>
+                                    }
+                                    <div class="small text-muted">ID: @product.Id</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-muted">@(product.Category ?? "General")</span>
+                        </td>
+                        <td>
+                            <div>
+                                <strong class="@stockClass" style="font-size: 16px;">@product.TotalStock</strong>
+                                <div class="small text-muted">Total units</div>
+                                @if (product.VariantCount > 1)
+                                {
+                                    <button class="btn btn-link btn-sm p-0 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#variants-@product.Id">
+                                        @product.VariantCount variants <i class="bi bi-chevron-down small"></i>
+                                    </button>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <strong>৳@product.Price?.ToString("N0")</strong>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="stock-status @statusClass">
+                                    <i class="bi bi-circle-fill" style="font-size: 6px;"></i> @statusLabel
+                                </span>
+                                @if (product.VariantCount == 1)
+                                {
+                                    var variant = product.Variants[0];
+                                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="updateStock(@variant.Id, @variant.Stock)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                    @if (product.VariantCount > 1)
+                    {
+                        <tr class="collapse" id="variants-@product.Id">
+                            <td colspan="5" class="bg-light p-0">
+                                <div class="p-3">
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <thead>
+                                            <tr class="small text-muted">
+                                                <th>SKU</th>
+                                                <th>Variant</th>
+                                                <th>Stock</th>
+                                                <th>Price</th>
+                                                <th class="text-end">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var v in product.Variants)
+                                            {
+                                                <tr>
+                                                    <td><code class="small">@v.Sku</code></td>
+                                                    <td>@(v.Color ?? "-") / @(v.Size ?? "-")</td>
+                                                    <td><strong class="@(v.Stock == 0 ? "text-danger" : (v.Stock <= 10 ? "text-warning" : ""))">@v.Stock</strong></td>
+                                                    <td>৳@v.Price.ToString("N0")</td>
+                                                    <td class="text-end">
+                                                        <button class="btn btn-xs btn-outline-primary" onclick="updateStock(@v.Id, @v.Stock)">
+                                                            Update
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-1"></i>
+                        <p class="mt-2">No products found</p>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    function updateStock(variantId, currentStock) {
+        const newStock = prompt('Enter new stock quantity (current: ' + currentStock + '):', currentStock);
+        if (newStock !== null && !isNaN(newStock)) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("UpdateStock")';
+            form.innerHTML = `
+                <input type="hidden" name="variantId" value="${variantId}">
+                <input type="hidden" name="newStock" value="${newStock}">
+                @Html.AntiForgeryToken()
+            `;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
+}

@@ -1,0 +1,461 @@
+@model List<Sparkle.Domain.Wallets.WithdrawalRequest>
+@{
+    ViewData["Title"] = "Wallet Management";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    :root {
+        --bs-primary-rgb: 13, 110, 253;
+        --bs-success-rgb: 25, 135, 84;
+        --bs-warning-rgb: 255, 193, 7;
+        --bs-danger-rgb: 220, 53, 69;
+    }
+    
+    .wallet-stat-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .wallet-stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        border-color: #dee2e6;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon-bg-primary { background: rgba(var(--bs-primary-rgb), 0.1); color: var(--bs-primary); }
+    .stat-icon-bg-success { background: rgba(var(--bs-success-rgb), 0.1); color: var(--bs-success); }
+    .stat-icon-bg-warning { background: rgba(var(--bs-warning-rgb), 0.1); color: var(--bs-warning); }
+    .stat-icon-bg-danger { background: rgba(var(--bs-danger-rgb), 0.1); color: var(--bs-danger); }
+
+    .stat-title {
+        color: #6c757d;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 0;
+        line-height: 1.2;
+    }
+
+    .stat-meta {
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .content-panel {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 0; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .panel-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #f1f3f5;
+        background: #fff;
+    }
+
+    .panel-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin: 0;
+        color: #212529;
+    }
+
+    .custom-table th {
+        background: #f8f9fa;
+        color: #6c757d;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .custom-table td {
+        padding: 1rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f3f5;
+        color: #495057;
+    }
+
+    .custom-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .custom-table tr:hover td {
+        background-color: #f8f9fa;
+    }
+
+    .status-badge {
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 50rem;
+    }
+
+    .timeline-item {
+        padding: 1rem 0;
+        border-bottom: 1px dashed #e9ecef;
+        position: relative;
+    }
+    
+    .timeline-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .timeline-date {
+        font-size: 0.75rem;
+        color: #adb5bd;
+        font-weight: 600;
+    }
+
+    .timeline-content {
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="row align-items-center mb-4">
+    <div class="col-md-6">
+        <h4 class="fw-bold text-dark mb-1">Wallet Overview</h4>
+        <p class="text-muted small mb-0">Monitor system funds and manage withdrawal requests securely.</p>
+    </div>
+    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+        <span class="text-muted small me-2"><i class="bi bi-clock"></i> Updated: @DateTime.Now.ToString("h:mm tt")</span>
+        <button class="btn btn-sm btn-outline-secondary" onclick="window.location.reload()"><i class="bi bi-arrow-clockwise me-1">Refresh</i></button>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- Platform Earnings -->
+    <div class="col-xl-3 col-md-6">
+        <div class="wallet-stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-title">Platform Earnings</div>
+                    <div class="stat-value">৳ @(((decimal)(ViewBag.PlatformTotalCommission ?? 0)).ToString("N2"))</div>
+                </div>
+                <div class="stat-icon stat-icon-bg-primary">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+            </div>
+            <div class="stat-meta text-primary">
+                <i class="bi bi-graph-up-arrow"></i> Total Commissions Earned
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Seller Payable -->
+    <div class="col-xl-3 col-md-6">
+        <div class="wallet-stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-title">Seller Payable</div>
+                    <div class="stat-value">৳ @(((decimal)(ViewBag.TotalSellerAvailable ?? 0)).ToString("N0"))</div>
+                </div>
+                <div class="stat-icon stat-icon-bg-success">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+            </div>
+            <div class="stat-meta text-success">
+                <i class="bi bi-check-circle-fill"></i> Available for withdrawal
+            </div>
+        </div>
+    </div>
+
+    <!-- Escrow/Pending -->
+    <div class="col-xl-3 col-md-6">
+        <div class="wallet-stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-title">In Escrow</div>
+                    <div class="stat-value">৳ @(((decimal)(ViewBag.TotalSellerPending ?? 0)).ToString("N0"))</div>
+                </div>
+                <div class="stat-icon stat-icon-bg-warning">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+            </div>
+            <div class="stat-meta text-warning">
+                <i class="bi bi-clock-history"></i> Pending cleared funds
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdrawal Requests -->
+    <div class="col-xl-3 col-md-6">
+        <div class="wallet-stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-title">Withdrawal Requests</div>
+                    <div class="stat-value text-danger">@ViewBag.PendingWithdrawals</div>
+                </div>
+                <div class="stat-icon stat-icon-bg-danger">
+                    <i class="bi bi-exclamation-octagon"></i>
+                </div>
+            </div>
+            <div class="stat-meta text-danger">
+                Action Required
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Table -->
+    <div class="col-lg-8">
+        <div class="content-panel">
+            <div class="panel-header d-flex justify-content-between align-items-center">
+                <h5 class="panel-title">Recent Withdrawal Requests</h5>
+                @if (Model != null && Model.Count > 0)
+                {
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">@Model.Count(x => x.Status == "Pending") Pending</span>
+                }
+            </div>
+
+            <div class="table-responsive">
+                <table class="table custom-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Seller Info</th>
+                            <th>Amount</th>
+                            <th>Bank Details</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var req in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-primary fw-bold me-3" style="width: 40px; height: 40px; font-size: 0.9rem;">
+                                                @(req.Seller?.ShopName?.Substring(0, 1).ToUpper() ?? "S")
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark">@req.Seller?.ShopName</div>
+                                                <div class="small text-muted" style="font-size: 0.75rem;">ID: #@req.SellerId</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">৳ @req.Amount.ToString("N2")</div>
+                                        <div class="small text-muted" style="font-size: 0.75rem;">@req.RequestDate.ToString("MMM dd, yyyy")</div>
+                                    </td>
+                                    <td>
+                                        <div class="small fw-bold text-dark">@req.BankName</div>
+                                        <div class="text-muted small" style="font-family: monospace;">@req.AccountNumber</div>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var statusBadgeClass = req.Status switch
+                                            {
+                                                "Pending" => "bg-warning-subtle text-warning-emphasis",
+                                                "Approved" => "bg-info-subtle text-info-emphasis",
+                                                "Processed" => "bg-success-subtle text-success-emphasis",
+                                                "Rejected" => "bg-danger-subtle text-danger-emphasis",
+                                                _ => "bg-secondary-subtle text-secondary-emphasis"
+                                            };
+                                        }
+                                        <span class="status-badge @statusBadgeClass">@req.Status</span>
+                                    </td>
+                                    <td class="text-end">
+                                        @if(req.Status == "Pending")
+                                        {
+                                            <div class="d-flex justify-content-end gap-2">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal-@req.Id" title="Reject">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                                <form asp-action="ApproveWithdrawal" asp-route-id="@req.Id" method="post" style="display:inline;">
+                                                    <button type="submit" class="btn btn-sm btn-success px-3" title="Approve">
+                                                        <i class="bi bi-check-lg me-1"></i> Approve
+                                                        </button>
+                                                </form>
+                                            </div>
+                                            
+                                            <!-- Reject Modal -->
+                                            <div class="modal fade" id="rejectModal-@req.Id" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <form asp-action="RejectWithdrawal" asp-route-id="@req.Id" method="post">
+                                                        <div class="modal-content border-0 shadow">
+                                                            <div class="modal-header bg-danger text-white">
+                                                                <h5 class="modal-title fs-6 fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Reject Withdrawal Request</h5>
+                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body p-4">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label fw-bold text-secondary">Reason for Rejection</label>
+                                                                    <textarea name="reason" class="form-control" required rows="3" placeholder="Please explain why this request is being rejected (visible to seller)..."></textarea>
+                                                                </div>
+                                                                <div class="alert alert-warning d-flex align-items-center mb-0" role="alert">
+                                                                    <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                                                                    <div class="small">Funds will be returned to the seller's available balance immediately.</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer bg-light border-top-0">
+                                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                                                <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        }
+                                        else if (req.Status == "Approved")
+                                        {
+                                            <button type="button" class="btn btn-sm btn-primary px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#processModal-@req.Id">
+                                                <i class="bi bi-send me-1"></i> Process
+                                            </button>
+                                            
+                                            <!-- Process Modal -->
+                                            <div class="modal fade" id="processModal-@req.Id" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <form asp-action="ProcessWithdrawal" asp-route-id="@req.Id" method="post">
+                                                        <div class="modal-content border-0 shadow">
+                                                            <div class="modal-header bg-primary text-white">
+                                                                <h5 class="modal-title fs-6 fw-bold"><i class="bi bi-cash-coin me-2"></i>Process Payment</h5>
+                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body p-4">
+                                                                <div class="text-center mb-4">
+                                                                    <div class="fs-1 text-primary mb-2">৳ @req.Amount.ToString("N2")</div>
+                                                                    <div class="text-muted small">Transfer Amount to <strong>@req.Seller?.ShopName</strong></div>
+                                                                </div>
+                                                                
+                                                                <div class="bg-light p-3 rounded mb-3 border">
+                                                                    <div class="d-flex justify-content-between mb-1">
+                                                                        <span class="text-muted small">Bank:</span>
+                                                                        <span class="fw-bold small">@req.BankName</span>
+                                                                    </div>
+                                                                    <div class="d-flex justify-content-between">
+                                                                        <span class="text-muted small">A/C No:</span>
+                                                                        <span class="fw-bold small font-monospace">@req.AccountNumber</span>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="mb-3">
+                                                                    <label class="form-label fw-bold text-secondary">Transaction Reference ID</label>
+                                                                    <input name="transactionReference" class="form-control" required placeholder="e.g. TRX-8859-202X" />
+                                                                    <div class="form-text">Enter the bank transaction ID or reference number.</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer bg-light border-top-0">
+                                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                                                <button type="submit" class="btn btn-primary">Confirm Transfer</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        }
+                                        else 
+                                        {
+                                           <button class="btn btn-sm btn-light disabled border-0" disabled><i class="bi bi-lock"></i></button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="py-5 text-center">
+                                    <div class="text-muted opacity-50 mb-2">
+                                        <i class="bi bi-inbox fs-1"></i>
+                                    </div>
+                                    <h6 class="fw-bold text-secondary">No Withdrawal Requests</h6>
+                                    <p class="small text-muted">All caught up! There are no pending requests at this time.</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column: History -->
+    <div class="col-lg-4">
+        <div class="content-panel h-100">
+            <div class="panel-header border-bottom-0 pb-2">
+                <h5 class="panel-title">Platform Earnings History</h5>
+            </div>
+            
+            <div class="px-4 pb-4">
+                @{
+                    var adminTxs = ViewBag.RecentAdminTransactions as List<Sparkle.Domain.Wallets.AdminTransaction>;
+                }
+                
+                <div class="mt-2">
+                @if (adminTxs != null && adminTxs.Any())
+                {
+                    <div class="timeline-feed">
+                    @foreach (var tx in adminTxs)
+                    {
+                        <div class="timeline-item">
+                            <div class="d-flex w-100 justify-content-between mb-1">
+                                <span class="fw-bold text-success">
+                                    <i class="bi bi-arrow-down-left-circle-fill me-1 opacity-75"></i> ৳ @tx.Amount.ToString("N2")
+                                </span>
+                                <span class="timeline-date">@tx.TransactionDate.ToString("MMM dd")</span>
+                            </div>
+                            <div class="timeline-content text-muted small mb-2">
+                                @tx.Description
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded">
+                                <span class="badge bg-white text-secondary border shadow-sm" style="font-weight: 500;">Success</span>
+                                <small class="text-muted fw-bold" style="font-size: 0.7rem;">Balance: ৳ @tx.BalanceAfter.ToString("N2")</small>
+                            </div>
+                        </div>
+                    }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                       <div class="text-muted opacity-25 mb-3">
+                            <i class="bi bi-clock-history" style="font-size: 3rem;"></i>
+                       </div>
+                       <p class="text-muted small">No recent transaction history found.</p>
+                    </div>
+                }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

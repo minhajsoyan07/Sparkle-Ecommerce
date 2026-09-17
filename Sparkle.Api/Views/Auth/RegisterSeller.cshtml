@@ -1,0 +1,1375 @@
+@model Sparkle.Api.Controllers.AuthController.RegisterSellerViewModel
+@{
+    ViewData["Title"] = "Seller Registration";
+    Layout = null;
+    var langCookie = Context.Request.Cookies["sparkle-lang"] == "bn" ? "bn" : "en";
+    var isBangla = langCookie == "bn";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(isBangla ? "সেলার হোন - স্পার্কল" : "Become a Seller - Sparkle")</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0f766e;
+            --primary-dark: #115e59;
+            --primary-light: #14b8a6;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --bg-color: #f0fdfa;
+            --input-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * { font-family: 'Inter', system-ui, -apple-system, sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background-color: var(--bg-color);
+            background-image: url('/images/auth-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 2rem; 
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 118, 110, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 0;
+        }
+
+        .auth-wrapper { 
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: min(900px, 95vw);
+            animation: slideUp 0.5s ease-out;
+            margin: auto;
+        }
+
+        @@keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .register-container { 
+            width: 100%; 
+            background: #ffffff;
+            border-radius: 20px; 
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            overflow: hidden; 
+            display: grid; 
+            grid-template-columns: 340px 1fr;
+            height: 683px;
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        /* Left Side - Clean Minimal Design */
+        .register-left { 
+            background: linear-gradient(135deg, #0f766e 0%, #115e59 100%); 
+            padding: 2.5rem; 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+            border-radius: 20px 0 0 20px;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            width: fit-content;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .brand-logo img {
+            height: 40px;
+            width: auto;
+        }
+
+        .left-center-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            flex: 1;
+            justify-content: center;
+            padding: 1.5rem 0;
+        }
+
+        .user-icon-circle {
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .user-icon-circle img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        .register-left h1 { 
+            font-size: 2.2rem; 
+            font-weight: 700; 
+            line-height: 1.2;
+            margin-bottom: 0.5rem; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .register-left p.subtitle { 
+            font-size: 0.95rem; 
+            opacity: 0.9; 
+            margin-bottom: 0;
+        }
+
+        .features-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .feature-item:last-child { 
+            padding-bottom: 0; 
+        }
+
+        .feature-item i { 
+            font-size: 1rem; 
+            opacity: 0.9;
+        }
+
+        /* Right Side */
+        .register-right { 
+            padding: 3rem 1.25rem 2rem 1.25rem; /* Reduced padding to make inputs wider */
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            border-radius: 0 20px 20px 0;
+            overflow-y: auto; /* Enable vertical scroll */
+            height: 100%; /* Fill container height */
+        }
+
+        /* Custom Scrollbar */
+        .register-right::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .register-right::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .register-right::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+            border-radius: 10px;
+        }
+
+        .register-right::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #115e59 0%, #0f766e 100%);
+        }
+
+        .form-header {
+            margin-bottom: 0.75rem;
+        }
+
+        .form-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.35rem;
+        }
+
+        .form-header p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            margin-bottom: 0;
+        }
+
+        .info-badge { 
+            background: #e0f2fe; 
+            color: #0369a1; 
+            padding: 0.65rem 0.85rem; 
+            border-radius: 8px; 
+            font-size: 0.8rem; 
+            margin-bottom: 1.5rem; 
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .info-badge i { font-size: 0.9rem; }
+
+        .form-group { margin-bottom: 1rem; }
+        
+        .form-label { 
+            font-size: 0.9rem; 
+            font-weight: 600; 
+            color: var(--text-dark); 
+            margin-bottom: 0.25rem; 
+            display: block; 
+        }
+
+        .form-control, .form-select { 
+            height: 38px;
+            border: 1.5px solid #cbd5e1; 
+            border-radius: 8px; 
+            padding: 0 1rem; 
+            font-size: 0.95rem; 
+            width: 100%; 
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+            background: var(--input-bg);
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* Custom Select Dropdown Styling */
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px;
+            padding-right: 2.5rem;
+            cursor: pointer;
+        }
+
+        .form-select:disabled {
+            background-color: #f1f5f9;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Hover States */
+        .form-control:hover:not(:disabled), 
+        .form-select:hover:not(:disabled) { 
+            border-color: #94a3b8;
+            background-color: #f8fafc;
+        }
+
+        /* Focus States */
+        .form-control:focus, .form-select:focus { 
+            border-color: var(--primary-color); 
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1); 
+            outline: none;
+            background-color: #ffffff;
+        }
+
+        .form-select:focus {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%230f766e' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+        }
+
+        .form-control::placeholder { 
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        /* Hide browser's built-in password reveal icon */
+        input::-ms-reveal,
+        input::-ms-clear,
+        input::-webkit-credentials-auto-fill-button {
+            display: none !important;
+        }
+
+        /* Option styling for better dropdown appearance */
+        .form-select option {
+            padding: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-select option:first-child {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        /* Enhanced Address Dropdown Styles - 7 items visible with smooth scroll */
+        .address-dropdown-wrapper {
+            position: relative;
+        }
+
+        .address-dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .address-dropdown-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .address-dropdown-trigger:hover:not(.disabled) {
+            border-color: #94a3b8;
+            background-color: #f8fafc;
+        }
+
+        .address-dropdown-trigger.active {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+        }
+
+        .address-dropdown-trigger.disabled {
+            background-color: #f1f5f9;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .address-dropdown-trigger .addr-placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+            background: transparent !important;
+            display: inline-block;
+            visibility: visible;
+        }
+
+        .address-dropdown-trigger span {
+            color: var(--text-dark);
+            background: transparent !important;
+        }
+
+        .address-dropdown-trigger .arrow {
+            transition: transform 0.2s ease;
+        }
+
+        .address-dropdown-trigger.active .arrow {
+            transform: rotate(180deg);
+        }
+
+        .address-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            max-height: calc(7 * 42px + 12px); /* 7 items × item height + padding */
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: none;
+            padding: 6px 0;
+            scroll-behavior: smooth;
+        }
+
+        .address-dropdown-menu.open {
+            display: block;
+            animation: dropdownSlide 0.15s ease-out;
+        }
+
+        @@keyframes dropdownSlide {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .address-dropdown-item {
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: background-color 0.1s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .address-dropdown-item:hover {
+            background-color: #f0fdfa;
+            color: var(--primary-color);
+        }
+
+        .address-dropdown-item.selected {
+            background-color: #f0fdfa;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* Custom Scrollbar for dropdown */
+        .address-dropdown-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .address-dropdown-menu::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .address-dropdown-menu::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .address-dropdown-menu::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Responsive adjustments */
+        @@media (max-width: 768px) {
+            .address-dropdown-menu {
+                max-height: calc(7 * 40px + 12px);
+            }
+            .address-dropdown-item {
+                padding: 9px 14px;
+                font-size: 0.85rem;
+            }
+        }
+
+
+
+        textarea.form-control {
+            height: auto;
+            padding: 0.75rem 1rem;
+        }
+
+        .password-wrapper { position: relative; }
+        
+        .password-toggle { 
+            position: absolute; 
+            right: 1rem; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            cursor: pointer; 
+            color: #94a3b8;
+        }
+        
+        .password-toggle:hover { color: var(--text-dark); }
+
+        .helper-text {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 0.15rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .strength-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            display: none;
+        }
+        .strength-badge.weak {
+            display: inline;
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .strength-badge.medium {
+            display: inline;
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .strength-badge.strong {
+            display: inline;
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .btn-primary { 
+            background: #0f766e; 
+            border: none; 
+            border-radius: 8px; 
+            height: 42px;
+            font-size: 1rem; 
+            font-weight: 600; 
+            color: white; 
+            width: 100%; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            margin-top: 1rem;
+        }
+
+        .btn-primary:hover { 
+            background: #115e59; 
+            transform: translateY(-1px); 
+        }
+
+        .bottom-links {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .bottom-links a {
+            color: #0f766e;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .bottom-links a:hover { text-decoration: underline; }
+
+        .nav-back { 
+            position: absolute; 
+            top: 2rem; 
+            left: 2rem; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+            color: white; 
+            text-decoration: none; 
+            font-size: 0.95rem; 
+            font-weight: 600; 
+            transition: all 0.2s; 
+            padding: 0.5rem 1rem; 
+            border-radius: 50px; 
+            background: rgba(255,255,255,0.15); 
+            backdrop-filter: blur(10px); 
+            z-index: 10; 
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .nav-back:hover { 
+            background: white; 
+            color: var(--text-dark); 
+        }
+
+        /* Responsive */
+        @@media (max-width: 900px) {
+            .register-container { grid-template-columns: 1fr; max-width: 500px; min-height: auto; }
+            .register-left { display: none; }
+            .register-right { padding: 2rem; }
+            .nav-back { color: var(--text-dark); background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        }
+    </style>
+</head>
+<body>
+    <a href="/auth/login" class="nav-back"><i class="bi bi-arrow-left"></i> @(isBangla ? "লগইনে ফিরুন" : "Back")</a>
+    
+    <div class="auth-wrapper">
+        <div class="register-container">
+            <!-- Left Side -->
+            <div class="register-left">
+                <div class="brand-logo">
+                    <img src="/images/logo.png" alt="Sparkle" />
+                </div>
+
+                <div class="left-center-content">
+                    <div class="user-icon-circle">
+                        <img src="/images/seller-icon.png" alt="Seller" />
+                    </div>
+                    <h1>@Html.Raw(isBangla ? "সেলার রেজিস্ট্রেশন" : "SELLER<br/>REGISTRATION")</h1>
+                    <p class="subtitle">@(isBangla ? "নতুন সেলার অ্যাকাউন্ট তৈরি করুন" : "Create a New Seller Account")</p>
+                </div>
+                
+                <div class="features-box">
+                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> <span>@(isBangla ? "প্রথম মাস কমিশন ফ্রি" : "First month commission free")</span></div>
+                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> <span>@(isBangla ? "দ্রুত পেমেন্ট সিস্টেম" : "Fast payout system")</span></div>
+                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> <span>@(isBangla ? "ড্যাশবোর্ড ও রিপোর্ট" : "Dashboard & reporting")</span></div>
+                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> <span>@(isBangla ? "২৪/৭ সাপোর্ট" : "24/7 support")</span></div>
+                </div>
+            </div>
+
+            <!-- Right Side -->
+            <div class="register-right">
+                <div class="form-header">
+                    <h2>@(isBangla ? "আপনার নিজের ব্যবসা শুরু করুন" : "Start Your Own Business")</h2>
+                    <p>@(isBangla ? "নিচে আপনার বিস্তারিত তথ্য পূরণ করুন" : "Fill in your details below")</p>
+                </div>
+
+                <div class="info-badge">
+                    <i class="bi bi-info-circle-fill"></i>
+                    @(isBangla ? "আপনার অ্যাকাউন্ট ২৪-৪৮ ঘণ্টার মধ্যে রিভিউ ও অ্যাপ্রুভ করা হবে" : "Your account will be reviewed and approved within 24-48 hours")
+                </div>
+
+                <form method="post" asp-action="RegisterSeller" asp-controller="Auth" id="sellerRegisterForm">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    <input asp-for="Address" type="hidden" id="SellerAddressHidden" />
+
+                    <div class="form-group">
+                        <label asp-for="FullName" class="form-label">Full Name / Owner <span class="text-danger">*</span></label>
+                        <input asp-for="FullName" type="text" class="form-control" placeholder="Enter full name" autofocus />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                        <input asp-for="Email" type="email" class="form-control" placeholder="Business email" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="BusinessName" class="form-label">Business Name <span class="text-danger">*</span></label>
+                                <input asp-for="BusinessName" type="text" class="form-control" placeholder="Sparkle Fashion" />
+                                <span asp-validation-for="BusinessName" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="BusinessCategory" class="form-label">Shop Category <span class="text-danger">*</span></label>
+                                <select asp-for="BusinessCategory" id="BusinessCategorySelectV2" class="form-select" required>
+                                    <option value="" selected disabled>Select Shop Type</option>
+                                    <option value="General Store">General Store</option>
+                                    <option value="Grocery Store">Grocery Store</option>
+                                    <option value="Super Shop">Super Shop</option>
+                                    <option value="Electronics Shop">Electronics Shop</option>
+                                    <option value="Mobile & Gadgets Store">Mobile & Gadgets Store</option>
+                                    <option value="Fashion Boutique">Fashion Boutique</option>
+                                    <option value="Furniture & Home Decor">Furniture & Home Decor</option>
+                                    <option value="Pharmacy & Healthcare">Pharmacy & Healthcare</option>
+                                    <option value="Books & Stationery">Books & Stationery</option>
+                                    <option value="Sports & Fitness">Sports & Fitness</option>
+                                    <option value="Hardware & Tools">Hardware & Tools</option>
+                                    <option value="Automotive Shop">Automotive Shop</option>
+                                    <option value="Others">Others</option>
+                                </select>
+                                <span id="shopTypeError" class="text-danger small" style="display:none;">Shop Category is required</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="ContactPhone" class="form-label">Business Phone <span class="text-danger">*</span></label>
+                                <input asp-for="ContactPhone" type="tel" class="form-control" placeholder="+880 1XXXXXXXXX" />
+                                <span asp-validation-for="ContactPhone" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="BusinessRegistrationNumber" class="form-label">Trade License #</label>
+                                <input asp-for="BusinessRegistrationNumber" type="text" class="form-control" placeholder="Optional" />
+                                <span asp-validation-for="BusinessRegistrationNumber" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="BusinessWebsite" class="form-label">Website / Page</label>
+                        <input asp-for="BusinessWebsite" type="url" class="form-control" placeholder="https://facebook.com/..." />
+                        <span asp-validation-for="BusinessWebsite" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Business Address (Bangladesh) <span class="text-danger">*</span></label>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <!-- Custom Division Dropdown -->
+                                <div class="address-dropdown" id="divisionDropdown">
+                                    <input type="hidden" id="SellerDivisionSelect" name="division" />
+                                    <div class="address-dropdown-trigger" id="divisionTrigger">
+                                        <span class="addr-placeholder">Select Division</span>
+                                        <i class="bi bi-chevron-down arrow"></i>
+                                    </div>
+                                    <div class="address-dropdown-menu" id="divisionMenu"></div>
+                                </div>
+                                <span id="divisionError" class="text-danger small" style="display:none;">Division is required</span>
+                            </div>
+                            <div class="col-md-6">
+                                <!-- Custom District Dropdown -->
+                                <div class="address-dropdown" id="districtDropdown">
+                                    <input type="hidden" id="SellerDistrictSelect" name="district" />
+                                    <div class="address-dropdown-trigger disabled" id="districtTrigger">
+                                        <span class="addr-placeholder">Select District / City</span>
+                                        <i class="bi bi-chevron-down arrow"></i>
+                                    </div>
+                                    <div class="address-dropdown-menu" id="districtMenu"></div>
+                                </div>
+                                <span id="districtError" class="text-danger small" style="display:none;">District is required</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Upazila / Thana <span class="text-danger">*</span></label>
+                                <!-- Custom Thana Dropdown -->
+                                <div class="address-dropdown" id="thanaDropdown">
+                                    <input type="hidden" id="SellerThanaSelect" name="thana" />
+                                    <div class="address-dropdown-trigger disabled" id="thanaTrigger">
+                                        <span class="addr-placeholder">Select Thana</span>
+                                        <i class="bi bi-chevron-down arrow"></i>
+                                    </div>
+                                    <div class="address-dropdown-menu" id="thanaMenu"></div>
+                                </div>
+                                <span id="thanaError" class="text-danger small" style="display:none;">Thana is required</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Village / Area <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="SellerAreaInput" placeholder="Area / Locality" />
+                                <span id="areaError" class="text-danger small" style="display:none;">Area is required</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Detailed Shop Address</label>
+                        <textarea class="form-control" rows="2" id="SellerStreetDetails" placeholder="Shop number, road, market" style="resize: none;"></textarea>
+                        <small class="helper-text">Include floor, stall, and nearby landmark for logistics team.</small>
+                        <span id="SellerAddressError" class="text-danger small" style="display:none;"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Password" class="form-label">Password <span class="text-danger">*</span></label>
+                        <div class="password-wrapper">
+                            <input asp-for="Password" type="password" class="form-control" id="password" placeholder="Create a strong password" />
+                            <i class="bi bi-eye password-toggle" id="togglePassword"></i>
+                        </div>
+                        <small class="helper-text">
+                            <span>Use 6+ characters with letters &amp; numbers</span>
+                            <span class="strength-badge" id="passwordStrength"></span>
+                        </small>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ConfirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                        <div class="password-wrapper">
+                            <input asp-for="ConfirmPassword" type="password" class="form-control" id="confirmPassword" placeholder="Re-enter your password" data-val-required="Confirm Password is required" />
+                            <i class="bi bi-eye password-toggle" id="toggleConfirmPassword"></i>
+                        </div>
+                        <span id="confirmPasswordError" class="text-danger small" style="display:none;">Confirm Password is required</span>
+                    </div>
+
+                    <button type="submit" class="btn-primary">@(isBangla ? "আবেদন জমা দিন" : "Submit Application")</button>
+
+                    <div class="bottom-links">
+                        @(isBangla ? "আগেই অ্যাকাউন্ট আছে?" : "Already have an account?") <a href="/auth/login?type=seller">@(isBangla ? "লগইন করুন" : "Login")</a><br>
+                        <a href="/auth/register">@(isBangla ? "কাস্টমার হিসেবে রেজিস্টার করুন" : "Register as Customer")</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Modern Validation Styles */
+
+
+        /* Custom Select Styles */
+        .custom-select-wrapper {
+            position: relative;
+            user-select: none;
+            width: 100%;
+        }
+
+        .custom-select-trigger {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            height: 38px;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+
+        .custom-select-trigger:after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transition: transform 0.2s;
+        }
+
+        .custom-select-wrapper.open .custom-select-trigger {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+        }
+
+        .custom-select-wrapper.open .custom-select-trigger:after {
+            transform: rotate(180deg);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%230f766e' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+        }
+
+        .custom-options {
+            position: absolute;
+            display: block;
+            top: 100%;
+            left: 0;
+            right: 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+            transition: all 0.2s;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            z-index: 100;
+            margin-top: 5px;
+            max-height: 250px; /* FIXED FORMAT SIZE */
+            overflow-y: auto;
+        }
+
+        .custom-select-wrapper.open .custom-options {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+            transform: translateY(0);
+        }
+
+        .custom-option {
+            position: relative;
+            display: block;
+            padding: 0.65rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .custom-option:hover {
+            background-color: #f0fdfa;
+            color: var(--primary-color);
+        }
+
+        .custom-option.selected {
+            background-color: #f0fdfa;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* Scrollbar for options */
+        .custom-options::-webkit-scrollbar { width: 6px; }
+        .custom-options::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-options::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-options::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+    <script>
+        // Password toggle
+        function setupPasswordToggle(toggleId, passwordId) {
+            const toggle = document.querySelector(toggleId);
+            const password = document.querySelector(passwordId);
+            if (toggle && password) {
+                toggle.addEventListener('click', function () {
+                    const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                    password.setAttribute('type', type);
+                    this.classList.toggle('bi-eye');
+                    this.classList.toggle('bi-eye-slash');
+                });
+            }
+        }
+
+        setupPasswordToggle('#togglePassword', '#password');
+        setupPasswordToggle('#toggleConfirmPassword', '#confirmPassword');
+
+        // Password Strength Checker
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            if (password.length >= 6) strength++;
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            return strength;
+        }
+
+        const passwordInput = document.getElementById('password');
+        const strengthBadge = document.getElementById('passwordStrength');
+        
+        if (passwordInput && strengthBadge) {
+            passwordInput.addEventListener('input', function() {
+                const strength = checkPasswordStrength(this.value);
+                strengthBadge.className = 'strength-badge';
+                strengthBadge.textContent = '';
+                
+                if (this.value.length > 0) {
+                    if (strength <= 2) {
+                        strengthBadge.classList.add('weak');
+                        strengthBadge.textContent = 'Weak';
+                    } else if (strength <= 3) {
+                        strengthBadge.classList.add('medium');
+                        strengthBadge.textContent = 'Medium';
+                    } else {
+                        strengthBadge.classList.add('strong');
+                        strengthBadge.textContent = 'Strong';
+                    }
+                }
+            });
+        }
+
+        // Custom Dropdown Logic
+        function initCustomDropdown(selectId) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+
+            // Hide original select
+            select.style.display = 'none';
+
+            // Create wrapper
+            const wrapper = document.createElement('div');
+            wrapper.className = 'custom-select-wrapper';
+            select.parentNode.insertBefore(wrapper, select);
+            wrapper.appendChild(select);
+
+            // Create trigger
+            const trigger = document.createElement('div');
+            trigger.className = 'custom-select-trigger';
+            trigger.innerHTML = `<span>${select.options[select.selectedIndex].text}</span>`;
+            wrapper.appendChild(trigger);
+
+            // Create options container
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'custom-options';
+            wrapper.appendChild(optionsContainer);
+
+            // Populate options
+            Array.from(select.options).forEach(opt => {
+                if (opt.disabled) return; // Skip placeholder
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'custom-option' + (opt.selected ? ' selected' : '');
+                optionDiv.textContent = opt.text;
+                optionDiv.dataset.value = opt.value;
+                
+                optionDiv.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    select.value = this.dataset.value;
+                    trigger.querySelector('span').textContent = this.textContent;
+                    
+                    wrapper.classList.remove('open');
+                    
+                    // Trigger change event on original select for validation
+                    select.dispatchEvent(new Event('change'));
+
+                    // Update styling
+                    wrapper.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    trigger.style.color = 'var(--text-dark)'; // Reset color
+                });
+
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            // Toggle dropdown
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // Close other dropdowns if any
+                document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+                    if (w !== wrapper) w.classList.remove('open');
+                });
+                wrapper.classList.toggle('open');
+            });
+
+            // Close on outside click
+            document.addEventListener('click', function(e) {
+                if (!wrapper.contains(e.target)) {
+                    wrapper.classList.remove('open');
+                }
+            });
+            
+            // Handle Placeholder Color
+            if (select.value === "") {
+                trigger.style.color = "#94a3b8";
+            }
+        }
+
+        // Initialize Custom Dropdown for Category
+        document.addEventListener('DOMContentLoaded', () => {
+             initCustomDropdown('BusinessCategorySelectV2');
+        });
+
+        // Custom Address Dropdown Logic - Division → District → Thana
+        (function () {
+            // DOM Elements
+            const divisionInput = document.getElementById('SellerDivisionSelect');
+            const districtInput = document.getElementById('SellerDistrictSelect');
+            const thanaInput = document.getElementById('SellerThanaSelect');
+            const divisionTrigger = document.getElementById('divisionTrigger');
+            const districtTrigger = document.getElementById('districtTrigger');
+            const thanaTrigger = document.getElementById('thanaTrigger');
+            const divisionMenu = document.getElementById('divisionMenu');
+            const districtMenu = document.getElementById('districtMenu');
+            const thanaMenu = document.getElementById('thanaMenu');
+            const areaInput = document.getElementById('SellerAreaInput');
+            const streetDetails = document.getElementById('SellerStreetDetails');
+            const addressHidden = document.getElementById('SellerAddressHidden');
+            const addressError = document.getElementById('SellerAddressError');
+            const form = document.getElementById('sellerRegisterForm');
+
+            if (!divisionInput || !districtInput || !thanaInput || !form) {
+                console.error('Custom address dropdown elements not found');
+                return;
+            }
+
+            // Division → District → Thana data (COMPLETE data with all upazilas)
+            const locationData = {
+                Dhaka: {
+                    "Dhaka": ["Dhamrai", "Dohar", "Keraniganj", "Nawabganj", "Savar", "Tejgaon", "Mirpur", "Mohammadpur", "Dhanmondi", "Gulshan", "Uttara", "Motijheel", "Ramna", "Shahbag", "Wari", "Sutrapur"],
+                    "Gazipur": ["Gazipur Sadar", "Kaliakair", "Kaliganj", "Kapasia", "Sreepur", "Tongi"],
+                    "Narayanganj": ["Araihazar", "Bandar", "Narayanganj Sadar", "Rupganj", "Sonargaon", "Fatullah", "Siddhirganj"],
+                    "Narsingdi": ["Belabo", "Monohardi", "Narsingdi Sadar", "Palash", "Raipura", "Shibpur"],
+                    "Tangail": ["Basail", "Bhuapur", "Delduar", "Dhanbari", "Ghatail", "Gopalpur", "Kalihati", "Madhupur", "Mirzapur", "Nagarpur", "Sakhipur", "Tangail Sadar"],
+                    "Kishoreganj": ["Austagram", "Bajitpur", "Bhairab", "Hossainpur", "Itna", "Karimganj", "Katiadi", "Kishoreganj Sadar", "Kuliarchar", "Mithamain", "Nikli", "Pakundia", "Tarail"],
+                    "Manikganj": ["Daulatpur", "Ghior", "Harirampur", "Manikganj Sadar", "Saturia", "Shibalaya", "Singair"],
+                    "Munshiganj": ["Gazaria", "Lohajang", "Munshiganj Sadar", "Sirajdikhan", "Sreenagar", "Tongibari"],
+                    "Faridpur": ["Alfadanga", "Bhanga", "Boalmari", "Charbhadrasan", "Faridpur Sadar", "Madhukhali", "Nagarkanda", "Sadarpur", "Saltha"],
+                    "Gopalganj": ["Gopalganj Sadar", "Kashiani", "Kotalipara", "Muksudpur", "Tungipara"],
+                    "Madaripur": ["Kalkini", "Madaripur Sadar", "Rajoir", "Shibchar"],
+                    "Shariatpur": ["Bhedarganj", "Damudya", "Gosairhat", "Naria", "Shariatpur Sadar", "Zajira"],
+                    "Rajbari": ["Baliakandi", "Goalandaghat", "Kalukhali", "Pangsha", "Rajbari Sadar"]
+                },
+                Chattogram: {
+                    "Chattogram": ["Anwara", "Banshkhali", "Boalkhali", "Chandanaish", "Fatikchhari", "Hathazari", "Lohagara", "Mirsharai", "Patiya", "Rangunia", "Raozan", "Sandwip", "Satkania", "Sitakunda", "Kotwali", "Pahartali", "Double Mooring", "Panchlaish", "Bakalia"],
+                    "Cumilla": ["Barura", "Brahmanpara", "Burichong", "Chandina", "Chauddagram", "Comilla Adarsha Sadar", "Comilla Sadar Dakshin", "Daudkandi", "Debidwar", "Homna", "Laksham", "Manoharganj", "Meghna", "Muradnagar", "Nangalkot", "Titas"],
+                    "Brahmanbaria": ["Akhaura", "Ashuganj", "Bancharampur", "Bijoynagar", "Brahmanbaria Sadar", "Kasba", "Nabinagar", "Nasirnagar", "Sarail"],
+                    "Noakhali": ["Begumganj", "Chatkhil", "Companiganj", "Hatiya", "Kabirhat", "Noakhali Sadar", "Senbagh", "Subarnachar", "Sonaimuri"],
+                    "Feni": ["Chhagalnaiya", "Daganbhuiyan", "Feni Sadar", "Fulgazi", "Parshuram", "Sonagazi"],
+                    "Lakshmipur": ["Kamalnagar", "Lakshmipur Sadar", "Ramganj", "Ramgati", "Raipur"],
+                    "Chandpur": ["Chandpur Sadar", "Faridganj", "Haimchar", "Haziganj", "Kachua", "Matlab Dakshin", "Matlab Uttar", "Shahrasti"],
+                    "Cox's Bazar": ["Chakaria", "Cox's Bazar Sadar", "Kutubdia", "Maheshkhali", "Pekua", "Ramu", "Teknaf", "Ukhiya"],
+                    "Bandarban": ["Ali Kadam", "Bandarban Sadar", "Lama", "Naikhongchhari", "Rowangchhari", "Ruma", "Thanchi"],
+                    "Khagrachari": ["Dighinala", "Khagrachhari Sadar", "Lakshmichhari", "Mahalchhari", "Manikchhari", "Matiranga", "Panchhari", "Ramgarh"],
+                    "Rangamati": ["Baghaichhari", "Barkal", "Kawkhali", "Belaichhari", "Juraichhari", "Kaptai", "Langadu", "Naniarchar", "Rajasthali", "Rangamati Sadar"]
+                },
+                Rajshahi: {
+                    "Rajshahi": ["Bagha", "Bagmara", "Charghat", "Durgapur", "Godagari", "Mohanpur", "Paba", "Puthia", "Tanore", "Boalia", "Rajpara", "Motihar", "Shah Makhdum"],
+                    "Pabna": ["Atgharia", "Bera", "Bhangura", "Chatmohar", "Faridpur", "Ishwardi", "Pabna Sadar", "Santhia", "Sujanagar"],
+                    "Sirajganj": ["Belkuchi", "Chauhali", "Kamarkhanda", "Kazipur", "Raiganj", "Shahjadpur", "Sirajganj Sadar", "Tarash", "Ullapara"],
+                    "Bogura": ["Adamdighi", "Bogura Sadar", "Dhunat", "Dhupchanchia", "Gabtali", "Kahaloo", "Nandigram", "Sariakandi", "Shajahanpur", "Sherpur", "Shibganj", "Sonatala"],
+                    "Naogaon": ["Atrai", "Badalgachhi", "Dhamoirhat", "Manda", "Mohadevpur", "Naogaon Sadar", "Niamatpur", "Patnitala", "Porsha", "Raninagar", "Sapahar"],
+                    "Natore": ["Bagatipara", "Baraigram", "Gurudaspur", "Lalpur", "Naldanga", "Natore Sadar", "Singra"],
+                    "Joypurhat": ["Akkelpur", "Joypurhat Sadar", "Kalai", "Khetlal", "Panchbibi"],
+                    "Chapainawabganj": ["Bholahat", "Gomastapur", "Nachole", "Nawabganj Sadar", "Shibganj"]
+                },
+                Khulna: {
+                    "Khulna": ["Batiaghata", "Dacope", "Dighalia", "Dumuria", "Koyra", "Paikgachha", "Phultala", "Rupsa", "Terokhada", "Sonadanga", "Khalishpur", "Daulatpur"],
+                    "Jessore": ["Abhaynagar", "Bagherpara", "Chaugachha", "Jhikargachha", "Keshabpur", "Jessore Sadar", "Manirampur", "Sharsha"],
+                    "Jhenaidah": ["Harinakunda", "Jhenaidah Sadar", "Kaliganj", "Kotchandpur", "Maheshpur", "Shailkupa"],
+                    "Magura": ["Magura Sadar", "Mohammadpur", "Shalikha", "Sreepur"],
+                    "Narail": ["Kalia", "Lohagara", "Narail Sadar"],
+                    "Bagerhat": ["Bagerhat Sadar", "Chitalmari", "Fakirhat", "Kachua", "Mollahat", "Mongla", "Morrelganj", "Rampal", "Sarankhola"],
+                    "Satkhira": ["Assasuni", "Debhata", "Kalaroa", "Kaliganj", "Satkhira Sadar", "Shyamnagar", "Tala"],
+                    "Meherpur": ["Gangni", "Meherpur Sadar", "Mujibnagar"],
+                    "Chuadanga": ["Alamdanga", "Chuadanga Sadar", "Damurhuda", "Jibannagar"],
+                    "Kushtia": ["Bheramara", "Daulatpur", "Khoksa", "Kumarkhali", "Kushtia Sadar", "Mirpur"]
+                },
+                Barishal: {
+                    "Barishal": ["Agailjhara", "Babuganj", "Bakerganj", "Banaripara", "Gaurnadi", "Hizla", "Barishal Sadar", "Mehendiganj", "Muladi", "Wazirpur"],
+                    "Bhola": ["Bhola Sadar", "Borhanuddin", "Char Fasson", "Daulatkhan", "Lalmohan", "Manpura", "Tazumuddin"],
+                    "Patuakhali": ["Bauphal", "Dashmina", "Dumki", "Galachipa", "Kalapara", "Mirzaganj", "Patuakhali Sadar", "Rangabali"],
+                    "Pirojpur": ["Bhandaria", "Kawkhali", "Mathbaria", "Nazirpur", "Nesarabad", "Pirojpur Sadar", "Zianagar"],
+                    "Barguna": ["Amtali", "Bamna", "Barguna Sadar", "Betagi", "Patharghata", "Taltali"],
+                    "Jhalokati": ["Jhalokati Sadar", "Kathalia", "Nalchity", "Rajapur"]
+                },
+                Sylhet: {
+                    "Sylhet": ["Balaganj", "Beanibazar", "Bishwanath", "Companiganj", "Dakshin Surma", "Fenchuganj", "Golapganj", "Gowainghat", "Jaintiapur", "Kanaighat", "Osmani Nagar", "Sylhet Sadar", "Kotwali", "Shah Paran", "South Surma"],
+                    "Habiganj": ["Ajmiriganj", "Bahubal", "Baniachang", "Chunarughat", "Habiganj Sadar", "Lakhai", "Madhabpur", "Nabiganj", "Shaistaganj"],
+                    "Moulvibazar": ["Barlekha", "Juri", "Kamalganj", "Kulaura", "Moulvibazar Sadar", "Rajnagar", "Sreemangal"],
+                    "Sunamganj": ["Bishwamvarpur", "Chhatak", "Dharampasha", "Dowarabazar", "Jagannathpur", "Jamalganj", "Sulla", "Sunamganj Sadar", "Shanthiganj", "Tahirpur"]
+                },
+                Rangpur: {
+                    "Rangpur": ["Badarganj", "Gangachara", "Kaunia", "Mithapukur", "Pirgachha", "Pirganj", "Rangpur Sadar", "Taraganj"],
+                    "Dinajpur": ["Birampur", "Birganj", "Biral", "Bochaganj", "Chirirbandar", "Dinajpur Sadar", "Ghoraghat", "Hakimpur", "Kaharole", "Khansama", "Nawabganj", "Parbatipur"],
+                    "Thakurgaon": ["Baliadangi", "Haripur", "Pirganj", "Ranisankail", "Thakurgaon Sadar"],
+                    "Panchagarh": ["Atwari", "Boda", "Debiganj", "Panchagarh Sadar", "Tetulia"],
+                    "Nilphamari": ["Dimla", "Domar", "Jaldhaka", "Kishoreganj", "Nilphamari Sadar", "Saidpur"],
+                    "Lalmonirhat": ["Aditmari", "Hatibandha", "Kaliganj", "Lalmonirhat Sadar", "Patgram"],
+                    "Kurigram": ["Bhurungamari", "Char Rajibpur", "Chilmari", "Kurigram Sadar", "Nageshwari", "Phulbari", "Rajarhat", "Rowmari", "Ulipur"],
+                    "Gaibandha": ["Fulchhari", "Gaibandha Sadar", "Gobindaganj", "Palashbari", "Sadullapur", "Saghata", "Sundarganj"]
+                },
+                Mymensingh: {
+                    "Mymensingh": ["Bhaluka", "Dhobaura", "Fulbaria", "Gaffargaon", "Gauripur", "Haluaghat", "Ishwarganj", "Mymensingh Sadar", "Muktagacha", "Nandail", "Phulpur", "Trishal"],
+                    "Sherpur": ["Jhenaigati", "Nakla", "Nalitabari", "Sherpur Sadar", "Sreebardi"],
+                    "Netrokona": ["Atpara", "Barhatta", "Durgapur", "Kendua", "Khaliajuri", "Madan", "Mohanganj", "Netrokona Sadar", "Purbadhala"],
+                    "Jamalpur": ["Bakshiganj", "Dewanganj", "Islampur", "Jamalpur Sadar", "Madarganj", "Melandaha", "Sarishabari"]
+                }
+            };
+
+            const divisions = Object.keys(locationData);
+
+            // Utility: Populate dropdown menu
+            function populateMenu(menu, items, onSelect) {
+                menu.innerHTML = '';
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'address-dropdown-item';
+                    div.textContent = item;
+                    div.addEventListener('click', () => onSelect(item));
+                    menu.appendChild(div);
+                });
+            }
+
+            // Utility: Toggle dropdown
+            function toggleDropdown(trigger, menu, isOpen) {
+                if (isOpen) {
+                    trigger.classList.add('active');
+                    menu.classList.add('open');
+                } else {
+                    trigger.classList.remove('active');
+                    menu.classList.remove('open');
+                }
+            }
+
+            // Utility: Set dropdown value
+            function setDropdownValue(input, trigger, value, placeholderText) {
+                input.value = value;
+                const span = trigger.querySelector('span');
+                if (value) {
+                    span.textContent = value;
+                    span.classList.remove('addr-placeholder');
+                } else {
+                    span.textContent = placeholderText;
+                    span.classList.add('addr-placeholder');
+                }
+            }
+
+            // Utility: Enable/disable dropdown
+            function setDropdownEnabled(trigger, enabled) {
+                if (enabled) {
+                    trigger.classList.remove('disabled');
+                } else {
+                    trigger.classList.add('disabled');
+                }
+            }
+
+            // Populate division menu
+            populateMenu(divisionMenu, divisions, (division) => {
+                setDropdownValue(divisionInput, divisionTrigger, division, 'Select Division');
+                toggleDropdown(divisionTrigger, divisionMenu, false);
+                
+                // Reset and populate district
+                setDropdownValue(districtInput, districtTrigger, '', 'Select District / City');
+                setDropdownValue(thanaInput, thanaTrigger, '', 'Select Thana');
+                const districts = Object.keys(locationData[division] || {});
+                populateMenu(districtMenu, districts, (district) => {
+                    setDropdownValue(districtInput, districtTrigger, district, 'Select District / City');
+                    toggleDropdown(districtTrigger, districtMenu, false);
+                    
+                    // Reset and populate thana
+                    setDropdownValue(thanaInput, thanaTrigger, '', 'Select Thana');
+                    const thanas = locationData[division]?.[district] || [];
+                    populateMenu(thanaMenu, thanas, (thana) => {
+                        setDropdownValue(thanaInput, thanaTrigger, thana, 'Select Thana');
+                        toggleDropdown(thanaTrigger, thanaMenu, false);
+                    });
+                    setDropdownEnabled(thanaTrigger, thanas.length > 0);
+                });
+                setDropdownEnabled(districtTrigger, districts.length > 0);
+                setDropdownEnabled(thanaTrigger, false);
+            });
+
+            // Click handlers for triggers
+            divisionTrigger.addEventListener('click', () => {
+                if (!divisionTrigger.classList.contains('disabled')) {
+                    const isOpen = divisionMenu.classList.contains('open');
+                    closeAllDropdowns();
+                    toggleDropdown(divisionTrigger, divisionMenu, !isOpen);
+                }
+            });
+
+            districtTrigger.addEventListener('click', () => {
+                if (!districtTrigger.classList.contains('disabled')) {
+                    const isOpen = districtMenu.classList.contains('open');
+                    closeAllDropdowns();
+                    toggleDropdown(districtTrigger, districtMenu, !isOpen);
+                }
+            });
+
+            thanaTrigger.addEventListener('click', () => {
+                if (!thanaTrigger.classList.contains('disabled')) {
+                    const isOpen = thanaMenu.classList.contains('open');
+                    closeAllDropdowns();
+                    toggleDropdown(thanaTrigger, thanaMenu, !isOpen);
+                }
+            });
+
+            // Close all dropdowns
+            function closeAllDropdowns() {
+                toggleDropdown(divisionTrigger, divisionMenu, false);
+                toggleDropdown(districtTrigger, districtMenu, false);
+                toggleDropdown(thanaTrigger, thanaMenu, false);
+            }
+
+            // Close dropdowns on outside click
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.address-dropdown')) {
+                    closeAllDropdowns();
+                }
+            });
+
+            // Form submit validation - Individual field errors
+            form.addEventListener('submit', (e) => {
+                const division = divisionInput.value;
+                const district = districtInput.value;
+                const thana = thanaInput.value;
+                const area = areaInput.value.trim();
+                const street = streetDetails.value.trim();
+                const shopType = document.getElementById('BusinessCategorySelectV2').value;
+
+                // Get individual error spans
+                const divisionError = document.getElementById('divisionError');
+                const districtError = document.getElementById('districtError');
+                const thanaError = document.getElementById('thanaError');
+                const areaError = document.getElementById('areaError');
+                const shopTypeError = document.getElementById('shopTypeError');
+
+                let hasError = false;
+
+                // Reset all errors
+                divisionError.style.display = 'none';
+                districtError.style.display = 'none';
+                thanaError.style.display = 'none';
+                areaError.style.display = 'none';
+                shopTypeError.style.display = 'none';
+
+                // Check each field individually
+                if (!division) {
+                    divisionError.style.display = 'block';
+                    hasError = true;
+                }
+                if (!district) {
+                    districtError.style.display = 'block';
+                    hasError = true;
+                }
+                if (!thana) {
+                    thanaError.style.display = 'block';
+                    hasError = true;
+                }
+                if (area.length < 2) {
+                    areaError.style.display = 'block';
+                    hasError = true;
+                }
+                if (!shopType) {
+                    shopTypeError.style.display = 'block';
+                    hasError = true;
+                }
+
+                // Password validation
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                const confirmPasswordError = document.getElementById('confirmPasswordError');
+                confirmPasswordError.style.display = 'none';
+
+                if (!confirmPassword) {
+                    confirmPasswordError.textContent = 'Confirm Password is required';
+                    confirmPasswordError.style.display = 'block';
+                    hasError = true;
+                } else if (password !== confirmPassword) {
+                    confirmPasswordError.textContent = 'The Password and Confirm Password do not match.';
+                    confirmPasswordError.style.display = 'block';
+                    hasError = true;
+                }
+
+                if (hasError) {
+                    e.preventDefault();
+                    return;
+                }
+
+                addressHidden.value = `${division}, ${district}, ${thana}, ${area} | ${street}`;
+            });
+        })();
+
+        // Phone Validation Logic (Same as Register User)
+        document.addEventListener('DOMContentLoaded', function() {
+            const phoneInput = document.getElementById('ContactPhone');
+            const emailInput = document.getElementById('Email');
+
+            if(phoneInput) {
+                phoneInput.addEventListener('input', function(e) {
+                    let val = e.target.value.replace(/\D/g, ''); // Numbers only
+                    if (val.startsWith('1')) val = '0' + val;    // Auto-prefix 01
+                    if (val.length > 11) val = val.substring(0, 11); // Max 11
+                    e.target.value = val;
+                });
+
+                phoneInput.addEventListener('blur', function(e) {
+                    const val = e.target.value;
+                    const span = document.querySelector('span[data-valmsg-for="ContactPhone"]');
+                    if (val.length > 0) {
+                        if (!/^01\d{9}$/.test(val)) {
+                            if (span) {
+                                span.textContent = "Invalid phone (must be 01XXXXXXXXX)";
+                                span.className = "text-danger field-validation-error small";
+                            }
+                        } else {
+                            if (span && span.textContent.includes("Invalid phone")) {
+                                span.textContent = "";
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Email Logic
+            if(emailInput) {
+                emailInput.addEventListener('blur', function(e) {
+                    const val = e.target.value;
+                    const span = document.querySelector('span[data-valmsg-for="Email"]');
+                    const regex = /^[a-zA-Z0-9._%+-]+@@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    
+                    if (val.length > 0) {
+                        if (!regex.test(val)) {
+                            if (span) {
+                                span.textContent = "Invalid email address";
+                                span.className = "text-danger field-validation-error small";
+                            }
+                        } else {
+                            if (span && span.textContent === "Invalid email address") {
+                                span.textContent = "";
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>

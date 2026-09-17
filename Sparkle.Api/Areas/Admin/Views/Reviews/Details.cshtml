@@ -1,0 +1,650 @@
+@model Sparkle.Domain.Reviews.ProductReview
+@{
+    ViewData["Title"] = "Review Details";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+
+    var statusClass = Model.Status switch
+    {
+        "Approved" => "approved",
+        "Rejected" => "rejected",
+        _ => "pending"
+    };
+    var statusIcon = Model.Status switch
+    {
+        "Approved" => "bi-check-circle-fill",
+        "Rejected" => "bi-x-circle-fill",
+        _ => "bi-clock-fill"
+    };
+    var statusColor = Model.Status switch
+    {
+        "Approved" => "#15803d",
+        "Rejected" => "#b91c1c",
+        _ => "#b45309"
+    };
+}
+
+<style>
+    :root {
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-300: #cbd5e1;
+        --slate-400: #94a3b8;
+        --slate-500: #64748b;
+        --slate-700: #334155;
+        --slate-800: #1e293b;
+        --slate-900: #0f172a;
+        --primary: #6366f1;
+        --primary-light: #eef2ff;
+    }
+
+    .detail-page { max-width: 960px; }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--slate-500);
+        text-decoration: none;
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin-bottom: 1.25rem;
+        transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--slate-900); }
+    .back-link i { font-size: 0.9rem; transition: transform 0.2s; }
+    .back-link:hover i { transform: translateX(-3px); }
+
+    .detail-card {
+        background: white;
+        border: 1px solid var(--slate-200);
+        border-radius: 14px;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+    }
+
+    .detail-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px 22px;
+        border-bottom: 1px solid var(--slate-100);
+        background: var(--slate-50);
+    }
+
+    .detail-card-header .h-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+    }
+
+    .detail-card-header h6 {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--slate-800);
+        margin: 0;
+    }
+
+    .detail-card-body { padding: 20px 22px; }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 18px;
+    }
+
+    .info-item .label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--slate-400);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 5px;
+    }
+
+    .info-item .value {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--slate-800);
+        word-break: break-word;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .status-pill.pending { background: #fffbeb; color: #b45309; }
+    .status-pill.approved { background: #f0fdf4; color: #15803d; }
+    .status-pill.rejected { background: #fef2f2; color: #b91c1c; }
+
+    .star-display {
+        color: #f59e0b;
+        font-size: 1.1rem;
+        letter-spacing: 2px;
+    }
+
+    .rating-breakdown {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .rating-box {
+        text-align: center;
+        padding: 12px 16px;
+        background: var(--slate-50);
+        border: 1px solid var(--slate-100);
+        border-radius: 10px;
+        min-width: 90px;
+    }
+    .rating-box .rb-val {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--slate-800);
+    }
+    .rating-box .rb-lbl {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--slate-500);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin-top: 4px;
+    }
+
+    .review-comment-box {
+        background: var(--slate-50);
+        border: 1px solid var(--slate-100);
+        border-radius: 10px;
+        padding: 18px;
+        font-size: 0.9rem;
+        color: var(--slate-700);
+        line-height: 1.7;
+    }
+
+    .review-images {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+    }
+    .review-images img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid var(--slate-200);
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .review-images img:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .action-buttons .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 7px 14px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border: 1px solid var(--slate-200);
+        background: white;
+        color: var(--slate-700);
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+    .action-buttons .btn-action:hover { background: var(--slate-50); border-color: var(--slate-300); }
+    .action-buttons .btn-action.approve { color: #15803d; border-color: #bbf7d0; }
+    .action-buttons .btn-action.approve:hover { background: #f0fdf4; }
+    .action-buttons .btn-action.reject { color: #b91c1c; border-color: #fecaca; }
+    .action-buttons .btn-action.reject:hover { background: #fef2f2; }
+    .action-buttons .btn-action.delete { color: #dc2626; border-color: #fecaca; }
+    .action-buttons .btn-action.delete:hover { background: #fef2f2; }
+
+    .seller-response-box {
+        background: #fefce8;
+        border: 1px solid #fef08a;
+        border-radius: 10px;
+        padding: 16px;
+        margin-top: 14px;
+    }
+    .seller-response-box .sr-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: #a16207;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+    }
+    .seller-response-box .sr-text {
+        font-size: 0.85rem;
+        color: #854d0e;
+        line-height: 1.6;
+    }
+
+    .admin-note-form textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--slate-200);
+        border-radius: 8px;
+        font-size: 0.85rem;
+        resize: vertical;
+        min-height: 80px;
+        transition: border-color 0.2s;
+    }
+    .admin-note-form textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
+    }
+
+    .product-preview {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px;
+        background: var(--slate-50);
+        border: 1px solid var(--slate-100);
+        border-radius: 10px;
+    }
+    .product-preview img {
+        width: 56px;
+        height: 56px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid var(--slate-200);
+    }
+    .product-preview .pp-title {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--slate-800);
+        margin-bottom: 2px;
+    }
+    .product-preview .pp-meta {
+        font-size: 0.72rem;
+        color: var(--slate-500);
+    }
+</style>
+
+<div class="detail-page">
+    <a href="@Url.Action("Index")" class="back-link">
+        <i class="bi bi-arrow-left"></i> Back to Reviews
+    </a>
+
+    <!-- Review Header -->
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <div class="h-icon" style="background: @(statusColor)22; color: @statusColor;">
+                <i class="bi @statusIcon"></i>
+            </div>
+            <h6>Review #@Model.Id</h6>
+            <span class="status-pill @statusClass ms-auto">
+                <i class="bi @statusIcon" style="font-size: 0.65rem;"></i>
+                @Model.Status
+            </span>
+        </div>
+        <div class="detail-card-body">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+                <!-- Reviewer Info -->
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem;">
+                        @(Model.User?.FullName?.Substring(0, 1).ToUpper() ?? "?")
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; color: var(--slate-800); font-size: 0.95rem;">@(Model.User?.FullName ?? "Unknown User")</div>
+                        <div style="font-size: 0.75rem; color: var(--slate-500);">
+                            @(Model.User?.Email ?? "")
+                            @if (Model.IsVerifiedPurchase)
+                            {
+                                <span class="text-success ms-2" style="font-size: 0.65rem; font-weight: 700;">
+                                    <i class="bi bi-patch-check-fill"></i> VERIFIED PURCHASE
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="action-buttons">
+                    @if (Model.Status != "Approved")
+                    {
+                        <form asp-action="Approve" method="post" style="display:inline;">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn-action approve">
+                                <i class="bi bi-check2-circle"></i> Approve
+                            </button>
+                        </form>
+                    }
+                    @if (Model.Status != "Rejected")
+                    {
+                        <form asp-action="Reject" method="post" style="display:inline;">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn-action reject">
+                                <i class="bi bi-x-circle"></i> Reject
+                            </button>
+                        </form>
+                    }
+                    <form asp-action="ToggleLock" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn-action">
+                            <i class="bi @(Model.IsLocked ? "bi-unlock" : "bi-lock")"></i>
+                            @(Model.IsLocked ? "Unlock" : "Lock")
+                        </button>
+                    </form>
+                    <form asp-action="Delete" method="post" style="display:inline;" onsubmit="return confirm('Permanently delete this review?');">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn-action delete">
+                            <i class="bi bi-trash3"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="label">Review Date</div>
+                    <div class="value">@Model.ReviewDate.ToString("dd MMM yyyy, hh:mm tt")</div>
+                </div>
+                @if (Model.ApprovedAt.HasValue)
+                {
+                    <div class="info-item">
+                        <div class="label">Approved At</div>
+                        <div class="value">@Model.ApprovedAt.Value.ToString("dd MMM yyyy, hh:mm tt")</div>
+                    </div>
+                }
+                @if (Model.LastEditedAt.HasValue)
+                {
+                    <div class="info-item">
+                        <div class="label">Last Edited</div>
+                        <div class="value">@Model.LastEditedAt.Value.ToString("dd MMM yyyy") <span class="text-muted">(×@Model.EditCount)</span></div>
+                    </div>
+                }
+                <div class="info-item">
+                    <div class="label">Interactions</div>
+                    <div class="value">
+                        <span class="text-success">👍 @Model.HelpfulCount</span>
+                        <span class="text-danger ms-2">👎 @Model.NotHelpfulCount</span>
+                        @if (Model.ReportCount > 0)
+                        {
+                            <span class="text-danger ms-2">🚩 @Model.ReportCount reports</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <!-- Rating & Comment -->
+            <div class="detail-card">
+                <div class="detail-card-header">
+                    <div class="h-icon" style="background: #fef3c7; color: #f59e0b;">
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <h6>Review Content</h6>
+                </div>
+                <div class="detail-card-body">
+                    <!-- Stars -->
+                    <div class="mb-3">
+                        <div class="star-display mb-1">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                @(i <= Model.Rating ? "★" : "☆")
+                            }
+                        </div>
+                        <div style="font-size: 0.78rem; color: var(--slate-500); font-weight: 600;">
+                            @Model.Rating out of 5 stars
+                        </div>
+                    </div>
+
+                    <!-- Sub-ratings -->
+                    @if (Model.QualityRating.HasValue || Model.ValueForMoneyRating.HasValue || Model.AccuracyRating.HasValue)
+                    {
+                        <div class="rating-breakdown mb-4">
+                            @if (Model.QualityRating.HasValue)
+                            {
+                                <div class="rating-box">
+                                    <div class="rb-val">@Model.QualityRating/5</div>
+                                    <div class="rb-lbl">Quality</div>
+                                </div>
+                            }
+                            @if (Model.ValueForMoneyRating.HasValue)
+                            {
+                                <div class="rating-box">
+                                    <div class="rb-val">@Model.ValueForMoneyRating/5</div>
+                                    <div class="rb-lbl">Value</div>
+                                </div>
+                            }
+                            @if (Model.AccuracyRating.HasValue)
+                            {
+                                <div class="rating-box">
+                                    <div class="rb-val">@Model.AccuracyRating/5</div>
+                                    <div class="rb-lbl">Accuracy</div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- Title -->
+                    @if (!string.IsNullOrWhiteSpace(Model.Title))
+                    {
+                        <h5 style="font-size: 1rem; font-weight: 700; color: var(--slate-800); margin-bottom: 10px;">@Model.Title</h5>
+                    }
+
+                    <!-- Comment -->
+                    <div class="review-comment-box">
+                        @(string.IsNullOrWhiteSpace(Model.Comment) ? "No comment provided." : Model.Comment)
+                    </div>
+
+                    <!-- Images -->
+                    @if (Model.Images?.Any() == true)
+                    {
+                        <div class="review-images">
+                            @foreach (var img in Model.Images.OrderBy(i => i.DisplayOrder))
+                            {
+                                <img src="@img.ImageUrl" alt="@(img.Caption ?? "Review image")" title="@img.Caption" />
+                            }
+                        </div>
+                    }
+
+                    <!-- Seller Response -->
+                    @if (!string.IsNullOrWhiteSpace(Model.SellerResponse))
+                    {
+                        <div class="seller-response-box">
+                            <div class="sr-label"><i class="bi bi-shop me-1"></i> Seller Response</div>
+                            <div class="sr-text">@Model.SellerResponse</div>
+                            @if (Model.SellerResponseDate.HasValue)
+                            {
+                                <div class="mt-2" style="font-size: 0.68rem; color: #a16207;">
+                                    @Model.SellerResponseDate.Value.ToString("dd MMM yyyy, hh:mm tt")
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- Rejection Reason -->
+                    @if (!string.IsNullOrWhiteSpace(Model.RejectionReason))
+                    {
+                        <div class="mt-3 p-3" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px;">
+                            <div style="font-size: 0.68rem; font-weight: 700; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px;">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> Rejection Reason
+                            </div>
+                            <div style="font-size: 0.85rem; color: #991b1b; line-height: 1.6;">@Model.RejectionReason</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Admin Note -->
+            <div class="detail-card">
+                <div class="detail-card-header">
+                    <div class="h-icon" style="background: var(--primary-light); color: var(--primary);">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <h6>Admin Note</h6>
+                </div>
+                <div class="detail-card-body">
+                    <form asp-action="AddNote" method="post" class="admin-note-form">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <textarea name="note" placeholder="Add an internal note about this review...">@Model.AdminNote</textarea>
+                        <div class="d-flex align-items-center justify-content-between mt-3">
+                            <label class="d-flex align-items-center gap-2" style="font-size: 0.78rem; color: var(--slate-500); cursor: pointer;">
+                                <input type="checkbox" name="isVisible" value="true" @(Model.IsAdminNoteVisible ? "checked" : "") class="form-check-input" style="margin-top: 0;" />
+                                Visible to seller/customer
+                            </label>
+                            <button type="submit" class="btn-action" style="display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; border: 1px solid var(--primary); background: var(--primary); color: white; cursor: pointer;">
+                                <i class="bi bi-check2"></i> Save Note
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Product Info -->
+            <div class="detail-card">
+                <div class="detail-card-header">
+                    <div class="h-icon" style="background: #fff7ed; color: #f97316;">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <h6>Product</h6>
+                </div>
+                <div class="detail-card-body">
+                    @if (Model.Product != null)
+                    {
+                        <div class="product-preview">
+                            @if (Model.Product.Images?.Any() == true)
+                            {
+                                <img src="@Model.Product.Images.First().Url" alt="@Model.Product.Title" />
+                            }
+                            else
+                            {
+                                <div style="width: 56px; height: 56px; border-radius: 8px; background: var(--slate-100); display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-image text-muted"></i>
+                                </div>
+                            }
+                            <div>
+                                <div class="pp-title">@Model.Product.Title</div>
+                                <div class="pp-meta">
+                                    @if (Model.Product.Seller != null)
+                                    {
+                                        <span><i class="bi bi-shop me-1"></i>@Model.Product.Seller.ShopName</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <a href="/home/product/@Model.ProductId" target="_blank" class="d-block mt-3 text-center" style="font-size: 0.78rem; font-weight: 600; color: var(--primary); text-decoration: none;">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> View Product Page
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- Order Info -->
+            @if (Model.OrderItem?.Order != null)
+            {
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <div class="h-icon" style="background: #f0fdf4; color: #16a34a;">
+                            <i class="bi bi-bag-check"></i>
+                        </div>
+                        <h6>Order Info</h6>
+                    </div>
+                    <div class="detail-card-body">
+                        <div class="info-item mb-3">
+                            <div class="label">Order Number</div>
+                            <div class="value font-monospace">@Model.OrderItem.Order.OrderNumber</div>
+                        </div>
+                        <div class="info-item mb-3">
+                            <div class="label">Order Date</div>
+                            <div class="value">@Model.OrderItem.Order.OrderDate.ToString("dd MMM yyyy")</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="label">Order Status</div>
+                            <div class="value">@Model.OrderItem.Order.Status</div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Quick Stats -->
+            <div class="detail-card">
+                <div class="detail-card-header">
+                    <div class="h-icon" style="background: var(--slate-100); color: var(--slate-500);">
+                        <i class="bi bi-bar-chart"></i>
+                    </div>
+                    <h6>Flags & State</h6>
+                </div>
+                <div class="detail-card-body">
+                    <div class="d-flex flex-column gap-2" style="font-size: 0.82rem;">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Verified Purchase</span>
+                            <span class="fw-bold @(Model.IsVerifiedPurchase ? "text-success" : "text-muted")">
+                                @(Model.IsVerifiedPurchase ? "Yes" : "No")
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Pinned</span>
+                            <span class="fw-bold @(Model.IsPinned ? "text-primary" : "text-muted")">
+                                @(Model.IsPinned ? "Yes" : "No")
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Locked</span>
+                            <span class="fw-bold @(Model.IsLocked ? "text-danger" : "text-muted")">
+                                @(Model.IsLocked ? "Yes" : "No")
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Edit Count</span>
+                            <span class="fw-bold">@Model.EditCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Reports</span>
+                            <span class="fw-bold @(Model.ReportCount > 0 ? "text-danger" : "")">
+                                @Model.ReportCount
+                                @if (Model.ReportCount > 0)
+                                {
+                                    <form asp-action="ClearReports" method="post" style="display: inline; margin-left: 6px;">
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <button type="submit" style="background: none; border: none; color: var(--primary); font-size: 0.68rem; cursor: pointer; font-weight: 600; padding: 0;">Clear</button>
+                                    </form>
+                                }
+                            </span>
+                        </div>
+                    </div>
+
+                    @if (Model.EditCount > 0)
+                    {
+                        <a href="@Url.Action("EditHistory", new { id = Model.Id })" class="d-block mt-3 text-center" style="font-size: 0.75rem; font-weight: 600; color: var(--primary); text-decoration: none;">
+                            <i class="bi bi-clock-history me-1"></i> View Edit History
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

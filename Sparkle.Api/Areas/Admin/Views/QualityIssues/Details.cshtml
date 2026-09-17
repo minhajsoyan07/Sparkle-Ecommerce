@@ -1,0 +1,164 @@
+@using Sparkle.Domain.Reviews
+@using Sparkle.Domain.Catalog
+@model ProductQualityIssue
+@{
+    ViewData["Title"] = "Issue Details";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var recentReviews = ViewBag.RecentReviews as List<ProductReview> ?? new List<ProductReview>();
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Quality Issue Review</h5>
+                <span class="badge @(Model.Severity == QualityIssueSeverity.Critical ? "bg-danger" : "bg-warning text-dark")">
+                    @Model.Severity Severity
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex gap-4 mb-4">
+                    @if (Model.Product.Images?.Any() == true)
+                    {
+                        <img src="@Model.Product.Images.First().Url" style="width: 120px; height: 120px; border-radius: 12px; object-fit: cover;" />
+                    }
+                    <div>
+                        <h4 class="mb-1">@Model.Product.Title</h4>
+                        <p class="text-muted small mb-3">ID: #@Model.ProductId | Seller: @(Model.Product.Seller?.ShopName ?? "Sparkle")</p>
+                        
+                        <div class="d-flex gap-3">
+                            <div class="text-center p-2 bg-light rounded" style="min-width: 80px;">
+                                <div class="h4 mb-0 text-danger">@Model.CurrentRating.ToString("F1")★</div>
+                                <div class="small text-muted">Current Avg</div>
+                            </div>
+                            <div class="text-center p-2 bg-light rounded" style="min-width: 80px;">
+                                <div class="h4 mb-0">@Model.LowRatingCount</div>
+                                <div class="small text-muted">Poor Ratings</div>
+                            </div>
+                            <div class="text-center p-2 bg-light rounded" style="min-width: 80px;">
+                                <div class="h4 mb-0 text-warning">@Model.ReportCount</div>
+                                <div class="small text-muted">Reports</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert @(Model.AutoSuspended ? "alert-danger" : "alert-warning") border-0 mb-4">
+                    <div class="d-flex gap-3">
+                        <i class="bi bi-info-circle-fill fs-4"></i>
+                        <div>
+                            <strong>Issue Detection Logic:</strong> This product was flagged because its average rating dropped below the 2.5★ platform threshold.
+                            @if (Model.AutoSuspended)
+                            {
+                                <div class="mt-1"><strong>Action:</strong> Auto-suspended (Rating &lt; 2.0).</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <h6>Recent Product Reviews (Approved)</h6>
+                <div class="list-group list-group-flush border rounded">
+                    @if (recentReviews.Any())
+                    {
+                        foreach (var review in recentReviews)
+                        {
+                            <div class="list-group-item p-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-warning">
+                                        @for(int i=1; i<=5; i++) { @(i <= review.Rating ? "★" : "☆") }
+                                    </span>
+                                    <small class="text-muted">@review.ReviewDate.ToString("MMM dd")</small>
+                                </div>
+                                <p class="mb-0 small">@review.Comment</p>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="list-group-item p-3 text-center text-muted small">No recent reviews found.</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">Resolution Workflow</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Resolve" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Resolution Type</label>
+                        <select name="resolution" class="form-select">
+                            <option value="Product Improved">Product Quality Improved (Verified)</option>
+                            <option value="False Positive">False Positive/Acceptable Rating</option>
+                            <option value="Seller Educated">Seller Educated / Warning Sent</option>
+                            <option value="Under Monitoring">Continued Monitoring</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Admin Internal Notes</label>
+                        <textarea name="notes" class="form-control" rows="3" placeholder="Explain the resolution..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success px-4">Close & Resolve Issue</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">Administrative Actions</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="TakeAction" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="action" value="Suspend Product" class="btn btn-outline-danger @(Model.Product.ModerationStatus == ProductModerationStatus.Suspended ? "disabled" : "")">
+                            <i class="bi bi-pause-circle me-1"></i> Suspend Product
+                        </button>
+                        <button type="submit" name="action" value="Warn Seller" class="btn btn-outline-warning">
+                            <i class="bi bi-patch-exclamation me-1"></i> Send Quality Warning
+                        </button>
+                        <button type="submit" name="action" value="Request Improvement" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil-square me-1"></i> Request Product Update
+                        </button>
+                    </div>
+                    <div class="mt-3">
+                        <textarea name="notes" class="form-control form-control-sm" rows="3" placeholder="Reason for action..."></textarea>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">Timeline</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item">
+                        <small class="text-muted d-block">Detected At</small>
+                        <span class="small font-monospace">@Model.DetectedAt.ToString("g")</span>
+                    </div>
+                    @if (Model.ReviewedAt.HasValue)
+                    {
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Admin Review Started</small>
+                            <span class="small font-monospace">@Model.ReviewedAt.Value.ToString("g")</span>
+                        </div>
+                    }
+                    @if (Model.Status == QualityIssueStatus.Resolved)
+                    {
+                        <div class="list-group-item bg-success-subtle">
+                            <small class="text-muted d-block text-success">Resolved At</small>
+                            <span class="small font-monospace text-success">@Model.ResolvedAt?.ToString("g")</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

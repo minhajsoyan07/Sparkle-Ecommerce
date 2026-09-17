@@ -1,0 +1,80 @@
+@model Sparkle.Api.Areas.Admin.Controllers.SystemSettingsViewModel
+@{
+    ViewData["Title"] = "System Settings";
+    Layout = "_SettingsLayout";
+}
+
+<h4 class="mb-4">System Configuration</h4>
+
+<form method="post" asp-action="SaveSystem">
+    <div class="card mb-4 border-warning">
+        <div class="card-header bg-warning text-dark">
+            <i class="bi bi-exclamation-triangle me-2"></i> Maintenance Mode
+        </div>
+        <div class="card-body">
+            <p class="card-text">Enable maintenance mode to prevent customers from accessing the store while you make changes. Admins can still access the dashboard.</p>
+            <div class="form-check form-switch">
+                <input asp-for="MaintenanceMode" class="form-check-input" type="checkbox">
+                <label asp-for="MaintenanceMode" class="form-check-label">Enable Maintenance Mode</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            User Registration
+        </div>
+        <div class="card-body">
+            <div class="form-check form-switch mb-3">
+                <input asp-for="AllowRegistration" class="form-check-input" type="checkbox">
+                <label asp-for="AllowRegistration" class="form-check-label">Allow New User Registrations</label>
+            </div>
+            <div class="form-check form-switch">
+                <input asp-for="RequireEmailConfirmation" class="form-check-input" type="checkbox">
+                <label asp-for="RequireEmailConfirmation" class="form-check-label">Require Email Confirmation</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <button type="submit" class="btn btn-primary">Save System Settings</button>
+    </div>
+</form>
+
+<hr class="my-5">
+
+<h4 class="mb-4">System Utilities</h4>
+
+<div class="card mb-4">
+    <div class="card-header">
+        Cache Management
+    </div>
+    <div class="card-body">
+        <p>Clear system cache to reflect recent changes immediately.</p>
+        <button class="btn btn-outline-secondary">Clear All Cache</button>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        Database
+    </div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>Database Size</span>
+            <span class="fw-bold">24.5 MB</span>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm">Optimize Database</button>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        Logs
+    </div>
+    <div class="card-body">
+        <a href="#" class="btn btn-outline-primary">View System Logs</a>
+        <a href="#" class="btn btn-outline-danger ms-2">Clear Error Logs</a>
+    </div>
+</div>
+

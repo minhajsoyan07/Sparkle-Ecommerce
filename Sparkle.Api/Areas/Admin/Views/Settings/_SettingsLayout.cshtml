@@ -1,0 +1,46 @@
+@{
+    Layout = "/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var activePage = ViewContext.RouteData.Values["action"]?.ToString()?.ToLower();
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title">Store Settings</h2>
+        <p class="text-muted">Manage your store configuration and preferences.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-3">
+        <div class="content-card p-0 overflow-hidden">
+            <div class="list-group list-group-flush">
+                <a href="/admin/settings/general" class="list-group-item list-group-item-action p-3 @(activePage == "general" || activePage == "index" ? "active bg-primary text-white" : "")">
+                    <i class="bi bi-gear me-2"></i> General
+                </a>
+                <a href="/admin/settings/payments" class="list-group-item list-group-item-action p-3 @(activePage == "payments" ? "active bg-primary text-white" : "")">
+                    <i class="bi bi-credit-card me-2"></i> Payments
+                </a>
+                <a href="/admin/settings/shipping" class="list-group-item list-group-item-action p-3 @(activePage == "shipping" ? "active bg-primary text-white" : "")">
+                    <i class="bi bi-truck me-2"></i> Shipping
+                </a>
+                <a href="/admin/settings/taxes" class="list-group-item list-group-item-action p-3 @(activePage == "taxes" ? "active bg-primary text-white" : "")">
+                    <i class="bi bi-percent me-2"></i> Taxes
+                </a>
+                <a href="/admin/settings/users" class="list-group-item list-group-item-action p-3 @(activePage == "users" ? "active bg-primary text-white" : "")">
+                    <i class="bi bi-people me-2"></i> Users & Permissions
+                </a>
+                <a href="/admin/settings/notifications" class="list-group-item list-group-item-action p-3 @(activePage == "notifications" ? "active bg-primary text-white" : "")">
+                    <i class="bi bi-bell me-2"></i> Notifications
+                </a>
+                <a href="/admin/settings/system" class="list-group-item list-group-item-action p-3 @(activePage == "system" ? "active bg-primary text-white" : "")">
+                    <i class="bi bi-cpu me-2"></i> System & Logs
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-9">
+        <div class="content-card">
+            @RenderBody()
+        </div>
+    </div>
+</div>

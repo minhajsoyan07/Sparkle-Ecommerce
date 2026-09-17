@@ -1,0 +1,154 @@
+<style>
+    :root {
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-500: #64748b;
+        --slate-900: #0f172a;
+    }
+
+    .report-header {
+        margin-bottom: 2rem;
+    }
+
+    .report-stat-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid var(--slate-200);
+        padding: 1.25rem;
+        height: 100%;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--slate-500);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--slate-900);
+    }
+
+    .table-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid var(--slate-200);
+        overflow: hidden;
+        margin-top: 2rem;
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .report-table th {
+        background: var(--slate-50);
+        padding: 1rem;
+        text-align: left;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--slate-500);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--slate-200);
+    }
+
+    .report-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--slate-100);
+        font-size: 0.85rem;
+        color: var(--slate-800);
+    }
+
+    .btn-minimal {
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+    }
+
+    .progress-minimal {
+        height: 6px;
+        background: var(--slate-100);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .progress-bar-minimal {
+        background: #6366f1;
+        height: 100%;
+    }
+</style>
+
+<div class="report-header d-flex justify-content-between align-items-center">
+    <div>
+        <h4 class="fw-bold mb-1" style="font-size: 24px; color: var(--slate-900);">User Insights</h4>
+        <p class="text-muted mb-0" style="font-size: 14px;">Growth trends and platform demographics.</p>
+    </div>
+    <a href="/Admin/Reports" class="btn btn-outline-secondary btn-minimal">
+        <i class="bi bi-arrow-left me-1"></i> Dashboard
+    </a>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-3">
+        <div class="report-stat-card">
+            <div class="stat-label">Total Registered</div>
+            <div class="stat-value">@Model.TotalUsers</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="report-stat-card">
+            <div class="stat-label">Active Users</div>
+            <div class="stat-value text-success">@Model.ActiveUsers</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="report-stat-card">
+            <div class="stat-label">New This Month</div>
+            <div class="stat-value text-primary">@Model.NewUsersThisMonth</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="report-stat-card">
+            <div class="stat-label">Retention Rate</div>
+            <div class="stat-value text-indigo">@((Model.TotalUsers > 0 ? (Model.ActiveUsers * 100.0 / Model.TotalUsers) : 0).ToString("F1"))%</div>
+        </div>
+    </div>
+</div>
+
+<div class="table-card">
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th style="padding-left: 1.5rem;">User Role</th>
+                <th>Count</th>
+                <th style="padding-right: 1.5rem;">Distribution</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var role in Model.UsersByRole)
+            {
+                var percentage = Model.TotalUsers > 0 ? (role.Count * 100.0 / Model.TotalUsers) : 0;
+                <tr>
+                    <td style="padding-left: 1.5rem;" class="fw-bold">@role.RoleName</td>
+                    <td>@role.Count</td>
+                    <td style="padding-right: 1.5rem; width: 40%;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="progress-minimal flex-grow-1">
+                                <div class="progress-bar-minimal" style="width: @percentage%"></div>
+                            </div>
+                            <span class="text-slate-500 small fw-bold">@percentage.ToString("F1")%</span>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

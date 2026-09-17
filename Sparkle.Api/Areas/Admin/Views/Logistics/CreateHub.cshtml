@@ -1,0 +1,128 @@
+@using Sparkle.Domain.Logistics
+@model Hub
+@{
+    ViewData["Title"] = "Create Hub";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-header">
+    <div>
+        <h2 class="content-title">Create New Hub</h2>
+        <p class="text-muted">Add a new logistics hub to the network</p>
+    </div>
+    <a asp-action="Hubs" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back to Hubs
+    </a>
+</div>
+
+<div class="content-card">
+    <form asp-action="CreateHub" method="post">
+        @Html.AntiForgeryToken()
+        
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Basic Info -->
+                <h6 class="fw-bold mb-3" style="color: var(--sk-primary);"><i class="bi bi-info-circle me-2"></i>Basic Information</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Hub Name <span class="text-danger">*</span></label>
+                        <input asp-for="Name" class="form-control" placeholder="e.g., Dhaka Central Hub">
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Hub Code <span class="text-danger">*</span></label>
+                        <input asp-for="HubCode" class="form-control" placeholder="e.g., DHK-001">
+                        <span asp-validation-for="HubCode" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Hub Type <span class="text-danger">*</span></label>
+                        <select asp-for="Type" class="form-select">
+                            <option value="@HubType.Central">Central (Main Hub)</option>
+                            <option value="@HubType.Regional">Regional</option>
+                            <option value="@HubType.District">District</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Capacity</label>
+                        <input asp-for="Capacity" type="number" class="form-control" value="1000">
+                    </div>
+                </div>
+                
+                <!-- Location -->
+                <h6 class="fw-bold mb-3" style="color: var(--sk-primary);"><i class="bi bi-geo-alt me-2"></i>Location</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-12">
+                        <label class="form-label">Address <span class="text-danger">*</span></label>
+                        <textarea asp-for="Address" class="form-control" rows="2" placeholder="Full address"></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Area <span class="text-danger">*</span></label>
+                        <input asp-for="Area" class="form-control" placeholder="e.g., Gulshan">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">District <span class="text-danger">*</span></label>
+                        <input asp-for="District" class="form-control" placeholder="e.g., Dhaka">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Division <span class="text-danger">*</span></label>
+                        <input asp-for="Division" class="form-control" placeholder="e.g., Dhaka">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Postal Code</label>
+                        <input asp-for="PostalCode" class="form-control" placeholder="e.g., 1212">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Latitude</label>
+                        <input asp-for="Latitude" type="number" step="any" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Longitude</label>
+                        <input asp-for="Longitude" type="number" step="any" class="form-control">
+                    </div>
+                </div>
+                
+                <!-- Contact -->
+                <h6 class="fw-bold mb-3" style="color: var(--sk-primary);"><i class="bi bi-telephone me-2"></i>Contact Information</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Contact Phone</label>
+                        <input asp-for="ContactPhone" class="form-control" placeholder="e.g., 01700000000">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Contact Email</label>
+                        <input asp-for="ContactEmail" type="email" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Manager Name</label>
+                        <input asp-for="ManagerName" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Manager Phone</label>
+                        <input asp-for="ManagerPhone" class="form-control">
+                    </div>
+                </div>
+                
+                <!-- Status -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Operational Status</label>
+                        <select asp-for="OperationalStatus" class="form-select">
+                            <option value="@HubOperationalStatus.Operational">Operational</option>
+                            <option value="@HubOperationalStatus.Maintenance">Maintenance</option>
+                            <option value="@HubOperationalStatus.Closed">Closed</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Hubs" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Create Hub
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,499 @@
+@model List<Sparkle.Domain.Catalog.Product>
+@{
+    ViewData["Title"] = "Inventory";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalProducts = ViewBag.TotalProducts ?? Model.Count;
+}
+
+<div class="tw-w-full tw-px-2 tw-py-2 tw-overflow-x-hidden"> 
+    
+
+    <!-- Design: Filter Bar -->
+    <div class="tw-flex tw-flex-col md:tw-flex-row tw-items-center tw-justify-start tw-gap-4 tw-mb-8">
+        <!-- Search with Filter -->
+        <div class="tw-flex tw-items-center tw-gap-2">
+            <div class="tw-relative tw-w-full md:tw-w-[350px]">
+                <i class="bi bi-search tw-absolute tw-left-4 tw-top-1/2 -tw-translate-y-1/2 tw-text-slate-400"></i>
+                <input type="text" id="productSearch" placeholder="Search by name, SKU, or ID..." 
+                       class="tw-w-full tw-pl-11 tw-pr-4 tw-py-2.5 tw-bg-white tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm focus:tw-outline-none focus:tw-border-slate-400 focus:tw-ring-0 placeholder:tw-text-slate-400" />
+            </div>
+            
+            <!-- Filter Dropdown -->
+            <div class="tw-relative" id="filterDropdownContainer">
+                <button id="filterBtn" class="tw-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2.5 tw-bg-white tw-border tw-border-slate-200 tw-rounded-lg tw-text-sm tw-font-medium tw-text-slate-600 hover:tw-border-amber-400 tw-transition-colors">
+                    <i class="bi bi-funnel"></i>
+                    <span>Filter</span>
+                    <i class="bi bi-chevron-down tw-text-xs"></i>
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div id="filterDropdown" class="tw-absolute tw-top-full tw-left-0 tw-mt-2 tw-w-64 tw-bg-white tw-border tw-border-slate-200 tw-rounded-xl tw-shadow-xl tw-z-50 tw-hidden">
+                    <div class="tw-p-4">
+                        <h4 class="tw-text-xs tw-font-bold tw-text-slate-500 tw-uppercase tw-mb-3">Sort By</h4>
+                        
+                        <div class="tw-space-y-2">
+                            <button onclick="sortProducts('name-asc')" class="tw-w-full tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-sm tw-text-slate-600 hover:tw-bg-amber-50 hover:tw-text-amber-600 tw-transition-colors tw-text-left">
+                                <i class="bi bi-sort-alpha-down"></i> Name (A-Z)
+                            </button>
+                            <button onclick="sortProducts('name-desc')" class="tw-w-full tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-sm tw-text-slate-600 hover:tw-bg-amber-50 hover:tw-text-amber-600 tw-transition-colors tw-text-left">
+                                <i class="bi bi-sort-alpha-up"></i> Name (Z-A)
+                            </button>
+                            <button onclick="sortProducts('date-desc')" class="tw-w-full tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-sm tw-text-slate-600 hover:tw-bg-amber-50 hover:tw-text-amber-600 tw-transition-colors tw-text-left">
+                                <i class="bi bi-calendar-minus"></i> Newest First
+                            </button>
+                            <button onclick="sortProducts('date-asc')" class="tw-w-full tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-sm tw-text-slate-600 hover:tw-bg-amber-50 hover:tw-text-amber-600 tw-transition-colors tw-text-left">
+                                <i class="bi bi-calendar-plus"></i> Oldest First
+                            </button>
+                            <button onclick="sortProducts('stock-desc')" class="tw-w-full tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-sm tw-text-slate-600 hover:tw-bg-amber-50 hover:tw-text-amber-600 tw-transition-colors tw-text-left">
+                                <i class="bi bi-box-seam"></i> High Stock
+                            </button>
+                            <button onclick="sortProducts('stock-asc')" class="tw-w-full tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-sm tw-text-slate-600 hover:tw-bg-amber-50 hover:tw-text-amber-600 tw-transition-colors tw-text-left">
+                                <i class="bi bi-exclamation-triangle"></i> Low Stock
+                            </button>
+                            <button onclick="sortProducts('price-desc')" class="tw-w-full tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-sm tw-text-slate-600 hover:tw-bg-amber-50 hover:tw-text-amber-600 tw-transition-colors tw-text-left">
+                                <i class="bi bi-currency-dollar"></i> Price (High-Low)
+                            </button>
+                            <button onclick="sortProducts('price-asc')" class="tw-w-full tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-sm tw-text-slate-600 hover:tw-bg-amber-50 hover:tw-text-amber-600 tw-transition-colors tw-text-left">
+                                <i class="bi bi-coin"></i> Price (Low-High)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Right Side: Pagination + Tabs + Add Product -->
+        <div class="tw-ml-auto tw-flex tw-items-center tw-gap-3">
+            <!-- Pagination -->
+            @if (totalPages > 1)
+            {
+                <div class="tw-flex tw-items-center tw-gap-1">
+                    @if (currentPage > 1)
+                    {
+                        <a href="@Url.Action("Products", "Dashboard", new { page = currentPage - 1 })" 
+                           class="tw-w-8 tw-h-8 tw-flex tw-items-center tw-justify-center tw-rounded tw-text-sm tw-font-medium tw-border tw-bg-white tw-text-slate-600 tw-border-slate-200 hover:tw-border-amber-400">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    }
+                    @{
+                        int maxPages = 4;
+                        int startPage = Math.Max(1, currentPage - 1);
+                        int endPage = Math.Min(totalPages, startPage + maxPages - 1);
+                        if (endPage - startPage < maxPages - 1) startPage = Math.Max(1, endPage - maxPages + 1);
+                    }
+                    @for (int i = startPage; i <= endPage; i++)
+                    {
+                        <a href="@Url.Action("Products", "Dashboard", new { page = i })" 
+                           class="tw-w-8 tw-h-8 tw-flex tw-items-center tw-justify-center tw-rounded tw-text-sm tw-font-medium tw-border @(i == currentPage ? "tw-bg-amber-400 tw-text-white tw-border-amber-400" : "tw-bg-white tw-text-slate-600 tw-border-slate-200 hover:tw-border-amber-400")">
+                            @i
+                        </a>
+                    }
+                    @if (currentPage < totalPages)
+                    {
+                        <a href="@Url.Action("Products", "Dashboard", new { page = currentPage + 1 })" 
+                           class="tw-w-8 tw-h-8 tw-flex tw-items-center tw-justify-center tw-rounded tw-text-sm tw-font-medium tw-border tw-bg-white tw-text-slate-600 tw-border-slate-200 hover:tw-border-amber-400">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    }
+                </div>
+            }
+
+            <!-- Status Filter Tabs -->
+            <div class="tw-flex tw-bg-white tw-border tw-border-slate-200 tw-rounded-lg tw-overflow-hidden">
+                <button onclick="filterProducts('all', this)" class="filter-tab active tw-px-6 tw-py-2 tw-text-sm tw-font-medium tw-bg-slate-600 tw-text-white tw-transition-colors">All</button>
+                <button onclick="filterProducts('active', this)" class="filter-tab tw-px-6 tw-py-2 tw-text-sm tw-font-medium tw-text-slate-600 hover:tw-bg-slate-50 tw-border-l tw-border-slate-200 tw-transition-colors">Active</button>
+                <button onclick="filterProducts('inactive', this)" class="filter-tab tw-px-6 tw-py-2 tw-text-sm tw-font-medium tw-text-slate-600 hover:tw-bg-slate-50 tw-border-l tw-border-slate-200 tw-transition-colors">Inactive</button>
+            </div>
+
+            <!-- Add Product Button -->
+            <a href="@Url.Action("CreateProduct", "Dashboard")" class="tw-flex tw-items-center tw-gap-2 tw-bg-amber-400 hover:tw-bg-amber-500 tw-text-slate-900 tw-font-bold tw-px-6 tw-py-2.5 tw-rounded-lg tw-transition-colors">
+                <i class="bi bi-plus-lg"></i> 
+                <span>Add a Product</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Design: Data Table -->
+    @if (Model.Any())
+    {
+        <div class="tw-bg-white tw-border tw-border-slate-200 tw-rounded-lg tw-overflow-hidden">
+            <table class="tw-w-full">
+                <thead class="tw-bg-white tw-border-b tw-border-slate-200">
+                    <tr>
+                        <th class="tw-text-left tw-py-4 tw-pl-6 tw-text-xs tw-font-bold tw-text-slate-800 tw-uppercase tw-tracking-wide">Product Details</th>
+                        <th class="tw-text-left tw-py-4 tw-px-4 tw-text-xs tw-font-bold tw-text-slate-800 tw-uppercase tw-tracking-wide">Category</th>
+                        <th class="tw-text-left tw-py-4 tw-px-4 tw-text-xs tw-font-bold tw-text-slate-800 tw-uppercase tw-tracking-wide">Inventory</th>
+                        <th class="tw-text-left tw-py-4 tw-px-4 tw-text-xs tw-font-bold tw-text-slate-800 tw-uppercase tw-tracking-wide">Pricing</th>
+                        <th class="tw-text-left tw-py-4 tw-px-4 tw-text-xs tw-font-bold tw-text-slate-800 tw-uppercase tw-tracking-wide">Status</th>
+                        <th class="tw-text-right tw-py-4 tw-pr-6 tw-text-xs tw-font-bold tw-text-slate-800 tw-uppercase tw-tracking-wide">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="productsBody" class="tw-divide-y tw-divide-slate-100">
+                    @foreach (var product in Model)
+                    {
+                        var firstImage = product.Images?.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url ?? "https://via.placeholder.com/80x80?text=No+Img";
+                        var status = product.IsActive ? "active" : "inactive";
+                        var firstVariant = product.Variants?.FirstOrDefault();
+                        var variantId = firstVariant?.Id ?? 0;
+                        var price = firstVariant?.Price ?? 0;
+                        // Calculate total stock from all variants
+                        var totalStock = product.Variants != null && product.Variants.Any() 
+                            ? product.Variants.Sum(v => v.Stock) 
+                            : 0;
+                        var stock = totalStock;
+
+                        <tr class="product-row tw-group hover:tw-bg-slate-50 tw-transition-colors" 
+                            data-status="@status" 
+                            data-name="@product.Title.ToLower()" 
+                            data-date="@product.CreatedAt.ToString("yyyy-MM-dd")"
+                            data-stock="@stock"
+                            data-price="@price">
+                            <!-- Product Details -->
+                            <td class="tw-py-4 tw-pl-6">
+                                <div class="tw-flex tw-items-center tw-gap-4">
+                                    <div class="tw-w-12 tw-h-12 tw-rounded-lg tw-overflow-hidden tw-bg-slate-100 tw-border tw-border-slate-200 tw-shrink-0">
+                                        <img src="@firstImage" alt="@product.Title" class="tw-w-full tw-h-full tw-object-cover" />
+                                    </div>
+                                    <div>
+                                        <h4 class="tw-text-sm tw-font-bold tw-text-slate-900 tw-mb-0.5 tw-line-clamp-1">@product.Title</h4>
+                                        <span class="tw-text-xs tw-text-slate-500">ID: @product.Id</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Category -->
+                            <td class="tw-py-4 tw-px-4">
+                                <span class="tw-text-sm tw-font-medium tw-text-slate-600">
+                                    @(product.Category?.Name ?? "General")
+                                </span>
+                            </td>
+
+                            <!-- Inventory (Stock) -->
+                            <td class="tw-py-4 tw-px-4">
+                                @if (variantId > 0)
+                                {
+                                    <div>
+                                        <div class="tw-max-w-[80px]">
+                                            <input type="number" value="@(firstVariant?.Stock ?? 0)" min="0"
+                                                   class="inline-edit-stock tw-w-full tw-px-3 tw-py-1.5 tw-bg-transparent hover:tw-bg-white focus:tw-bg-white tw-border tw-border-transparent hover:tw-border-slate-300 focus:tw-border-indigo-500 tw-rounded tw-text-sm tw-font-medium tw-text-slate-700 tw-transition-all focus:tw-outline-none"
+                                                   data-variant-id="@variantId" />
+                                        </div>
+
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="tw-text-xs tw-text-rose-500 tw-font-medium">No Variant</span>
+                                }
+                            </td>
+
+                            <!-- Pricing -->
+                            <td class="tw-py-4 tw-px-4">
+                                @if (variantId > 0)
+                                {
+                                    <div class="tw-flex tw-items-center">
+                                        <span class="tw-text-slate-400 tw-text-xs tw-mr-1">৳</span>
+                                        <input type="number" value="@price.ToString("0.00")" min="0.01" step="0.01"
+                                               class="inline-edit-price tw-w-24 tw-px-2 tw-py-1.5 tw-bg-transparent hover:tw-bg-white focus:tw-bg-white tw-border tw-border-transparent hover:tw-border-slate-300 focus:tw-border-indigo-500 tw-rounded tw-text-sm tw-font-medium tw-text-slate-700 tw-transition-all focus:tw-outline-none"
+                                               data-variant-id="@variantId" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="tw-text-xs tw-text-slate-400">N/A</span>
+                                }
+                            </td>
+
+                            <!-- Status -->
+                            <td class="tw-py-4 tw-px-4">
+                                <button class="toggle-status-btn tw-flex tw-items-center tw-gap-2 tw-px-3 tw-py-1.5 tw-rounded-full tw-text-xs tw-font-bold tw-transition-all hover:tw-shadow-sm @(product.IsActive ? "tw-bg-emerald-100 tw-text-emerald-700" : "tw-bg-rose-100 tw-text-rose-700")"
+                                        data-product-id="@product.Id"
+                                        data-active="@product.IsActive.ToString().ToLower()">
+                                    <span class="tw-w-2 tw-h-2 tw-rounded-full @(product.IsActive ? "tw-bg-emerald-500" : "tw-bg-rose-500")"></span>
+                                    <span>@(product.IsActive ? "Active" : "Inactive")</span>
+                                </button>
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="tw-py-4 tw-pr-6 tw-text-right">
+                                <div class="tw-flex tw-items-center tw-justify-end tw-gap-3">
+                                    <a href="@Url.Action("EditProduct", "Dashboard", new { id = product.Id })" class="tw-text-slate-400 hover:tw-text-slate-700 tw-transition-colors" title="Edit">
+                                        <i class="bi bi-pencil-square tw-text-lg"></i>
+                                    </a>
+                                    <button onclick="deleteProduct(@product.Id)" class="tw-text-slate-400 hover:tw-text-rose-600 tw-transition-colors" title="Delete">
+                                        <i class="bi bi-trash3 tw-text-lg"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <!-- Design: Empty State -->
+        <div class="tw-bg-white tw-border tw-border-slate-200 tw-rounded-lg tw-py-20 tw-flex tw-flex-col tw-items-center tw-justify-center">
+            <div class="tw-mb-4 tw-opacity-20">
+                <i class="bi bi-box-seam tw-text-6xl tw-text-slate-400"></i>
+            </div>
+            <h3 class="tw-text-lg tw-font-medium tw-text-slate-800 tw-mb-6">No items in your inventory</h3>
+            <a href="@Url.Action("CreateProduct", "Dashboard")" class="tw-px-6 tw-py-2.5 tw-border tw-border-amber-400 tw-text-amber-600 tw-font-bold tw-rounded-lg hover:tw-bg-amber-50 tw-transition-colors">
+                Add your first product
+            </a>
+        </div>
+    }
+
+    <!-- Scripts (Adapted for new structure) -->
+    <script>
+        function filterProducts(filterType, btn) {
+            // Update Tab Styles
+            document.querySelectorAll('.filter-tab').forEach(t => {
+                t.classList.remove('active', 'tw-bg-slate-600', 'tw-text-white');
+                t.classList.add('tw-text-slate-600', 'hover:tw-bg-slate-50');
+            });
+            btn.classList.add('active', 'tw-bg-slate-600', 'tw-text-white');
+            btn.classList.remove('tw-text-slate-600', 'hover:tw-bg-slate-50');
+
+            // Filter Rows
+            const rows = document.querySelectorAll('.product-row');
+            rows.forEach(row => {
+                if (filterType === 'all') {
+                    row.style.display = '';
+                } else {
+                    row.style.display = (row.dataset.status === filterType) ? '' : 'none';
+                }
+            });
+        }
+
+        document.getElementById('productSearch').addEventListener('keyup', function(e) {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.product-row').forEach(row => {
+                row.style.display = row.dataset.name.includes(term) ? '' : 'none';
+            });
+        });
+
+        // Toggle Status Logic
+        document.querySelectorAll('.toggle-status-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const productId = this.dataset.productId;
+                const currentActive = this.dataset.active === 'true';
+                
+                try {
+                    this.disabled = true;
+                    // Optimistic update
+                    const newState = !currentActive;
+                    updateBtnState(this, newState);
+
+                    const response = await fetch(`/Seller/Dashboard/ToggleProductStatus?productId=${productId}`, { method: 'POST' });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.closest('tr').dataset.status = newState ? 'active' : 'inactive';
+                        // Keep new state
+                    } else {
+                        // Revert on failure
+                        updateBtnState(this, currentActive);
+                        showToast('Error: ' + data.message, 'danger');
+                    }
+                } catch (err) {
+                    updateBtnState(this, currentActive);
+                    console.error(err);
+                } finally {
+                    this.disabled = false;
+                }
+            });
+        });
+
+        function updateBtnState(btn, isActive) {
+            btn.dataset.active = isActive;
+            
+            // Reconstruct button content
+            const colorClass = isActive ? 'tw-bg-emerald-500' : 'tw-bg-rose-500';
+            const text = isActive ? 'Active' : 'Inactive';
+            btn.innerHTML = `<span class="tw-w-2 tw-h-2 tw-rounded-full ${colorClass}"></span><span>${text}</span>`;
+
+            if (isActive) {
+                btn.classList.remove('tw-bg-rose-100', 'tw-text-rose-700');
+                btn.classList.add('tw-bg-emerald-100', 'tw-text-emerald-700');
+            } else {
+                btn.classList.remove('tw-bg-emerald-100', 'tw-text-emerald-700');
+                btn.classList.add('tw-bg-rose-100', 'tw-text-rose-700');
+            }
+        }
+
+        // Inline Price Update with Validation
+        document.querySelectorAll('.inline-edit-price').forEach(input => {
+            let originalValue = input.value;
+            
+            input.addEventListener('input', function() {
+                let value = parseFloat(this.value) || 0;
+                if (value < 0.01) {
+                    this.value = '';
+                }
+            });
+
+            input.addEventListener('blur', function() {
+                if (!this.value || parseFloat(this.value) < 0.01) {
+                    this.value = originalValue;
+                    alert('❌ Price must be greater than 0!');
+                }
+            });
+
+            input.addEventListener('change', async function() {
+                const value = parseFloat(this.value);
+                if (isNaN(value) || value <= 0) {
+                    alert('❌ Price must be greater than 0!');
+                    this.value = originalValue;
+                    return;
+                }
+                
+                const variantId = this.dataset.variantId;
+                const price = value;
+                try {
+                    const response = await fetch(`/Seller/Dashboard/UpdatePrice?variantId=${variantId}&price=${price}`, { method: 'POST' });
+                    const data = await response.json();
+                    if (data.success) {
+                        originalValue = price.toFixed(2);
+                        showToast('Price updated successfully', 'success');
+                    } else {
+                        showToast(data.message || 'Failed to update price', 'danger');
+                        this.value = originalValue;
+                    }
+                } catch (err) { 
+                    console.error(err); 
+                    showToast('Error updating price', 'danger');
+                    this.value = originalValue;
+                }
+            });
+        });
+
+        // Inline Stock Update with Validation
+        document.querySelectorAll('.inline-edit-stock').forEach(input => {
+            let originalValue = input.value;
+            
+            input.addEventListener('input', function() {
+                let value = parseInt(this.value) || 0;
+                if (value < 0) {
+                    this.value = '';
+                }
+            });
+
+            input.addEventListener('blur', function() {
+                if (this.value === '' || parseInt(this.value) < 0) {
+                    this.value = originalValue;
+                    if (this.value === '' || parseInt(this.value) < 0) {
+                        alert('❌ Stock cannot be negative!');
+                    }
+                }
+            });
+
+            input.addEventListener('change', async function() {
+                const value = parseInt(this.value);
+                if (isNaN(value) || value < 0) {
+                    alert('❌ Stock cannot be negative!');
+                    this.value = originalValue;
+                    return;
+                }
+                
+                const variantId = this.dataset.variantId;
+                const stock = value;
+                try {
+                    const response = await fetch(`/Seller/Dashboard/UpdateStock?variantId=${variantId}&stock=${stock}`, { method: 'POST' });
+                    const data = await response.json();
+                    if (data.success) {
+                        originalValue = stock;
+                        showToast('Stock updated successfully', 'success');
+                    } else {
+                        showToast(data.message || 'Failed to update stock', 'danger');
+                        this.value = originalValue;
+                    }
+                } catch (err) { 
+                    console.error(err); 
+                    showToast('Error updating stock', 'danger');
+                    this.value = originalValue;
+                }
+            });
+        });
+        
+        // Delete Product
+        async function deleteProduct(id) {
+            if(!confirm('Are you sure you want to delete this product?')) return;
+            try {
+                 const response = await fetch(`/Seller/Dashboard/DeleteProduct?id=${id}`, { method: 'POST' });
+                 if(response.ok) window.location.reload();
+                 else showToast('Delete failed', 'danger');
+            } catch(e) {
+                showToast('Connection error', 'danger');
+            }
+        }
+
+        // Filter Dropdown Toggle
+        const filterBtn = document.getElementById('filterBtn');
+        const filterDropdown = document.getElementById('filterDropdown');
+        
+        filterBtn?.addEventListener('click', function(e) {
+            e.stopPropagation();
+            filterDropdown.classList.toggle('tw-hidden');
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#filterDropdownContainer')) {
+                filterDropdown?.classList.add('tw-hidden');
+            }
+        });
+
+        // Sort Products
+        function sortProducts(sortType) {
+            const tbody = document.getElementById('productsBody');
+            if (!tbody) {
+                console.error('productsBody not found');
+                return;
+            }
+            
+            const rows = Array.from(tbody.querySelectorAll('tr.product-row'));
+            
+            rows.sort((a, b) => {
+                const nameA = a.getAttribute('data-name') || '';
+                const nameB = b.getAttribute('data-name') || '';
+                const dateA = a.getAttribute('data-date') || '0';
+                const dateB = b.getAttribute('data-date') || '0';
+                const stockA = parseInt(a.getAttribute('data-stock')) || 0;
+                const stockB = parseInt(b.getAttribute('data-stock')) || 0;
+                const priceA = parseFloat(a.getAttribute('data-price')) || 0;
+                const priceB = parseFloat(b.getAttribute('data-price')) || 0;
+                
+                switch(sortType) {
+                    case 'name-asc':
+                        return nameA.localeCompare(nameB);
+                    case 'name-desc':
+                        return nameB.localeCompare(nameA);
+                    case 'date-desc':
+                        return dateB.localeCompare(dateA);
+                    case 'date-asc':
+                        return dateA.localeCompare(dateB);
+                    case 'stock-desc':
+                        return stockB - stockA;
+                    case 'stock-asc':
+                        return stockA - stockB;
+                    case 'price-desc':
+                        return priceB - priceA;
+                    case 'price-asc':
+                        return priceA - priceB;
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+            
+            // Close dropdown
+            const dropdown = document.getElementById('filterDropdown');
+            if (dropdown) dropdown.classList.add('tw-hidden');
+        }
+    </script>
+</div>

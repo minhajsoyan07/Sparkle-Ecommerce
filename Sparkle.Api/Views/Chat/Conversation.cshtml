@@ -1,0 +1,952 @@
+@model Sparkle.Domain.Support.Chat
+@{
+    ViewData["Title"] = $"Chat with {Model.Seller?.ShopName ?? "Seller"}";
+    Layout = "_ProfileLayout";
+    var uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    var chats = ViewBag.AllChats as List<Sparkle.Domain.Support.Chat> ?? new List<Sparkle.Domain.Support.Chat>();
+    var activeId = (int)(ViewBag.ActiveChatId ?? 0);
+    var SI = Model.Seller?.ShopName?.Substring(0, 1).ToUpper() ?? "S";
+}
+
+<style>
+/* ═══════════════════════════════════════════════
+   SCOPED RESETS (override responsive-scaling.css)
+═══════════════════════════════════════════════ */
+.chat-container, .chat-container * { font-size: inherit; min-height: unset; }
+.chat-container .bi { font-size: inherit !important; }
+.chat-container h5, .chat-container h6 { font-size: inherit !important; margin: 0; }
+.chat-container input, .chat-container textarea, .chat-container button { min-height: unset; font-size: inherit; }
+
+/* ═══════════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════════ */
+:root {
+    --c-brand: #10b981; --c-brand-d: #059669; --c-bg: #fff; --c-bg2: #f8fafc;
+    --c-bdr: #e2e8f0; --c-bdr2: #f1f5f9; --c-tx: #0f172a; --c-tx2: #334155;
+    --c-tx3: #64748b; --c-mt: #94a3b8; --c-red: #dc2626;
+    --r: 8px; --r2: 16px; --r3: 20px; --r-full: 9999px;
+}
+
+/* ═══════════════════════════════════════════════
+   SHELL
+═══════════════════════════════════════════════ */
+.chat-container { margin:0; padding:0; }
+.chat-shell {
+    display:flex; height:calc(100vh - 160px); min-height:480px;
+    border-radius: var(--r2); overflow:hidden;
+    border:1px solid var(--c-bdr); box-shadow:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.06);
+    background: var(--c-bg);
+}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════ */
+.sb { width:320px; flex-shrink:0; display:flex; flex-direction:column; border-right:1px solid var(--c-bdr); background:var(--c-bg); }
+.sb-hd { padding:16px 16px 12px; border-bottom:1px solid var(--c-bdr); flex-shrink:0; }
+.sb-hd h6 { font-weight:700; font-size:18px; color:var(--c-tx); display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.sb-hd h6 i { color:var(--c-brand); font-size:16px; }
+.sb-sr { position:relative; }
+.sb-sr i.si { position:absolute; left:13px; top:50%; transform:translateY(-50%); font-size:14px; color:var(--c-mt); pointer-events:none; }
+.sb-sr input {
+    width:100%; padding:9px 13px 9px 36px; border:1.5px solid var(--c-bdr);
+    border-radius:var(--r-full); font-size:14px; color:var(--c-tx2); background:var(--c-bg2);
+    outline:none; transition:border-color .15s;
+}
+.sb-sr input:focus { border-color:var(--c-brand); background:var(--c-bg); }
+.sb-sr input::placeholder { color:var(--c-mt); }
+.sb-ls { flex:1; overflow-y:auto; padding:2px 0; }
+.sb-ls::-webkit-scrollbar { width:3px; }
+.sb-ls::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:2px; }
+
+.sb-r {
+    display:flex; align-items:center; gap:12px; padding:12px 16px;
+    text-decoration:none; cursor:pointer; transition:background .12s;
+    border-left:3px solid transparent;
+}
+.sb-r:hover { background:var(--c-bg2); }
+.sb-r.ac { background:#ecfdf5; border-left-color:var(--c-brand); }
+.sb-av {
+    width:44px; height:44px; border-radius:50%;
+    background:linear-gradient(135deg,var(--c-brand),var(--c-brand-d));
+    color:#fff; font-weight:700; font-size:16px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative;
+}
+.sb-av .ud { position:absolute; top:-2px; right:-2px; width:9px; height:9px; background:#ef4444; border:2px solid var(--c-bg); border-radius:50%; }
+.sb-mt { flex:1; min-width:0; }
+.sb-tp { display:flex; justify-content:space-between; align-items:baseline; gap:6px; }
+.sb-nm { font-weight:600; font-size:15px; color:var(--c-tx); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sb-r.ac .sb-nm { color:var(--c-brand-d); }
+.sb-tm { font-size:12px; color:var(--c-mt); white-space:nowrap; flex-shrink:0; }
+.sb-pv { font-size:13.5px; color:var(--c-tx3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px; }
+.sb-pv.ur { font-weight:600; color:var(--c-tx); }
+.sb-bg { flex-shrink:0; background:var(--c-brand); color:#fff; font-size:10px; font-weight:700; min-width:17px; height:17px; padding:0 5px; border-radius:var(--r-full); display:flex; align-items:center; justify-content:center; }
+
+/* ═══════════════════════════════════════════════
+   CHAT PANEL
+═══════════════════════════════════════════════ */
+.ch { flex:1; display:flex; flex-direction:column; min-width:0; background:#fafbfc; }
+
+/* HEADER */
+.ch-hd {
+    flex-shrink:0; background:var(--c-bg); padding:10px 18px;
+    border-bottom:1px solid var(--c-bdr); display:flex; align-items:center; gap:10px;
+}
+.ch-av { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--c-brand),var(--c-brand-d)); color:#fff; font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ch-inf { flex:1; min-width:0; }
+.ch-inf h5 { font-weight:600; font-size:14px; color:var(--c-tx); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ch-inf p { margin:0; font-size:10.5px; color:var(--c-tx3); }
+.ch-cp { display:inline-flex; align-items:center; gap:3px; padding:4px 10px; border:1px solid var(--c-brand); border-radius:var(--r-full); font-size:11.5px; font-weight:500; color:var(--c-brand); text-decoration:none; white-space:nowrap; transition:background .12s,color .12s; }
+.ch-cp i { font-size:11px; }
+.ch-cp:hover { background:var(--c-brand); color:#fff; }
+
+/* PRODUCT BANNER */
+.ch-pr { flex-shrink:0; background:#f0fdf4; border-bottom:1px solid #d1fae5; padding:7px 18px; display:flex; align-items:center; gap:9px; }
+.ch-pr img { width:32px; height:32px; border-radius:5px; object-fit:cover; flex-shrink:0; }
+.ch-pr-ph { width:32px; height:32px; border-radius:5px; background:var(--c-bdr); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--c-mt); font-size:13px; }
+.ch-pr-t { font-size:12.5px; font-weight:500; color:var(--c-tx); }
+.ch-pr-p { font-size:11px; font-weight:600; color:var(--c-brand); }
+
+/* ═══════════════════════════════════════════════
+   MESSAGE FEED
+═══════════════════════════════════════════════ */
+.ch-fd {
+    flex:1; overflow-y:auto; padding:14px 18px 10px;
+    display:flex; flex-direction:column; gap:2px;
+}
+.ch-fd::-webkit-scrollbar { width:4px; }
+.ch-fd::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:2px; }
+
+/* Date divider */
+.dd { display:flex; align-items:center; gap:7px; margin:6px 0 3px; font-size:10px; color:var(--c-mt); }
+.dd::before,.dd::after { content:''; flex:1; height:1px; background:var(--c-bdr); }
+.dd span { padding:2px 10px; border-radius:var(--r-full); border:1px solid var(--c-bdr); background:var(--c-bg); white-space:nowrap; font-weight:500; }
+
+/* Message row */
+.m { display:flex; align-items:flex-end; gap:6px; padding:1px 0; max-width:100%; }
+.m.out { flex-direction:row-reverse; }
+.m-av { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,var(--c-brand),var(--c-brand-d)); color:#fff; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:2px; }
+.m-av.hd { visibility:hidden; }
+
+/* Wrapper (bubble + dots) */
+.m-w { display:flex; align-items:flex-start; gap:3px; max-width:65%; position:relative; }
+.m.out .m-w { flex-direction:row-reverse; }
+
+/* Body (bubble + time) */
+.m-b { display:flex; flex-direction:column; gap:1px; min-width:0; }
+.m.out .m-b { align-items:flex-end; }
+.m.in  .m-b { align-items:flex-start; }
+
+/* Bubble */
+.bbl { padding:8px 13px; border-radius:16px; font-size:13.5px; line-height:1.45; word-break:break-word; }
+.m.out .bbl { background:linear-gradient(135deg,var(--c-brand),var(--c-brand-d)); color:#fff; border-bottom-right-radius:4px; }
+.m.in .bbl { background:var(--c-bg); color:var(--c-tx); border:1px solid var(--c-bdr); border-bottom-left-radius:4px; }
+
+/* Image inside bubble */
+.bbl-img { border-radius:12px; max-width:220px; max-height:200px; object-fit:cover; cursor:pointer; display:block; margin:2px 0; }
+.bbl-imgs { display:flex; flex-wrap:wrap; gap:4px; margin:2px 0; }
+.bbl-imgs img { border-radius:8px; width:100px; height:80px; object-fit:cover; cursor:pointer; }
+
+/* File attachment in bubble */
+.bbl-file {
+    display:flex; align-items:center; gap:8px; padding:6px 10px;
+    background:rgba(255,255,255,.15); border-radius:8px; margin:3px 0;
+    text-decoration:none; color:inherit; font-size:12px; transition:background .1s;
+}
+.m.in .bbl-file { background:var(--c-bg2); }
+.bbl-file:hover { background:rgba(255,255,255,.25); }
+.m.in .bbl-file:hover { background:#e2e8f0; }
+.bbl-file i { font-size:16px; flex-shrink:0; }
+.bbl-file-nm { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:150px; font-weight:500; }
+.bbl-file-sz { font-size:10px; opacity:.7; }
+
+/* Timestamp */
+.m-t { font-size:10px; color:var(--c-mt); display:flex; align-items:center; gap:3px; padding:0 5px; }
+.m.out .m-t { justify-content:flex-end; }
+.m-ed { font-style:italic; }
+
+/* Dots trigger */
+.m-d { flex-shrink:0; opacity:0; pointer-events:none; transition:opacity .12s; margin-top:5px; }
+.m:hover .m-d, .m-w:hover .m-d { opacity:1; pointer-events:auto; }
+.m-d-b { width:20px; height:20px; border-radius:50%; background:var(--c-bg); border:1px solid var(--c-bdr); color:var(--c-mt); font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; box-shadow:0 1px 3px rgba(0,0,0,.05); transition:background .1s,color .1s; }
+.m-d-b:hover { background:var(--c-bg2); color:var(--c-tx2); }
+
+/* Context menu */
+.m-c { position:absolute; bottom:100%; margin-bottom:4px; background:var(--c-bg); border:1px solid var(--c-bdr); border-radius:var(--r); box-shadow:0 -4px 20px rgba(0,0,0,.1); padding:4px 0; min-width:160px; z-index:50; display:none; }
+.m.out .m-c { right:0; left:auto; }
+.m.in .m-c { left:0; right:auto; }
+.m-c.op { display:block; }
+.cb { display:flex; align-items:center; gap:8px; padding:8px 14px; font-size:13px; font-weight:500; color:var(--c-tx2); background:none; border:none; width:100%; text-align:left; cursor:pointer; transition:background .1s; white-space:nowrap; }
+.cb i { font-size:13px; color:var(--c-mt); width:16px; display:inline-flex; align-items:center; justify-content:center; }
+.cb:hover { background:var(--c-bg2); }
+.cb:hover i { color:var(--c-brand); }
+.cb.dl { color:var(--c-red); }
+.cb.dl i { color:#fca5a5; }
+.cb.dl:hover { background:#fef2f2; }
+.cb.dl:hover i { color:var(--c-red); }
+.cs { height:1px; background:var(--c-bdr2); margin:2px 0; }
+
+/* Unsent message placeholder */
+.bbl-unsent { padding:8px 13px; border-radius:16px; font-size:13px; line-height:1.4; font-style:italic; color:var(--c-mt); background:var(--c-bg2); border:1px dashed var(--c-bdr); }
+.bbl-unsent i { font-size:12px; margin-right:4px; }
+
+/* Custom Modal */
+.sp-overlay { position:fixed; inset:0; background:rgba(15,23,42,.4); backdrop-filter:blur(3px); z-index:9998; display:none; align-items:center; justify-content:center; }
+.sp-overlay.show { display:flex; }
+.sp-modal { background:var(--c-bg); border-radius:var(--r2); box-shadow:0 20px 60px rgba(0,0,0,.15); padding:28px 24px 20px; max-width:380px; width:90%; text-align:center; animation:spIn .2s ease; }
+@@keyframes spIn { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
+.sp-modal-icon { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; margin:0 auto 14px; }
+.sp-modal-icon.warn { background:#fef3c7; color:#f59e0b; }
+.sp-modal-icon.danger { background:#fee2e2; color:#ef4444; }
+.sp-modal-icon.info { background:#ecfdf5; color:var(--c-brand); }
+.sp-modal h6 { font-weight:700; font-size:16px !important; color:var(--c-tx); margin-bottom:6px; }
+.sp-modal p { font-size:13px; color:var(--c-tx3); line-height:1.5; margin:0 0 18px; }
+.sp-modal-btns { display:flex; gap:8px; justify-content:center; }
+.sp-btn { padding:8px 20px; border-radius:var(--r); font-size:13px; font-weight:600; border:none; cursor:pointer; transition:all .12s; }
+.sp-btn-cancel { background:var(--c-bg2); color:var(--c-tx3); }
+.sp-btn-cancel:hover { background:var(--c-bg3); }
+.sp-btn-danger { background:var(--c-red); color:#fff; }
+.sp-btn-danger:hover { background:#dc2626; }
+.sp-btn-primary { background:var(--c-brand); color:#fff; }
+.sp-btn-primary:hover { background:var(--c-brand-d); }
+
+/* Inline edit */
+.m-e { display:flex; flex-direction:column; gap:3px; width:100%; }
+.m-e-ta { width:100%; padding:7px 10px; border:1.5px solid var(--c-brand); border-radius:var(--r); font-size:13px; color:var(--c-tx); background:var(--c-bg); outline:none; font-family:inherit; line-height:1.45; resize:none; min-height:30px; max-height:80px; overflow-y:auto; }
+.m-e-a { display:flex; gap:3px; justify-content:flex-end; }
+.m-e-a button { padding:3px 9px; border-radius:5px; font-size:11px; font-weight:600; cursor:pointer; }
+.be-c { border:1px solid var(--c-bdr); background:var(--c-bg); color:var(--c-tx3); }
+.be-s { border:none; background:var(--c-brand); color:#fff; }
+.be-s:hover { background:var(--c-brand-d); }
+.be-c:hover { background:var(--c-bg2); }
+
+/* ═══════════════════════════════════════════════
+   INPUT BAR
+═══════════════════════════════════════════════ */
+.ch-in { flex-shrink:0; background:var(--c-bg); border-top:1px solid var(--c-bdr); padding:10px 18px 12px; position:relative; z-index:10; }
+
+/* File preview strip */
+.fp-strip { display:none; margin-bottom:8px; overflow-x:auto; white-space:nowrap; padding-bottom:4px; }
+.fp-strip::-webkit-scrollbar { height:3px; }
+.fp-strip::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:2px; }
+.fp-item {
+    display:inline-flex; align-items:center; gap:6px; vertical-align:top;
+    background:var(--c-bg2); border:1px solid var(--c-bdr); border-radius:var(--r);
+    padding:4px 8px; margin-right:6px; font-size:11.5px; color:var(--c-tx2); position:relative;
+}
+.fp-item img { width:40px; height:36px; border-radius:4px; object-fit:cover; }
+.fp-item .fp-nm { max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500; }
+.fp-item .fp-rm { width:16px; height:16px; border-radius:50%; background:var(--c-red); color:#fff; font-size:9px; display:flex; align-items:center; justify-content:center; cursor:pointer; position:absolute; top:-4px; right:-4px; }
+
+/* Drag overlay */
+.ch-fd.drag-over { background:rgba(16,185,129,.06); outline:2px dashed var(--c-brand); outline-offset:-6px; }
+.drag-hint { display:none; position:absolute; inset:0; background:rgba(16,185,129,.08); z-index:10; align-items:center; justify-content:center; flex-direction:column; gap:6px; pointer-events:none; border-radius:inherit; }
+.drag-hint i { font-size:32px; color:var(--c-brand); }
+.drag-hint span { font-size:13px; color:var(--c-brand-d); font-weight:600; }
+.ch-fd.drag-over .drag-hint { display:flex; }
+
+/* Upload progress */
+.up-prog { display:none; margin-bottom:6px; }
+.up-bar { height:3px; background:var(--c-bdr); border-radius:2px; overflow:hidden; }
+.up-fill { height:100%; background:var(--c-brand); border-radius:2px; width:0%; transition:width .2s; }
+.up-txt { font-size:10px; color:var(--c-mt); margin-top:2px; }
+
+.inp-frm { display:flex; align-items:flex-end; gap:7px; }
+.inp-pl {
+    flex:1; display:flex; align-items:flex-end;
+    border:1.5px solid var(--c-bdr); border-radius:22px;
+    padding:3px 12px 3px 4px; background:var(--c-bg2);
+    transition:border-color .15s; min-width:0;
+}
+.inp-pl:focus-within { border-color:var(--c-brand); background:var(--c-bg); }
+
+/* Attach + Photo buttons */
+.bt-a { width:28px; height:28px; border-radius:50%; background:none; border:none; color:var(--c-mt); font-size:14px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:color .12s; }
+.bt-a:hover { color:var(--c-brand); }
+
+.cmp {
+    flex:1; border:none; background:transparent; padding:7px 5px; font-size:14px;
+    color:var(--c-tx); outline:none; min-width:0; resize:none; font-family:inherit;
+    line-height:1.45; max-height:120px; overflow-y:hidden; min-height:34px; height:34px;
+    scrollbar-width:none;
+}
+.cmp::-webkit-scrollbar { display:none; }
+.cmp.scr { overflow-y:auto; }
+.cmp::placeholder { color:var(--c-mt); }
+
+.bt-s {
+    width:36px; height:36px; border-radius:50%;
+    background:linear-gradient(135deg,var(--c-brand),var(--c-brand-d));
+    color:#fff; border:none; font-size:13px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; flex-shrink:0; transition:transform .12s,box-shadow .12s;
+    box-shadow:0 2px 8px rgba(16,185,129,.25);
+}
+.bt-s:hover { transform:scale(1.05); box-shadow:0 4px 12px rgba(16,185,129,.3); }
+.bt-s:active { transform:scale(.95); }
+.bt-s:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+/* Attach popup */
+.at-pop {
+    position:absolute; bottom:calc(100% + 4px); left:18px;
+    background:var(--c-bg); border:1px solid var(--c-bdr); border-radius:var(--r);
+    box-shadow:0 6px 20px rgba(0,0,0,.1); padding:3px 0; min-width:170px; z-index:100; display:none;
+}
+.at-o { display:flex; align-items:center; gap:7px; padding:7px 12px; font-size:12.5px; color:var(--c-tx2); text-decoration:none; border:none; background:none; width:100%; text-align:left; cursor:pointer; transition:background .1s; }
+.at-o i { font-size:13px; color:var(--c-brand); }
+.at-o:hover { background:var(--c-bg2); }
+
+/* Mobile */
+.mob-b { display:none; align-items:center; justify-content:center; width:30px; height:30px; border-radius:var(--r); background:var(--c-bg2); border:none; color:var(--c-tx3); font-size:13px; cursor:pointer; flex-shrink:0; }
+@@media (max-width:768px) {
+    .sb { display:none; }
+    .chat-shell.show-sb .sb { display:flex; width:100%; }
+    .chat-shell.show-sb .ch { display:none; }
+    .mob-b { display:inline-flex; }
+    .m-w { max-width:82%; }
+    .chat-container { padding:0 8px; }
+    .chat-shell { height:calc(100vh - 120px); border-radius:var(--r2); }
+}
+</style>
+
+<div class="chat-container">
+<div class="chat-shell" id="shell">
+
+    <!-- SIDEBAR -->
+    <div class="sb">
+        <div class="sb-hd">
+            <h6><i class="bi bi-chat-text-fill"></i> Messages</h6>
+            <div class="sb-sr"><i class="bi bi-search si"></i><input type="text" id="sS" placeholder="Search conversations…" autocomplete="off"/></div>
+        </div>
+        <div class="sb-ls" id="sL">
+            @if (!chats.Any())
+            {
+                <div class="text-center py-5" style="font-size:12px;color:var(--c-mt);"><i class="bi bi-chat-heart d-block mb-2" style="font-size:26px;opacity:.35;"></i>No conversations yet</div>
+            }
+            @foreach (var c in chats)
+            {
+                var lm = c.Messages.FirstOrDefault();
+                var unr = c.UserUnreadCount > 0;
+                var act = c.Id == activeId;
+                <a href="@Url.Action("Conversation","Chat",new{id=c.Id})" class="sb-r @(act?"ac":"")" data-name="@(c.Seller?.ShopName?.ToLower()??"")">
+                    <div class="sb-av">@(c.Seller?.ShopName?.Substring(0,1).ToUpper()??"S")@if(unr){<span class="ud"></span>}</div>
+                    <div class="sb-mt">
+                        <div class="sb-tp"><span class="sb-nm">@(c.Seller?.ShopName??"Seller")</span><span class="sb-tm">@FmtTime(c.LastMessageAt)</span></div>
+                        <div class="sb-pv @(unr?"ur":"")">@if(lm!=null){ if(lm.IsDeleted){<em style="color:var(--c-mt);"><i class="bi bi-slash-circle"></i> This message was unsent</em>} else{@(lm.IsSeller?"Seller: ":"You: ")@(lm.Content.Length>30?lm.Content[..30]+"…":lm.Content)} } else{<em style="color:var(--c-mt);">No messages</em>}</div>
+                    </div>
+                    @if(unr){<span class="sb-bg">@c.UserUnreadCount</span>}
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- CHAT PANEL -->
+    <div class="ch">
+
+        <!-- HEADER -->
+        <div class="ch-hd">
+            <button class="mob-b" onclick="document.getElementById('shell').classList.add('show-sb')"><i class="bi bi-arrow-left"></i></button>
+            <div class="ch-av">@SI</div>
+            <div class="ch-inf">
+                <h5>@(Model.Seller?.ShopName??"Seller")</h5>
+                <p><i class="bi bi-star-fill text-warning" style="font-size:8px;"></i> @(Model.Seller?.Rating.ToString("F1")??"4.5") Rating</p>
+            </div>
+            @if(Model.Product!=null){<a href="@Url.Action("Product","Home",new{id=Model.ProductId})" class="ch-cp"><i class="bi bi-box"></i> View Product</a>}
+        </div>
+
+        @if(Model.Product!=null)
+        {
+            <div class="ch-pr">
+                @if(Model.Product.Images?.Any()==true){<img src="@Model.Product.Images.First().Url" alt="@Model.Product.Title"/>}
+                else{<div class="ch-pr-ph"><i class="bi bi-box"></i></div>}
+                <div><div class="ch-pr-t">@Model.Product.Title</div><div class="ch-pr-p">৳@Model.Product.Price.ToString("N0")</div></div>
+            </div>
+        }
+
+        <!-- FEED -->
+        <div class="ch-fd" id="feed">
+            <div class="drag-hint"><i class="bi bi-cloud-arrow-up"></i><span>Drop files here</span></div>
+            
+            @if (!Model.Messages.Any())
+            {
+                <div class="tw-p-6 tw-flex tw-flex-col tw-items-center tw-justify-center tw-h-full tw-text-center tw-mt-10">
+                    <div class="tw-w-16 tw-h-16 tw-rounded-full tw-bg-orange-50 tw-text-orange-500 tw-flex tw-items-center tw-justify-center tw-text-2xl tw-mb-4">
+                        <i class="bi bi-chat-dots"></i>
+                    </div>
+                    <h5 class="tw-font-bold tw-text-slate-900 tw-text-lg tw-mb-2">Start a conversation</h5>
+                    <p class="tw-text-slate-500 tw-text-sm tw-mb-6">Send a message or choose a quick suggestion below</p>
+                    
+                    <div class="tw-flex tw-flex-wrap tw-justify-center tw-gap-2 tw-max-w-md">
+                        <button type="button" class="tw-bg-white tw-border tw-border-slate-200 tw-text-slate-700 tw-px-4 tw-py-2 tw-rounded-full tw-text-sm tw-font-medium hover:tw-border-slate-900 hover:tw-bg-slate-50 hover:tw-text-slate-900 tw-transition-all tw-flex tw-items-center tw-gap-2" onclick="setMessage('Is this product still available?')">
+                            <i class="bi bi-check-circle tw-text-emerald-500"></i> Available?
+                        </button>
+                        <button type="button" class="tw-bg-white tw-border tw-border-slate-200 tw-text-slate-700 tw-px-4 tw-py-2 tw-rounded-full tw-text-sm tw-font-medium hover:tw-border-slate-900 hover:tw-bg-slate-50 hover:tw-text-slate-900 tw-transition-all tw-flex tw-items-center tw-gap-2" onclick="setMessage('Can you offer a discount?')">
+                            <i class="bi bi-tag tw-text-blue-500"></i> Discount?
+                        </button>
+                        <button type="button" class="tw-bg-white tw-border tw-border-slate-200 tw-text-slate-700 tw-px-4 tw-py-2 tw-rounded-full tw-text-sm tw-font-medium hover:tw-border-slate-900 hover:tw-bg-slate-50 hover:tw-text-slate-900 tw-transition-all tw-flex tw-items-center tw-gap-2" onclick="setMessage('What is the estimated delivery time?')">
+                            <i class="bi bi-truck tw-text-orange-500"></i> Delivery?
+                        </button>
+                        <button type="button" class="tw-bg-white tw-border tw-border-slate-200 tw-text-slate-700 tw-px-4 tw-py-2 tw-rounded-full tw-text-sm tw-font-medium hover:tw-border-slate-900 hover:tw-bg-slate-50 hover:tw-text-slate-900 tw-transition-all tw-flex tw-items-center tw-gap-2" onclick="setMessage('Is cash on delivery available?')">
+                            <i class="bi bi-cash tw-text-purple-500"></i> COD?
+                        </button>
+                    </div>
+                </div>
+            }
+
+            @{ DateTime? lastD=null; string? lastS=null; }
+            @foreach (var m in Model.Messages)
+            {
+                var dt=m.SentAt.Date; var mine=m.SenderId==uid;
+                if(lastD!=dt){<div class="dd"><span>@FmtDate(dt)</span></div> lastD=dt; lastS=null;}
+                var showAv=!mine && m.SenderId!=lastS; lastS=m.SenderId;
+
+                <div class="m @(mine?"out":"in")" data-id="@m.Id" id="r-@m.Id">
+                    @if(!mine){<div class="m-av @(!showAv?"hd":"")">@SI</div>}
+                    <div class="m-w">
+                        <div class="m-b">
+                            <div class="@(m.IsDeleted ? "bbl-unsent" : "bbl")" id="bbl-@m.Id">
+                                @if(m.IsDeleted)
+                                {
+                                    <text><i class="bi bi-slash-circle"></i> This message was unsent</text>
+                                }
+                                else if(m.MessageType=="Image" && !string.IsNullOrEmpty(m.AttachmentUrl))
+                                {
+                                    <img src="@m.AttachmentUrl" class="bbl-img" alt="Image" onclick="window.open(this.src)"/>
+                                    @if(!string.IsNullOrWhiteSpace(m.Content)){<div style="margin-top:4px;">@m.Content</div>}
+                                }
+                                else if(m.MessageType=="File" && !string.IsNullOrEmpty(m.AttachmentUrl))
+                                {
+                                    <a href="@m.AttachmentUrl" target="_blank" class="bbl-file" download>
+                                        <i class="bi bi-file-earmark-arrow-down"></i>
+                                        <div><div class="bbl-file-nm">@(m.AttachmentName??System.IO.Path.GetFileName(m.AttachmentUrl))</div></div>
+                                    </a>
+                                    @if(!string.IsNullOrWhiteSpace(m.Content)){<div style="margin-top:3px;">@m.Content</div>}
+                                }
+                                else{@m.Content}
+                            </div>
+                            <div class="m-t" id="ts-@m.Id">
+                                @m.SentAt.ToLocalTime().ToString("h:mm tt")
+                                @if(m.IsEdited){<span class="m-ed">&nbsp;· edited</span>}
+                                @if(mine && m.IsRead){<i class="bi bi-check2-all" style="color:var(--c-brand);font-size:10px;"></i>}
+                                else if(mine){<i class="bi bi-check2" style="color:var(--c-mt);font-size:10px;"></i>}
+                            </div>
+                        </div>
+                        @if(mine && !m.IsDeleted){
+                            <div class="m-d"><button class="m-d-b" onclick="openC(@m.Id,event)"><i class="bi bi-three-dots"></i></button></div>
+                            <div class="m-c" id="cx-@m.Id">
+                                <button class="cb" onclick="sEdit(@m.Id)"><i class="bi bi-pencil"></i> Edit</button>
+                                <div class="cs"></div>
+                                <button class="cb dl" onclick="sDel(@m.Id,'forMe')"><i class="bi bi-eye-slash"></i> Delete for me</button>
+                                <button class="cb dl" onclick="sDel(@m.Id,'forEveryone')"><i class="bi bi-trash"></i> Delete for everyone</button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- INPUT BAR -->
+        <div class="ch-in" id="inBar">
+            <div class="up-prog" id="uProg"><div class="up-bar"><div class="up-fill" id="uFill"></div></div><div class="up-txt" id="uTxt">Uploading…</div></div>
+            <div class="fp-strip" id="fpS"></div>
+            <form class="inp-frm" id="cF" enctype="multipart/form-data">
+                <input type="file" id="fInp" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar" style="display:none"/>
+                <div class="inp-pl">
+                    <button type="button" class="bt-a" id="emjBtn" title="Emoji"><i class="bi bi-emoji-smile"></i></button>
+                    <button type="button" class="bt-a" onclick="togAt()" title="Attach"><i class="bi bi-plus-lg"></i></button>
+                    <button type="button" class="bt-a" onclick="document.getElementById('fInp').click()" title="Photo / File"><i class="bi bi-image"></i></button>
+                    <textarea id="cmp" class="cmp" placeholder="Type a message…" rows="1"></textarea>
+                </div>
+                <button type="submit" class="bt-s" id="bS" title="Send"><i class="bi bi-send-fill"></i></button>
+            </form>
+            <div class="at-pop" id="aP">
+                @if(Model.Product!=null){<button type="button" class="at-o" onclick="shareProd(@Model.ProductId)"><i class="bi bi-box"></i> Share This Product</button>}
+                <button type="button" class="at-o" onclick="openShareModal()"><i class="bi bi-search"></i> Share Another Product</button>
+                <button type="button" class="at-o" onclick="document.getElementById('fInp').click();togAt()"><i class="bi bi-image"></i> Photo / File</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+
+<!-- CUSTOM MODAL -->
+<div class="sp-overlay" id="spModal">
+    <div class="sp-modal">
+        <div class="sp-modal-icon warn" id="spIcon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <h6 id="spTitle">Are you sure?</h6>
+        <p id="spMsg">This action cannot be undone.</p>
+        <div class="sp-modal-btns">
+            <button class="sp-btn sp-btn-cancel" id="spCancelBtn" onclick="spClose()">Cancel</button>
+            <button class="sp-btn sp-btn-danger" id="spConfirm" onclick="spClose()">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- PRODUCT SHARE MODAL -->
+<div class="sp-overlay" id="prodShareModal" style="display:none;">
+    <div class="sp-modal" style="width:500px;max-width:90vw;">
+        <h6 style="margin-bottom:16px;">Share a Product</h6>
+        
+        <!-- Search input -->
+        <div style="position:relative;margin-bottom:12px;">
+            <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--c-mt);font-size:14px;"></i>
+            <input type="text" id="prodSearchInput" placeholder="Search products..." 
+                style="width:100%;padding:9px 12px 9px 36px;border:1.5px solid var(--c-bdr);border-radius:var(--r);font-size:14px;color:var(--c-tx2);background:var(--c-bg2);outline:none;"
+                oninput="searchProducts(this.value)"/>
+        </div>
+        
+        <!-- Search results -->
+        <div id="prodResults" style="max-height:400px;overflow-y:auto;border:1px solid var(--c-bdr);border-radius:var(--r);background:var(--c-bg);">
+            <div style="padding:32px 16px;text-align:center;color:var(--c-mt);font-size:14px;">
+                Start typing to search products...
+            </div>
+        </div>
+        
+        <div class="sp-modal-btns" style="margin-top:16px;">
+            <button class="sp-btn sp-btn-cancel" onclick="closeProdShareModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string FmtDate(DateTime d){var t=DateTime.UtcNow.Date;if(d==t)return"Today";if(d==t.AddDays(-1))return"Yesterday";return d.ToString("MMM d, yyyy");}
+    string FmtTime(DateTime dt){var diff=DateTime.UtcNow-dt;if(diff.TotalMinutes<1)return"Now";if(diff.TotalMinutes<60)return$"{(int)diff.TotalMinutes}m";if(diff.TotalHours<24)return$"{(int)diff.TotalHours}h";if(diff.TotalDays<7)return$"{(int)diff.TotalDays}d";return dt.ToString("MMM d");}
+}
+
+@section Scripts{
+<script>
+    function setMessage(text) {
+        const cmp = document.getElementById('cmp');
+        cmp.value = text;
+        cmp.focus();
+        cmp.dispatchEvent(new Event('input')); // Trigger resize
+        // To remove the suggestion overlay visually if desired, but adding a message will just scroll down.
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@Html.Raw("@")emoji-mart/data"></script>
+<script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+<script>
+
+const FD=document.getElementById('feed'), CM=document.getElementById('cmp'),
+      FM=document.getElementById('cF'), BS=document.getElementById('bS'),
+      FI=document.getElementById('fInp'), FPS=document.getElementById('fpS');
+const CID=@Model.Id, ME='@uid', SI='@SI';
+
+/* ── scroll to bottom ── */
+FD.scrollTop=FD.scrollHeight;
+
+/* ── auto-resize textarea ── */
+CM.addEventListener('input',()=>{
+    CM.style.height='34px';
+    const sh=CM.scrollHeight;
+    if(sh>120){CM.style.height='120px';CM.classList.add('scr');}
+    else{CM.style.height=sh+'px';CM.classList.remove('scr');}
+});
+
+/* ── emoji picker ── */
+    let _picker=null;
+    const emjBtn=document.getElementById('emjBtn');
+    if(emjBtn){
+        emjBtn.addEventListener('click',e=>{
+            e.preventDefault(); e.stopPropagation();
+            if(_picker){_picker.remove();_picker=null;return;}
+            try {
+                _picker=new EmojiMart.Picker({
+                    onEmojiSelect:(em)=>{
+                        const start = CM.selectionStart;
+                        const end = CM.selectionEnd;
+                        CM.value = CM.value.substring(0, start) + em.native + CM.value.substring(end);
+                        CM.selectionStart = CM.selectionEnd = start + em.native.length;
+                        CM.dispatchEvent(new Event('input'));
+                        CM.focus();
+                    },
+                    theme:'light', previewPosition:'none', skinTonePosition:'none'
+                });
+                Object.assign(_picker.style,{position:'absolute',bottom:'100%',left:'0',zIndex:'1000',marginBottom:'10px'});
+                document.querySelector('.inp-pl').style.position='relative';
+                document.querySelector('.inp-pl').appendChild(_picker);
+            } catch (err) {
+                alert('Emoji picker failed: ' + err);
+            }
+        });
+    }
+    document.addEventListener('click',e=>{
+        if(_picker && !e.target.closest('em-emoji-picker') && !e.target.closest('#emjBtn')){
+            _picker.remove();
+            _picker=null;
+        }
+    });
+
+/* ── sidebar search ── */
+document.getElementById('sS').addEventListener('input',function(){
+    const q=this.value.toLowerCase();
+    document.querySelectorAll('.sb-r').forEach(r=>{r.style.display=(r.dataset.name||'').includes(q)?'':'none';});
+});
+
+/* ── Custom Modal ── */
+let spCallback=null;
+function spShow(icon,title,msg,btnText,btnClass,cb){
+    const ov=document.getElementById('spModal');
+    document.getElementById('spIcon').className='sp-modal-icon '+icon;
+    document.getElementById('spTitle').textContent=title;
+    document.getElementById('spMsg').textContent=msg;
+    const btn=document.getElementById('spConfirm');
+    btn.textContent=btnText;
+    btn.className='sp-btn '+btnClass;
+    spCallback=cb;
+    btn.onclick=()=>{const cb=spCallback; spClose(); if(cb)cb();};
+    ov.classList.add('show');
+}
+function spClose(){document.getElementById('spModal').classList.remove('show');spCallback=null;}
+function spAlert(title,msg,icon){
+    const ov=document.getElementById('spModal');
+    document.getElementById('spIcon').className='sp-modal-icon '+(icon||'info');
+    document.getElementById('spTitle').textContent=title;
+    document.getElementById('spMsg').textContent=msg;
+    const btn=document.getElementById('spConfirm');
+    btn.textContent='OK';btn.className='sp-btn sp-btn-primary';
+    btn.onclick=()=>spClose();
+    document.getElementById('spCancelBtn').style.display='none';
+    ov.classList.add('show');
+    setTimeout(()=>document.getElementById('spCancelBtn').style.display='',100);
+}
+
+/* ── SignalR ── */
+const hub=new signalR.HubConnectionBuilder().withUrl('/hubs/chat').withAutomaticReconnect().build();
+hub.on('ReceiveMessage',m=>{if((m.chatId||m.ChatId)===CID)appMsg(m);});
+hub.on('MessageEdited',(id,txt)=>{
+    const b=document.getElementById('bbl-'+id);if(!b)return;
+    b.textContent=txt;
+    const t=document.getElementById('ts-'+id);
+    if(t&&!t.querySelector('.m-ed')){const s=document.createElement('span');s.className='m-ed';s.innerHTML='&nbsp;· edited';t.appendChild(s);}
+});
+hub.on('MessageDeleted',id=>{
+    const r=document.getElementById('r-'+id);
+    if(r){
+        const bbl=r.querySelector('.bbl');
+        const wrap=r.querySelector('.m-w');
+        const dots=r.querySelector('.m-d');
+        const ctx=r.querySelector('.m-c');
+        if(bbl){bbl.className='bbl-unsent';bbl.innerHTML='<i class="bi bi-slash-circle"></i> This message was unsent';}
+        if(dots)dots.remove();
+        if(ctx)ctx.remove();
+    }
+});
+hub.start().catch(e=>console.error(e));
+
+/* ── File handling ── */
+let pendingFiles=[];
+
+FI.addEventListener('change',()=>{
+    addFiles(FI.files);
+    FI.value='';
+});
+
+function addFiles(fl){
+    const allowed=['.jpg','.jpeg','.png','.gif','.webp','.bmp','.pdf','.doc','.docx','.xls','.xlsx','.txt','.zip','.rar'];
+    for(const f of fl){
+        if(pendingFiles.length>=5){spAlert('Limit Reached','Maximum 5 files at once.','warn');break;}
+        if(f.size>20*1024*1024){spAlert('File Too Large',`"${f.name}" exceeds the 20MB limit.`,'warn');continue;}
+        const ext='.'+f.name.split('.').pop().toLowerCase();
+        if(!allowed.includes(ext)){spAlert('Invalid File',`File type "${ext}" is not allowed.`,'warn');continue;}
+        pendingFiles.push(f);
+    }
+    renderPreviews();
+}
+
+function renderPreviews(){
+    FPS.innerHTML='';
+    if(!pendingFiles.length){FPS.style.display='none';return;}
+    FPS.style.display='block';
+    pendingFiles.forEach((f,i)=>{
+        const isImg=f.type.startsWith('image/');
+        const el=document.createElement('div');
+        el.className='fp-item';
+        if(isImg){
+            const img=document.createElement('img');
+            img.src=URL.createObjectURL(f);
+            el.appendChild(img);
+        } else {
+            const ic=document.createElement('i');
+            ic.className='bi bi-file-earmark';
+            ic.style.fontSize='18px';ic.style.color='var(--c-brand)';
+            el.appendChild(ic);
+        }
+        const nm=document.createElement('span');nm.className='fp-nm';nm.textContent=f.name;el.appendChild(nm);
+        const rm=document.createElement('span');rm.className='fp-rm';rm.innerHTML='<i class="bi bi-x"></i>';
+        rm.onclick=()=>{pendingFiles.splice(i,1);renderPreviews();};
+        el.appendChild(rm);
+        FPS.appendChild(el);
+    });
+}
+
+/* ── Drag & drop ── */
+FD.addEventListener('dragover',e=>{e.preventDefault();FD.classList.add('drag-over');});
+FD.addEventListener('dragleave',e=>{e.preventDefault();FD.classList.remove('drag-over');});
+FD.addEventListener('drop',e=>{e.preventDefault();FD.classList.remove('drag-over');if(e.dataTransfer.files.length)addFiles(e.dataTransfer.files);});
+
+/* ── Upload files ── */
+async function uploadFiles(){
+    if(!pendingFiles.length)return[];
+    const fd=new FormData();
+    pendingFiles.forEach(f=>fd.append('files',f));
+
+    const prog=document.getElementById('uProg'),fill=document.getElementById('uFill'),txt=document.getElementById('uTxt');
+    prog.style.display='block';fill.style.width='0%';txt.textContent='Uploading…';
+
+    return new Promise((resolve,reject)=>{
+        const xhr=new XMLHttpRequest();
+        xhr.open('POST','/Chat/UploadChatFiles');
+        xhr.upload.onprogress=e=>{if(e.lengthComputable){const p=Math.round(e.loaded/e.total*100);fill.style.width=p+'%';txt.textContent=`Uploading… ${p}%`;}};
+        xhr.onload=()=>{
+            prog.style.display='none';
+            if(xhr.status===200){const r=JSON.parse(xhr.responseText);pendingFiles=[];renderPreviews();resolve(r.files);}
+            else{try{const e=JSON.parse(xhr.responseText);spAlert('Upload Failed',e.error||'Could not upload files.','danger');}catch(x){spAlert('Upload Failed','An error occurred.','danger');}reject();}
+        };
+        xhr.onerror=()=>{prog.style.display='none';spAlert('Upload Failed','Network error.','danger');reject();};
+        xhr.send(fd);
+    });
+}
+
+/* ── Append message ── */
+function appMsg(m){
+    const id=m.id||m.Id;
+    const senderId=m.senderId||m.SenderId;
+    const content=m.content||m.Content||'';
+    const sentAt=m.sentAt||m.SentAt;
+    const attachUrl=m.attachmentUrl||m.AttachmentUrl||null;
+    const mine=senderId===ME;
+    const row=document.createElement('div');
+    row.className='m '+(mine?'out':'in');
+    row.dataset.id=id;row.id='r-'+id;
+    const t=new Date(sentAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+
+    let h='';
+    if(!mine) h+=`<div class="m-av">${esc(SI)}</div>`;
+    h+='<div class="m-w"><div class="m-b"><div class="bbl" id="bbl-'+id+'">';
+
+    if(attachUrl){
+        const isImg=attachUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i);
+        if(isImg) h+=`<img src="${attachUrl}" class="bbl-img" onclick="window.open(this.src)"/>`;
+        else h+=`<a href="${attachUrl}" target="_blank" class="bbl-file" download><i class="bi bi-file-earmark-arrow-down"></i><div><div class="bbl-file-nm">${esc(attachUrl.split('/').pop())}</div></div></a>`;
+        if(content) h+=`<div style="margin-top:3px">${esc(content)}</div>`;
+    } else {
+        h+=esc(content);
+    }
+
+    h+=`</div><div class="m-t" id="ts-${id}">${t} <i class="bi bi-check2" style="color:var(--c-mt);font-size:10px;"></i></div></div>`;
+    if(mine){
+        h+=`<div class="m-d"><button class="m-d-b" onclick="openC(${id},event)"><i class="bi bi-three-dots"></i></button></div>`;
+        h+=`<div class="m-c" id="cx-${id}"><button class="cb" onclick="sEdit(${id})"><i class="bi bi-pencil"></i> Edit</button><div class="cs"></div><button class="cb dl" onclick="sDel(${id},'forMe')"><i class="bi bi-eye-slash"></i> Delete for me</button><button class="cb dl" onclick="sDel(${id},'forEveryone')"><i class="bi bi-trash"></i> Delete for everyone</button></div>`;
+    }
+    h+='</div>';
+    row.innerHTML=h;
+    FD.appendChild(row);
+    FD.scrollTop=FD.scrollHeight;
+}
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+/* ── Context menu ── */
+function openC(id,e){e.stopPropagation();const m=document.getElementById('cx-'+id);if(!m)return;const w=m.classList.contains('op');closeC();if(!w)m.classList.add('op');}
+function closeC(){document.querySelectorAll('.m-c.op').forEach(m=>m.classList.remove('op'));}
+document.addEventListener('click',closeC);
+
+/* ── Inline edit ── */
+let _e=null;
+function sEdit(id){
+    closeC();if(_e)cEdit();
+    const b=document.getElementById('bbl-'+id);if(!b)return;
+    const o=b.textContent;_e={id,o,b};
+    b.innerHTML=`<div class="m-e"><textarea class="m-e-ta" id="et-${id}">${esc(o)}</textarea><div class="m-e-a"><button type="button" class="be-c" onclick="cEdit()">Cancel</button><button type="button" class="be-s" onclick="svEdit(${id})">Save</button></div></div>`;
+    const ta=document.getElementById('et-'+id);ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);
+    ta.addEventListener('keydown',e=>{if(e.key==='Escape')cEdit();if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();svEdit(id);}});
+}
+function cEdit(){if(!_e)return;_e.b.textContent=_e.o;_e=null;}
+function svEdit(id){
+    if(!_e||_e.id!==id)return;
+    const ta=document.getElementById('et-'+id),txt=ta?ta.value.trim():'';
+    if(!txt){cEdit();return;}
+    const o=_e.o;_e.b.textContent=txt;_e=null;
+    fetch('/Chat/EditMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messageId:id,content:txt})})
+    .then(r=>{if(r.ok){const t=document.getElementById('ts-'+id);if(t&&!t.querySelector('.m-ed')){const s=document.createElement('span');s.className='m-ed';s.innerHTML='&nbsp;· edited';t.appendChild(s);}} else{const b=document.getElementById('bbl-'+id);if(b)b.textContent=o;}})
+    .catch(()=>{const b=document.getElementById('bbl-'+id);if(b)b.textContent=o;});
+}
+
+/* ── Delete (for me / for everyone) ── */
+function sDel(id,mode){
+    closeC();
+    if(mode==='forEveryone'){
+        spShow('danger','Unsend this message?','This will remove the message for everyone in this conversation.','Unsend','sp-btn-danger',()=>doDelete(id,'forEveryone'));
+        return;
+    }
+    const row=document.getElementById('r-'+id);if(!row)return;
+    row.style.transition='opacity .2s';row.style.opacity='0';
+    setTimeout(()=>{
+        fetch('/Chat/DeleteMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messageId:id,mode:'forMe'})})
+        .then(r=>{if(r.ok)row.remove();else row.style.opacity='1';})
+        .catch(()=>{row.style.opacity='1';});
+    },220);
+}
+function doDelete(id,mode){
+    fetch('/Chat/DeleteMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messageId:id,mode:mode})})
+    .then(r=>{
+        if(r.ok){
+            const row=document.getElementById('r-'+id);
+            if(row){
+                const bbl=row.querySelector('.bbl');
+                const dots=row.querySelector('.m-d');
+                const ctx=row.querySelector('.m-c');
+                if(bbl){bbl.className='bbl-unsent';bbl.innerHTML='<i class="bi bi-slash-circle"></i> This message was unsent';}
+                if(dots)dots.remove();
+                if(ctx)ctx.remove();
+            }
+        }
+    });
+}
+
+/* ── Attach popup ── */
+function togAt(){const p=document.getElementById('aP');p.style.display=p.style.display==='block'?'none':'block';}
+function shareProd(pid){
+    CM.placeholder='Add a message about this product…';
+    document.getElementById('aP').style.display='none';
+    CM.focus();
+}
+
+/* ── Product sharing ── */
+let searchTimeout;
+function openShareModal(){
+    document.getElementById('prodShareModal').style.display='flex';
+    document.getElementById('prodSearchInput').focus();
+    document.getElementById('aP').style.display='none';
+}
+function closeProdShareModal(){
+    document.getElementById('prodShareModal').style.display='none';
+    document.getElementById('prodSearchInput').value='';
+    document.getElementById('prodResults').innerHTML='<div style="padding:32px 16px;text-align:center;color:var(--c-mt);font-size:14px;">Start typing to search products...</div>';
+}
+async function searchProducts(query){
+    const resultsDiv=document.getElementById('prodResults');
+    clearTimeout(searchTimeout);
+    
+    if(!query.trim()){
+        resultsDiv.innerHTML='<div style="padding:32px 16px;text-align:center;color:var(--c-mt);font-size:14px;">Start typing to search products...</div>';
+        return;
+    }
+    
+    resultsDiv.innerHTML='<div style="padding:16px;text-align:center;color:var(--c-mt);">Searching...</div>';
+    
+    searchTimeout=setTimeout(async()=>{
+        try{
+            const response=await fetch(`/api/chat/seller/@Model.SellerId/search-products?query=${encodeURIComponent(query)}&limit=5`);
+            const data=await response.json();
+            
+            if(!data.success||!data.data||data.data.length===0){
+                resultsDiv.innerHTML='<div style="padding:32px 16px;text-align:center;color:var(--c-mt);font-size:14px;">No products found</div>';
+                return;
+            }
+            
+            let html='';
+            data.data.forEach(product=>{
+                const price=product.price.toLocaleString('bn-BD',{minimumFractionDigits:0,maximumFractionDigits:0});
+                const rating=product.averageRating>0?product.averageRating.toFixed(1):'N/A';
+                html+=`
+                <div style="padding:12px 12px;border-bottom:1px solid var(--c-bdr);display:flex;gap:12px;cursor:pointer;transition:background .15s;hover:background:var(--c-bg2);" onclick="shareProductSuggestion(${product.id},'${product.title.replace(/'/g,"\\'")}')" onmouseover="this.style.background='var(--c-bg2)'" onmouseout="this.style.background='transparent'">
+                    ${product.thumbnailUrl?`<img src="${product.thumbnailUrl}" style="width:50px;height:50px;border-radius:var(--r);object-fit:cover;flex-shrink:0;"/>`:'<div style="width:50px;height:50px;border-radius:var(--r);background:var(--c-bg2);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-box" style="color:var(--c-mt);"></i></div>'}
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:500;color:var(--c-tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${product.title}</div>
+                        <div style="font-size:13px;color:var(--c-brand);margin-top:2px;">৳${price}</div>
+                        <div style="font-size:12px;color:var(--c-tx3);margin-top:2px;">⭐ ${rating} (${product.totalReviews} reviews)</div>
+                    </div>
+                </div>
+                `;
+            });
+            resultsDiv.innerHTML=html;
+        }catch(error){
+            console.error('Error searching products:',error);
+            resultsDiv.innerHTML='<div style="padding:16px;text-align:center;color:var(--c-red);font-size:14px;">Error searching products</div>';
+        }
+    },300);
+}
+function shareProductSuggestion(productId,productTitle){
+    closeProdShareModal();
+    hub.invoke('SuggestProduct',CID,productId,'Shared a product from our store').catch(err=>console.error('Error suggesting product:',err));
+}
+
+document.addEventListener('click',e=>{
+    const p=document.getElementById('aP');
+    const m=document.getElementById('prodShareModal');
+    if(p.style.display==='block'&&!p.contains(e.target)&&!e.target.closest('.bt-a'))p.style.display='none';
+    if(m.style.display==='flex'&&!m.querySelector('.sp-modal').contains(e.target))closeProdShareModal();
+});
+
+/* ── Send (text + files via SignalR) ── */
+async function doSend(){
+    console.log('[Send] doSend() invoked');
+    const msg=CM.value.trim();
+    console.log('[Send] msg:', msg, 'pendingFiles:', pendingFiles.length);
+    if(!msg&&!pendingFiles.length){
+        console.log('[Send] Nothing to send. Aborting.');
+        return;
+    }
+    BS.disabled=true;
+
+    try{
+        let attachUrl=null, attachName=null;
+        if(pendingFiles.length){
+            console.log('[Send] Uploading', pendingFiles.length, 'files...');
+            const uploaded=await uploadFiles();
+            console.log('[Send] Files uploaded:', uploaded);
+            if(uploaded&&uploaded.length){
+                attachUrl=uploaded[0].url;
+                attachName=uploaded[0].name;
+                // For multiple files, send each as a separate message
+                for(let i=1;i<uploaded.length;i++){
+                    console.log('[Send] Sending secondary file:', uploaded[i].name);
+                    await hub.invoke('SendMessage',CID, '', uploaded[i].url, uploaded[i].name || null);
+                }
+            }
+        }
+        if(msg||attachUrl){
+            console.log('[Send] Sending primary message/attachment...', { CID, msg, attachUrl, attachName });
+            await hub.invoke('SendMessage',CID, msg||'', attachUrl||null, attachName||null);
+            console.log('[Send] Primary message sent successfully!');
+        }
+        CM.value='';CM.style.height='34px';CM.classList.remove('scr');
+    }catch(err){
+        console.error('[Send] Error caught in doSend:', err);
+    }
+    BS.disabled=false;
+    console.log('[Send] doSend() complete. BS.disabled = false');
+}
+
+FM.addEventListener('submit',async e=>{
+    e.preventDefault();
+    await doSend();
+});
+
+CM.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey){
+        e.preventDefault();
+        doSend();
+    }
+});
+
+/* ── Paste support (images from clipboard) ── */
+CM.addEventListener('paste',e=>{
+    const items=e.clipboardData?.items;
+    if(!items)return;
+    const imageFiles=[];
+    for(const item of items){
+        if(item.type.startsWith('image/')){
+            const f=item.getAsFile();
+            if(f)imageFiles.push(f);
+        }
+    }
+    if(imageFiles.length){
+        e.preventDefault();
+        addFiles(imageFiles);
+    }
+});
+</script>
+}

@@ -1,0 +1,488 @@
+/* ========================================
+   RESPONSIVE SCALING ENGINE v2.0.0
+   Professional HD & 4K Display Optimization
+   ======================================== */
+
+:root {
+    /* === Fluid Typography Base === */
+    --fluid-min-width: 320;
+    --fluid-max-width: 2560;
+    --fluid-screen: 100vw;
+
+    /* === Responsive Font Sizes === */
+    /* Body Text */
+    --font-size-xs: clamp(0.75rem, 1.5vw, 0.875rem);
+    /* 12px → 14px */
+    --font-size-sm: clamp(0.8125rem, 1.6vw, 0.9375rem);
+    /* 13px → 15px */
+    --font-size-base: clamp(0.875rem, 1.8vw, 1.125rem);
+    /* 14px → 18px */
+    --font-size-lg: clamp(1rem, 2vw, 1.25rem);
+    /* 16px → 20px */
+    --font-size-xl: clamp(1.125rem, 2.2vw, 1.5rem);
+    /* 18px → 24px */
+
+    /* Headings */
+    --font-size-h1: clamp(1.75rem, 4vw, 2.875rem);
+    /* 28px → 46px */
+    --font-size-h2: clamp(1.5rem, 3.5vw, 2.375rem);
+    /* 24px → 38px */
+    --font-size-h3: clamp(1.25rem, 3vw, 1.875rem);
+    /* 20px → 30px */
+    --font-size-h4: clamp(1.125rem, 2.5vw, 1.625rem);
+    /* 18px → 26px */
+    --font-size-h5: clamp(1rem, 2.2vw, 1.375rem);
+    /* 16px → 22px */
+    --font-size-h6: clamp(0.9375rem, 2vw, 1.125rem);
+    /* 15px → 18px */
+
+    /* === Responsive Component Sizing === */
+    --btn-height: clamp(2.375rem, 3vw, 3.25rem);
+    /* 38px → 52px */
+    --btn-height-sm: clamp(2rem, 2.5vw, 2.75rem);
+    /* 32px → 44px */
+    --btn-height-lg: clamp(2.75rem, 3.5vw, 3.75rem);
+    /* 44px → 60px */
+
+    --input-height: clamp(2.5rem, 3.2vw, 3.375rem);
+    /* 40px → 54px */
+    --input-height-sm: clamp(2.125rem, 2.8vw, 3rem);
+    /* 34px → 48px */
+    --input-height-lg: clamp(2.875rem, 3.6vw, 3.75rem);
+    /* 46px → 60px */
+
+    --card-padding: clamp(1rem, 2vw, 2rem);
+    /* 16px → 32px */
+    --card-padding-sm: clamp(0.75rem, 1.5vw, 1.5rem);
+    /* 12px → 24px */
+    --card-padding-lg: clamp(1.5rem, 2.5vw, 2.5rem);
+    /* 24px → 40px */
+
+    /* === Responsive Spacing === */
+    --spacing-xs: clamp(0.25rem, 0.5vw, 0.5rem);
+    /* 4px → 8px */
+    --spacing-sm: clamp(0.5rem, 1vw, 1rem);
+    /* 8px → 16px */
+    --spacing-md: clamp(1rem, 2vw, 2rem);
+    /* 16px → 32px */
+    --spacing-lg: clamp(1.5rem, 3vw, 3rem);
+    /* 24px → 48px */
+    --spacing-xl: clamp(2rem, 4vw, 4rem);
+    /* 32px → 64px */
+    --spacing-2xl: clamp(3rem, 5vw, 6rem);
+    /* 48px → 96px */
+
+    /* === Icon Sizing === */
+    --icon-size-sm: clamp(1rem, 2vw, 1.5rem);
+    /* 16px → 24px */
+    --icon-size-md: clamp(1.25rem, 2.5vw, 2rem);
+    /* 20px → 32px */
+    --icon-size-lg: clamp(1.5rem, 3vw, 2.5rem);
+    /* 24px → 40px */
+    --icon-size-xl: clamp(2rem, 4vw, 3rem);
+    /* 32px → 48px */
+
+    /* === Viewport Breakpoint References === */
+    --bp-xs: 360px;
+    /* Extra Small Mobile */
+    --bp-sm: 480px;
+    /* Small Mobile */
+    --bp-md: 768px;
+    /* Tablet Portrait */
+    --bp-lg: 1024px;
+    /* Tablet Landscape */
+    --bp-xl: 1366px;
+    /* Laptop (Baseline) */
+    --bp-2xl: 1920px;
+    /* HD Desktop */
+    --bp-3xl: 2560px;
+    /* 4K Desktop */
+    --bp-4xl: 3840px;
+    /* Ultra HD 4K */
+}
+
+/* ========================================
+   GLOBAL SCALING - APPLY TO ALL ELEMENTS
+   ======================================== */
+
+html {
+    /* Smooth font rendering for HD/4K displays */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1;
+    font-kerning: normal;
+}
+
+body {
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+}
+
+/* === Typography Scaling === */
+h1,
+.h1 {
+    font-size: var(--font-size-h1) !important;
+}
+
+h2,
+.h2 {
+    font-size: var(--font-size-h2) !important;
+}
+
+h3,
+.h3 {
+    font-size: var(--font-size-h3) !important;
+}
+
+h4,
+.h4 {
+    font-size: var(--font-size-h4) !important;
+}
+
+h5,
+.h5 {
+    font-size: var(--font-size-h5) !important;
+}
+
+h6,
+.h6 {
+    font-size: var(--font-size-h6) !important;
+}
+
+/* === Button Responsive Scaling === */
+.btn {
+    min-height: var(--btn-height);
+    font-size: var(--font-size-base);
+    padding: clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 2vw, 1.5rem);
+}
+
+.btn-sm {
+    min-height: var(--btn-height-sm);
+    font-size: var(--font-size-sm);
+    padding: clamp(0.375rem, 0.8vw, 0.625rem) clamp(0.75rem, 1.5vw, 1.25rem);
+}
+
+.btn-lg {
+    min-height: var(--btn-height-lg);
+    font-size: var(--font-size-lg);
+    padding: clamp(0.625rem, 1.2vw, 0.875rem) clamp(1.25rem, 2.5vw, 2rem);
+}
+
+/* === Form Controls Scaling === */
+.form-control,
+.form-select {
+    min-height: var(--input-height);
+    font-size: var(--font-size-base);
+    padding: clamp(0.5rem, 1vw, 0.875rem) clamp(0.75rem, 1.5vw, 1rem);
+}
+
+.form-control-sm,
+.form-select-sm {
+    min-height: var(--input-height-sm);
+    font-size: var(--font-size-sm);
+}
+
+.form-control-lg,
+.form-select-lg {
+    min-height: var(--input-height-lg);
+    font-size: var(--font-size-lg);
+}
+
+/* === Card Scaling === */
+.card {
+    border-radius: clamp(0.5rem, 1vw, 1rem);
+}
+
+.card-body {
+    padding: var(--card-padding);
+}
+
+.card-body-sm {
+    padding: var(--card-padding-sm);
+}
+
+.card-body-lg {
+    padding: var(--card-padding-lg);
+}
+
+/* === Badge & Tag Scaling === */
+.badge {
+    font-size: var(--font-size-xs);
+    padding: clamp(0.25rem, 0.5vw, 0.375rem) clamp(0.5rem, 1vw, 0.75rem);
+}
+
+/* === Icon Scaling === */
+.bi {
+    font-size: var(--icon-size-md);
+}
+
+.bi-sm {
+    font-size: var(--icon-size-sm);
+}
+
+.bi-lg {
+    font-size: var(--icon-size-lg);
+}
+
+.bi-xl {
+    font-size: var(--icon-size-xl);
+}
+
+/* ========================================
+   NAVIGATION SCALING
+   ======================================== */
+
+/* Top Bar */
+.top-bar {
+    font-size: var(--font-size-xs);
+    padding: clamp(0.375rem, 0.8vw, 0.625rem) 0;
+}
+
+/* Main Navigation */
+.main-nav {
+    padding: clamp(0.75rem, 1.5vw, 1rem) 0;
+}
+
+.sparkle-logo {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+/* Logo Image Scaling */
+.sparkle-logo img {
+    height: clamp(2.8125rem, 5vw, 3.75rem) !important;
+}
+
+/* Search Box */
+.search-input {
+    font-size: var(--font-size-sm);
+    padding: clamp(0.625rem, 1.2vw, 0.875rem) clamp(1rem, 2vw, 1.25rem);
+}
+
+.search-btn {
+    padding: 0 clamp(1.5rem, 3vw, 2rem);
+    font-size: var(--icon-size-md);
+}
+
+.category-dropdown {
+    font-size: var(--font-size-xs);
+    padding: 0 clamp(1rem, 2vw, 1.5rem);
+}
+
+/* Cart & Settings Icons */
+.cart-icon,
+.settings-icon {
+    width: clamp(2.25rem, 4vw, 2.75rem);
+    height: clamp(2.25rem, 4vw, 2.75rem);
+    font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+
+.cart-badge {
+    width: clamp(1.125rem, 2.5vw, 1.5rem);
+    height: clamp(1.125rem, 2.5vw, 1.5rem);
+    font-size: var(--font-size-xs);
+}
+
+/* ========================================
+   PRODUCT CARD SCALING
+   ======================================== */
+
+.sparkle-product-card img,
+.product-card img {
+    height: clamp(10rem, 20vw, 13.75rem) !important;
+    /* 160px → 220px */
+}
+
+.trending-card .card-img-top {
+    height: clamp(10rem, 18vw, 12.5rem) !important;
+    /* 160px → 200px */
+}
+
+.flash-card .card-img-top {
+    height: clamp(9rem, 16vw, 11.25rem) !important;
+    /* 144px → 180px */
+}
+
+/* Product Card Padding */
+.product-card .card-body,
+.sparkle-product-card .card-body {
+    padding: var(--card-padding-sm);
+}
+
+/* Product Title */
+.product-card .card-title,
+.sparkle-product-card .card-title {
+    font-size: var(--font-size-base);
+}
+
+/* Product Price */
+.product-card .price,
+.sparkle-product-card .price {
+    font-size: clamp(1.125rem, 2.2vw, 1.5rem);
+}
+
+/* ========================================
+   MODAL & OVERLAY SCALING
+   ======================================== */
+
+.modal-content {
+    border-radius: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+
+.modal-header,
+.modal-footer {
+    padding: var(--card-padding);
+}
+
+.modal-body {
+    padding: var(--card-padding-lg);
+    font-size: var(--font-size-base);
+}
+
+.modal-title {
+    font-size: var(--font-size-h4);
+}
+
+/* ========================================
+   TABLE SCALING
+   ======================================== */
+
+.table {
+    font-size: var(--font-size-base);
+}
+
+.table th,
+.table td {
+    padding: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+
+.table-sm th,
+.table-sm td {
+    padding: clamp(0.5rem, 1vw, 0.875rem);
+}
+
+/* ========================================
+   FOOTER SCALING
+   ======================================== */
+
+footer,
+.footer {
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-xl) 0;
+}
+
+footer h5,
+.footer h5 {
+    font-size: var(--font-size-lg);
+}
+
+/* ========================================
+   LIST GROUP SCALING
+   ======================================== */
+
+.list-group-item {
+    font-size: var(--font-size-base);
+    padding: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+
+/* ========================================
+   ALERT SCALING
+   ======================================== */
+
+.alert {
+    font-size: var(--font-size-base);
+    padding: var(--card-padding);
+    border-radius: clamp(0.5rem, 1vw, 0.75rem);
+}
+
+/* ========================================
+   HD & 4K OPTIMIZATIONS
+   ======================================== */
+
+/* HD Display (1920px+) */
+@media (min-width: 1920px) {
+    :root {
+        /* Enhanced spacing for larger screens */
+        --container-max-width: 1600px;
+    }
+
+    .container {
+        max-width: var(--container-max-width);
+    }
+
+    /* Sharper images on HD displays */
+    img {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* 4K Display (2560px+) */
+@media (min-width: 2560px) {
+    :root {
+        --container-max-width: 1920px;
+    }
+
+    /* Ultra-sharp rendering for 4K */
+    body {
+        font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    }
+}
+
+/* Ultra HD 4K (3840px+) */
+@media (min-width: 3840px) {
+    :root {
+        --container-max-width: 2560px;
+    }
+}
+
+/* ========================================
+   SAFETY SYSTEM - OVERFLOW PREVENTION
+   ======================================== */
+
+/* Prevent text overflow */
+.text-safe-wrap {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    hyphens: auto;
+}
+
+/* Prevent layout shift */
+* {
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Ensure minimum readability */
+@media (max-width: 360px) {
+    html {
+        font-size: 14px;
+        /* Minimum base font size */
+    }
+}
+
+/* ========================================
+   GPU ACCELERATION FOR SMOOTH SCALING
+   ======================================== */
+
+.card,
+.btn,
+.modal-content {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* ========================================
+   PRINT OPTIMIZATIONS
+   ======================================== */
+
+@media print {
+    * {
+        font-size: 12pt !important;
+    }
+
+    .btn,
+    .card {
+        min-height: auto !important;
+    }
+}

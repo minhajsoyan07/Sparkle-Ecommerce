@@ -1,0 +1,277 @@
+@model Sparkle.Domain.Users.UserAddress
+@{
+    ViewData["Title"] = "Add New Address";
+    Layout = "_ProfileLayout";
+}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<div class="tw-bg-white tw-rounded-2xl tw-border tw-border-slate-100 tw-overflow-hidden tw-shadow-sm">
+    <div class="tw-px-6 tw-py-8 md:tw-px-10">
+        <div class="tw-mb-8">
+            <h5 class="tw-font-bold tw-text-slate-900 tw-text-xl tw-mb-1">Add New Address</h5>
+            <p class="tw-text-xs tw-text-slate-500 tw-mb-0">Please enter your delivery details for a faster checkout</p>
+        </div>
+
+        <form method="post" asp-action="CreateAddress">
+            <input type="hidden" asp-for="Latitude" id="Latitude" />
+            <input type="hidden" asp-for="Longitude" id="Longitude" />
+            
+            <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-x-8 tw-gap-y-6">
+                <!-- Location Header -->
+                <div class="col-span-1 md:col-span-2 tw-flex tw-items-center tw-gap-2 tw-pb-2 tw-border-b tw-border-slate-50 tw-mt-2">
+                    <i class="bi bi-geo-alt tw-text-orange-500 tw-text-lg"></i>
+                    <h6 class="tw-font-bold tw-text-slate-800 tw-text-sm tw-mb-0">Location Details</h6>
+                </div>
+
+                <!-- Country -->
+                <div class="tw-space-y-1.5">
+                    <label asp-for="Country" class="tw-block tw-text-[10px] tw-font-bold tw-text-slate-700 tw-uppercase tw-tracking-wider tw-ml-1">Country / Region</label>
+                    <div class="tw-relative">
+                        <select asp-for="Country" class="tw-w-full tw-px-4 tw-py-3 tw-pl-11 tw-bg-slate-50 tw-border tw-border-slate-200 tw-rounded-xl tw-text-slate-700 tw-text-sm tw-appearance-none tw-cursor-not-allowed" readonly>
+                            <option value="Bangladesh">Bangladesh</option>
+                        </select>
+                        <span class="tw-absolute tw-top-1/2 tw-left-4 -tw-translate-y-1/2 tw-text-slate-400 tw-text-sm">
+                            <i class="bi bi-globe"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- City -->
+                <div class="tw-space-y-1.5">
+                    <label asp-for="City" class="tw-block tw-text-[10px] tw-font-bold tw-text-slate-700 tw-uppercase tw-tracking-wider tw-ml-1">City <span class="tw-text-red-500">*</span></label>
+                    <div class="tw-relative">
+                        <input asp-for="City" class="tw-w-full tw-px-4 tw-py-3 tw-pl-11 tw-bg-white tw-border tw-border-slate-200 tw-rounded-xl tw-text-slate-900 tw-text-sm focus:tw-border-orange-500 focus:tw-ring-4 focus:tw-ring-orange-500/5 tw-transition-all tw-outline-none" placeholder="Enter city name (e.g., Dhaka)" required />
+                        <span class="tw-absolute tw-top-1/2 tw-left-4 -tw-translate-y-1/2 tw-text-slate-400 tw-text-sm">
+                            <i class="bi bi-building"></i>
+                        </span>
+                    </div>
+                    <span asp-validation-for="City" class="tw-text-[10px] tw-text-red-500 tw-font-semibold tw-ml-1"></span>
+                </div>
+
+                <!-- Division -->
+                <div class="tw-space-y-1.5">
+                    <label asp-for="Division" class="tw-block tw-text-[10px] tw-font-bold tw-text-slate-700 tw-uppercase tw-tracking-wider tw-ml-1">Division <span class="tw-text-red-500">*</span></label>
+                    <div class="tw-relative">
+                        <select asp-for="Division" class="tw-w-full tw-px-4 tw-py-3 tw-pl-11 tw-bg-white tw-border tw-border-slate-200 tw-rounded-xl tw-text-slate-900 tw-text-sm focus:tw-border-orange-500 focus:tw-ring-4 focus:tw-ring-orange-500/5 tw-transition-all tw-outline-none tw-appearance-none">
+                            <option value="">Select Division</option>
+                            <option value="Dhaka">Dhaka</option>
+                            <option value="Chattogram">Chattogram</option>
+                            <option value="Khulna">Khulna</option>
+                            <option value="Rajshahi">Rajshahi</option>
+                            <option value="Barishal">Barishal</option>
+                            <option value="Sylhet">Sylhet</option>
+                            <option value="Rangpur">Rangpur</option>
+                            <option value="Mymensingh">Mymensingh</option>
+                        </select>
+                        <span class="tw-absolute tw-top-1/2 tw-left-4 -tw-translate-y-1/2 tw-text-slate-400 tw-text-sm">
+                            <i class="bi bi-map"></i>
+                        </span>
+                        <span class="tw-absolute tw-top-1/2 tw-right-4 -tw-translate-y-1/2 tw-text-slate-400 tw-pointer-events-none">
+                            <i class="bi bi-chevron-down"></i>
+                        </span>
+                    </div>
+                    <span asp-validation-for="Division" class="tw-text-[10px] tw-text-red-500 tw-font-semibold tw-ml-1"></span>
+                </div>
+
+                <!-- Postal Code -->
+                <div class="tw-space-y-1.5">
+                    <label asp-for="PostalCode" class="tw-block tw-text-[10px] tw-font-bold tw-text-slate-700 tw-uppercase tw-tracking-wider tw-ml-1">Zip / Postal Code <span class="tw-text-red-500">*</span></label>
+                    <div class="tw-relative">
+                        <input asp-for="PostalCode" class="tw-w-full tw-px-4 tw-py-3 tw-pl-11 tw-bg-white tw-border tw-border-slate-200 tw-rounded-xl tw-text-slate-900 tw-text-sm focus:tw-border-orange-500 focus:tw-ring-4 focus:tw-ring-orange-500/5 tw-transition-all tw-outline-none" placeholder="e.g., 1216" required />
+                        <span class="tw-absolute tw-top-1/2 tw-left-4 -tw-translate-y-1/2 tw-text-slate-400 tw-text-sm">
+                            <i class="bi bi-mailbox"></i>
+                        </span>
+                    </div>
+                    <span asp-validation-for="PostalCode" class="tw-text-[10px] tw-text-red-500 tw-font-semibold tw-ml-1"></span>
+                </div>
+
+                <!-- Area -->
+                <div class="tw-space-y-1.5 col-span-1 md:col-span-2">
+                    <label asp-for="Area" class="tw-block tw-text-[10px] tw-font-bold tw-text-slate-700 tw-uppercase tw-tracking-wider tw-ml-1">Area / Neighborhood <span class="tw-text-red-500">*</span></label>
+                    <div class="tw-relative">
+                        <input asp-for="Area" class="tw-w-full tw-px-4 tw-py-3 tw-pl-11 tw-bg-white tw-border tw-border-slate-200 tw-rounded-xl tw-text-slate-900 tw-text-sm focus:tw-border-orange-500 focus:tw-ring-4 focus:tw-ring-orange-500/5 tw-transition-all tw-outline-none" id="areaSearch" placeholder="Search area (e.g., Mirpur 10)" autocomplete="off" required />
+                        <span class="tw-absolute tw-top-1/2 tw-left-4 -tw-translate-y-1/2 tw-text-slate-400 tw-text-sm">
+                            <i class="bi bi-geo"></i>
+                        </span>
+                        <div id="areaSuggestions" class="tw-absolute tw-w-full tw-bg-white tw-border tw-border-slate-100 tw-rounded-xl tw-shadow-xl tw-mt-1 tw-z-[1000] tw-hidden tw-max-h-52 tw-overflow-y-auto"></div>
+                    </div>
+                    <span asp-validation-for="Area" class="tw-text-[10px] tw-text-red-500 tw-font-semibold tw-ml-1"></span>
+                </div>
+
+                <!-- Street Address -->
+                <div class="tw-space-y-1.5 col-span-1 md:col-span-2">
+                    <label asp-for="AddressLine1" class="tw-block tw-text-[10px] tw-font-bold tw-text-slate-700 tw-uppercase tw-tracking-wider tw-ml-1">Street Address <span class="tw-text-red-500">*</span></label>
+                    <div class="tw-relative">
+                        <input asp-for="AddressLine1" class="tw-w-full tw-px-4 tw-py-3 tw-pl-11 tw-bg-white tw-border tw-border-slate-200 tw-rounded-xl tw-text-slate-900 tw-text-sm focus:tw-border-orange-500 focus:tw-ring-4 focus:tw-ring-orange-500/5 tw-transition-all tw-outline-none" placeholder="House no, Road no, Block, etc." required />
+                        <span class="tw-absolute tw-top-1/2 tw-left-4 -tw-translate-y-1/2 tw-text-slate-400 tw-text-sm">
+                            <i class="bi bi-house-door"></i>
+                        </span>
+                    </div>
+                    <span asp-validation-for="AddressLine1" class="tw-text-[10px] tw-text-red-500 tw-font-semibold tw-ml-1"></span>
+                </div>
+
+                <!-- Contact Header -->
+                <div class="col-span-1 md:col-span-2 tw-flex tw-items-center tw-gap-2 tw-pb-2 tw-border-b tw-border-slate-50 tw-mt-6">
+                    <i class="bi bi-person tw-text-orange-500 tw-text-lg"></i>
+                    <h6 class="tw-font-bold tw-text-slate-800 tw-text-sm tw-mb-0">Contact Information</h6>
+                </div>
+
+                <!-- Full Name -->
+                <div class="tw-space-y-1.5">
+                    <label asp-for="FullName" class="tw-block tw-text-[10px] tw-font-bold tw-text-slate-700 tw-uppercase tw-tracking-wider tw-ml-1">Full Name <span class="tw-text-red-500">*</span></label>
+                    <div class="tw-relative">
+                        <input asp-for="FullName" class="tw-w-full tw-px-4 tw-py-3 tw-pl-11 tw-bg-white tw-border tw-border-slate-200 tw-rounded-xl tw-text-slate-900 tw-text-sm focus:tw-border-orange-500 focus:tw-ring-4 focus:tw-ring-orange-500/5 tw-transition-all tw-outline-none" placeholder="Receiver's full name" required />
+                        <span class="tw-absolute tw-top-1/2 tw-left-4 -tw-translate-y-1/2 tw-text-slate-400 tw-text-sm">
+                            <i class="bi bi-person-badge"></i>
+                        </span>
+                    </div>
+                    <span asp-validation-for="FullName" class="tw-text-[10px] tw-text-red-500 tw-font-semibold tw-ml-1"></span>
+                </div>
+
+                <!-- Phone -->
+                <div class="tw-space-y-1.5">
+                    <label asp-for="PhoneNumber" class="tw-block tw-text-[10px] tw-font-bold tw-text-slate-700 tw-uppercase tw-tracking-wider tw-ml-1">Phone Number <span class="tw-text-red-500">*</span></label>
+                    <div class="tw-relative">
+                        <input asp-for="PhoneNumber" class="tw-w-full tw-px-4 tw-py-3 tw-pl-11 tw-bg-white tw-border tw-border-slate-200 tw-rounded-xl tw-text-slate-900 tw-text-sm focus:tw-border-orange-500 focus:tw-ring-4 focus:tw-ring-orange-500/5 tw-transition-all tw-outline-none" placeholder="017XXXXXXXX" required />
+                        <span class="tw-absolute tw-top-1/2 tw-left-4 -tw-translate-y-1/2 tw-text-slate-400 tw-text-sm">
+                            <i class="bi bi-telephone"></i>
+                        </span>
+                    </div>
+                    <span asp-validation-for="PhoneNumber" class="tw-text-[10px] tw-text-red-500 tw-font-semibold tw-ml-1"></span>
+                </div>
+
+                <!-- Map Section -->
+                <div class="col-span-1 md:col-span-2 tw-mt-6">
+                    <div class="tw-flex tw-items-center tw-justify-between tw-mb-4">
+                        <div class="tw-flex tw-items-center tw-gap-2">
+                            <i class="bi bi-pin-map tw-text-orange-500 tw-text-lg"></i>
+                            <h6 class="tw-font-bold tw-text-slate-800 tw-text-sm tw-mb-0">Pin on Map</h6>
+                        </div>
+                        <span class="tw-text-[10px] tw-text-slate-500 tw-font-medium">Pinpoint exact delivery location</span>
+                    </div>
+                    <div class="tw-rounded-2xl tw-overflow-hidden tw-border tw-border-slate-100 tw-shadow-inner">
+                        <div id="map" class="tw-h-[350px] tw-w-full tw-z-0"></div>
+                    </div>
+                </div>
+
+                <!-- Preferences -->
+                <div class="col-span-1 md:col-span-2 tw-mt-6 tw-bg-slate-50/50 tw-rounded-2xl tw-p-6 tw-border tw-border-slate-100">
+                    <h6 class="tw-font-bold tw-text-slate-800 tw-text-sm tw-mb-4 tw-flex tw-items-center tw-gap-2">
+                        <i class="bi bi-sliders tw-text-orange-500"></i> Address Preferences
+                    </h6>
+                    
+                    <div class="tw-flex tw-flex-col md:tw-flex-row tw-gap-6">
+                        <div class="tw-flex tw-items-center tw-gap-3 tw-bg-white tw-px-4 tw-py-3 tw-rounded-xl tw-border tw-border-slate-100 tw-flex-1">
+                            <input asp-for="IsDefault" class="tw-w-5 tw-h-5 tw-rounded tw-border-slate-300 tw-text-orange-500 focus:tw-ring-orange-500" type="checkbox" />
+                            <label asp-for="IsDefault" class="tw-text-xs tw-font-bold tw-text-slate-700 tw-cursor-pointer">Use as default shipping address</label>
+                        </div>
+
+                        <div class="tw-flex tw-items-center tw-gap-3 tw-bg-white tw-px-4 tw-py-3 tw-rounded-xl tw-border tw-border-slate-100 tw-flex-1">
+                            <input asp-for="IsDefaultBilling" class="tw-w-5 tw-h-5 tw-rounded tw-border-slate-300 tw-text-orange-500 focus:tw-ring-orange-500" type="checkbox" />
+                            <label asp-for="IsDefaultBilling" class="tw-text-xs tw-font-bold tw-text-slate-700 tw-cursor-pointer">Use as default billing address</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="col-span-1 md:col-span-2 tw-mt-8 tw-flex tw-items-center tw-gap-4">
+                    <button type="submit" class="tw-bg-orange-500 tw-text-white tw-px-8 tw-py-3.5 tw-rounded-xl tw-text-sm tw-font-bold hover:tw-bg-orange-600 tw-transition-all tw-shadow-lg tw-shadow-orange-500/20 tw-flex tw-items-center tw-gap-2">
+                        <i class="bi bi-check2-circle"></i> Save Address
+                    </button>
+                    <a href="/account-info/addresses" class="tw-px-6 tw-py-3.5 tw-bg-slate-50 tw-text-slate-600 tw-rounded-xl tw-text-sm tw-font-bold hover:tw-bg-slate-100 tw-transition-all tw-no-underline">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Map (Dhaka Center)
+        const defaultLat = 23.8103;
+        const defaultLng = 90.4125;
+        
+        const map = L.map('map').setView([defaultLat, defaultLng], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        let marker = L.marker([defaultLat, defaultLng], {draggable: true}).addTo(map);
+
+        function updateLocation(lat, lng) {
+            document.getElementById('Latitude').value = lat;
+            document.getElementById('Longitude').value = lng;
+        }
+        
+        // Initialize with default values
+        updateLocation(defaultLat, defaultLng);
+
+        marker.on('dragend', function(e) {
+            const pos = e.target.getLatLng();
+            updateLocation(pos.lat, pos.lng);
+        });
+
+        map.on('click', function(e) {
+            marker.setLatLng(e.latlng);
+            updateLocation(e.latlng.lat, e.latlng.lng);
+        });
+
+        // Area Autocomplete
+        const areaSearch = document.getElementById('areaSearch');
+        const suggestions = document.getElementById('areaSuggestions');
+        
+        if (areaSearch) {
+            areaSearch.addEventListener('input', async function() {
+                const query = this.value;
+                if (query.length < 2) {
+                    suggestions.classList.add('tw-hidden');
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`/api/Location/areas?query=${query}`);
+                    const areas = await res.json();
+                    
+                    suggestions.innerHTML = '';
+                    if (areas.length > 0) {
+                        suggestions.classList.remove('tw-hidden');
+                        areas.forEach(area => {
+                            const item = document.createElement('a');
+                            item.className = 'tw-block tw-px-6 tw-py-3 tw-text-sm tw-text-slate-700 hover:tw-bg-slate-50 tw-transition-all tw-cursor-pointer tw-no-underline tw-border-b tw-border-slate-50 last:tw-border-0';
+                            item.href = '#';
+                            item.innerHTML = `
+                                <div class="tw-flex tw-items-center tw-gap-3">
+                                    <i class="bi bi-geo-alt tw-text-slate-400"></i>
+                                    <div class="tw-flex tw-flex-col">
+                                        <span class="tw-font-bold tw-text-slate-900">${area.name}</span>
+                                        <span class="tw-text-[10px] tw-text-slate-500 tw-uppercase tw-tracking-wider">${area.district}</span>
+                                    </div>
+                                </div>`;
+                            item.onclick = (e) => {
+                                e.preventDefault();
+                                areaSearch.value = area.name;
+                                suggestions.classList.add('tw-hidden');
+                            };
+                            suggestions.appendChild(item);
+                        });
+                    } else {
+                        suggestions.classList.add('tw-hidden');
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            });
+
+            // Close suggestions on click outside
+            document.addEventListener('click', function(e) {
+                if (e.target !== areaSearch) {
+                    suggestions.classList.add('tw-hidden');
+                }
+            });
+        }
+    });
+</script>

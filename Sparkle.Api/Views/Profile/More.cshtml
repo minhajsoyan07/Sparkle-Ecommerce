@@ -1,0 +1,114 @@
+@{
+    ViewData["Title"] = "More Options";
+    Layout = "_ProfileLayout";
+    var langCookie = Context.Request.Cookies["sparkle-lang"] == "bn" ? "bn" : "en";
+    var isBangla = langCookie == "bn";
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+}
+
+<div class="tw-space-y-6">
+    <!-- Language Selection -->
+    <div class="tw-bg-white tw-rounded-2xl tw-border tw-border-slate-100 tw-overflow-hidden tw-shadow-sm">
+        <div class="tw-px-6 tw-py-5 tw-border-b tw-border-slate-50">
+            <h6 class="tw-font-bold tw-text-slate-900 tw-text-base tw-mb-1 tw-flex tw-items-center tw-gap-2">
+                <i class="bi bi-translate tw-text-orange-500"></i> Language Settings
+            </h6>
+            <p class="tw-text-[11px] tw-text-slate-500 tw-mb-0">Choose your preferred language for the interface</p>
+        </div>
+        <div class="tw-p-6">
+            <form asp-action="ChangeLanguage" asp-controller="Home" method="post">
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                <div class="tw-grid tw-grid-cols-2 tw-gap-4">
+                    <label class="tw-relative tw-cursor-pointer">
+                        <input type="radio" name="language" value="en" class="tw-sr-only tw-peer" @(langCookie == "en" ? "checked" : "") onchange="this.form.submit()" />
+                        <div class="tw-flex tw-items-center tw-justify-center tw-gap-3 tw-px-4 tw-py-4 tw-rounded-2xl tw-border-2 tw-border-slate-50 tw-bg-slate-50/30 tw-text-slate-500 peer-checked:tw-border-orange-500 peer-checked:tw-bg-orange-50/50 peer-checked:tw-text-orange-600 tw-transition-all hover:tw-bg-slate-50">
+                            <span class="tw-font-bold tw-text-sm">English</span>
+                        </div>
+                    </label>
+                    <label class="tw-relative tw-cursor-pointer">
+                        <input type="radio" name="language" value="bn" class="tw-sr-only tw-peer" @(langCookie == "bn" ? "checked" : "") onchange="this.form.submit()" />
+                        <div class="tw-flex tw-items-center tw-justify-center tw-gap-3 tw-px-4 tw-py-4 tw-rounded-2xl tw-border-2 tw-border-slate-50 tw-bg-slate-50/30 tw-text-slate-500 peer-checked:tw-border-orange-500 peer-checked:tw-bg-orange-50/50 peer-checked:tw-text-orange-600 tw-transition-all hover:tw-bg-slate-50">
+                            <span class="tw-font-bold tw-text-sm">বাংলা</span>
+                        </div>
+                    </label>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Additional Settings -->
+    <div class="tw-bg-white tw-rounded-2xl tw-border tw-border-slate-100 tw-overflow-hidden tw-shadow-sm">
+        <div class="tw-px-6 tw-py-5 tw-border-b tw-border-slate-50">
+            <h6 class="tw-font-bold tw-text-slate-900 tw-text-base tw-mb-1 tw-flex tw-items-center tw-gap-2">
+                <i class="bi bi-grid tw-text-orange-500"></i> Account Preferences
+            </h6>
+            <p class="tw-text-[11px] tw-text-slate-500 tw-mb-0">Manage communication and data privacy settings</p>
+        </div>
+        <div class="tw-divide-y tw-divide-slate-50">
+            <!-- Communication -->
+            <div class="tw-p-6 tw-transition-all hover:tw-bg-slate-50/30">
+                <div class="tw-flex tw-justify-between tw-items-center tw-gap-4">
+                    <div class="tw-flex tw-gap-4 tw-items-start">
+                        <div class="tw-w-10 tw-h-10 tw-rounded-xl tw-bg-blue-50 tw-text-blue-600 tw-flex tw-items-center tw-justify-center tw-text-lg tw-flex-shrink-0">
+                            <i class="bi bi-megaphone"></i>
+                        </div>
+                        <div>
+                            <div class="tw-text-sm tw-font-bold tw-text-slate-900">Communication Preferences</div>
+                            <div class="tw-text-[11px] tw-text-slate-500 tw-mt-0.5">Manage email and SMS subscriptions</div>
+                        </div>
+                    </div>
+                    <button class="tw-bg-white tw-text-slate-700 tw-px-4 tw-py-2 tw-rounded-xl tw-text-xs tw-font-bold tw-border tw-border-slate-200 hover:tw-bg-slate-50 tw-transition-all">Manage</button>
+                </div>
+            </div>
+
+            <!-- Privacy -->
+            <div class="tw-p-6 tw-transition-all hover:tw-bg-slate-50/30">
+                <div class="tw-flex tw-justify-between tw-items-center tw-gap-4">
+                    <div class="tw-flex tw-gap-4 tw-items-start">
+                        <div class="tw-w-10 tw-h-10 tw-rounded-xl tw-bg-emerald-50 tw-text-emerald-600 tw-flex tw-items-center tw-justify-center tw-text-lg tw-flex-shrink-0">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div>
+                            <div class="tw-text-sm tw-font-bold tw-text-slate-900">Data & Privacy</div>
+                            <div class="tw-text-[11px] tw-text-slate-500 tw-mt-0.5">Marketing consents and data requests</div>
+                        </div>
+                    </div>
+                    <button class="tw-bg-white tw-text-slate-700 tw-px-4 tw-py-2 tw-rounded-xl tw-text-xs tw-font-bold tw-border tw-border-slate-200 hover:tw-bg-slate-50 tw-transition-all">View</button>
+                </div>
+            </div>
+
+            <!-- Returns -->
+            <div class="tw-p-6 tw-transition-all hover:tw-bg-slate-50/30">
+                <div class="tw-flex tw-justify-between tw-items-center tw-gap-4">
+                    <div class="tw-flex tw-gap-4 tw-items-start">
+                        <div class="tw-w-10 tw-h-10 tw-rounded-xl tw-bg-purple-50 tw-text-purple-600 tw-flex tw-items-center tw-justify-center tw-text-lg tw-flex-shrink-0">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </div>
+                        <div>
+                            <div class="tw-text-sm tw-font-bold tw-text-slate-900">Returns & Exchanges</div>
+                            <div class="tw-text-[11px] tw-text-slate-500 tw-mt-0.5">Initiate or track returns</div>
+                        </div>
+                    </div>
+                    <button class="tw-bg-white tw-text-slate-700 tw-px-4 tw-py-2 tw-rounded-xl tw-text-xs tw-font-bold tw-border tw-border-slate-200 hover:tw-bg-slate-50 tw-transition-all">Check</button>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="tw-p-6 tw-bg-red-50/20">
+                <div class="tw-flex tw-justify-between tw-items-center tw-gap-4">
+                    <div class="tw-flex tw-gap-4 tw-items-start">
+                        <div class="tw-w-10 tw-h-10 tw-rounded-xl tw-bg-red-50 tw-text-red-500 tw-flex tw-items-center tw-justify-center tw-text-lg tw-flex-shrink-0">
+                            <i class="bi bi-trash"></i>
+                        </div>
+                        <div>
+                            <div class="tw-text-[10px] tw-font-bold tw-text-red-500 tw-uppercase tw-tracking-wider tw-mb-0.5">Danger Zone</div>
+                            <div class="tw-text-sm tw-font-bold tw-text-slate-900">Delete Account</div>
+                            <div class="tw-text-[11px] tw-text-slate-500 tw-mt-0.5">Permanently close your account</div>
+                        </div>
+                    </div>
+                    <button class="tw-bg-white tw-text-red-500 tw-px-4 tw-py-2 tw-rounded-xl tw-text-xs tw-font-bold tw-border tw-border-red-100 hover:tw-bg-red-50 tw-transition-all">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
